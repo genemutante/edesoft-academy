@@ -1,0 +1,139 @@
+/* ==========================================================================
+   MASTER HEADER STYLES (FONTE ÚNICA DA VERDADE)
+   ========================================================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    /* DIMENSÕES TRAVADAS */
+    --header-height: 56px; 
+    
+    /* CORES */
+    --header-dark-bg: #0f172a;
+    --header-dark-text: #ffffff;
+    --header-dark-border: #1e293b;
+
+    --header-light-bg: #ffffff;
+    --header-light-text: #1e293b;
+    --header-light-border: #e2e8f0;
+}
+
+/* BASE DO CORPO DO MÓDULO (IFRAME) */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f1f5f9;
+    height: 100vh; /* Ocupa exatamente a altura da janela */
+    width: 100vw;
+    overflow: hidden; /* IMPORTANTE: Remove scroll da página inteira */
+    display: flex;
+    flex-direction: column; /* Empilha Header em cima, Conteúdo embaixo */
+}
+
+/* ==========================================================================
+   CLASSE MESTRE 1: CABEÇALHO ESCURO (Para app-view.html)
+   ========================================================================== */
+.app-header-dark {
+    height: var(--header-height) !important;
+    min-height: var(--header-height) !important;
+    background-color: var(--header-dark-bg);
+    border-bottom: 1px solid var(--header-dark-border);
+    color: var(--header-dark-text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+    z-index: 1000;
+    transition: none !important;
+}
+
+/* ==========================================================================
+   CLASSE MESTRE 2: CABEÇALHO CLARO (PADRONIZADO PARA MÓDULOS)
+   ========================================================================== */
+.module-header-light {
+    height: var(--header-height) !important;
+    min-height: var(--header-height) !important;
+    background-color: var(--header-light-bg);
+    border-bottom: 1px solid var(--header-light-border);
+    color: var(--header-light-text);
+    
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px; /* Alinhamento visual agradável */
+    
+    flex-shrink: 0; /* Garante que o header nunca encolha */
+    z-index: 50;
+    transition: none !important;
+}
+
+/* TÍTULO PADRONIZADO (Sem Flicker) */
+.header-title-static {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    white-space: nowrap;
+    color: inherit;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   HELPER DE LAYOUT: Ocupar espaço restante
+   Use isso na <main> ou <div> principal do módulo
+   ========================================================================== */
+.module-content-fill {
+    flex: 1; /* Ocupa todo o espaço que sobra abaixo do header */
+    overflow-y: auto; /* Se o conteúdo for grande, SÓ AQUI rola */
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================================================
+   AJUSTES DO RODAPÉ DA SIDEBAR (Texto e Ícone)
+   ========================================================= */
+
+/* 1. Texto do Nome e Cargo */
+.sidebar-footer .user-info strong {
+    color: #f1f5f9; /* Branco/Cinza bem claro (Igual ao menu) */
+    font-weight: 600;
+}
+
+.sidebar-footer .user-info span {
+    color: #cbd5e1; /* Um cinza levemente mais suave, mas legível */
+    opacity: 1;     /* Garante que não fique transparente/apagado */
+}
+
+/* 2. Botão de Sair (Logoff) */
+.btn-sidebar-logout {
+    color: #ef4444 !important; /* Força um vermelho vivo */
+    background-color: rgba(255, 255, 255, 0.05); /* Fundo sutil para destacar o botão */
+    border: 1px solid rgba(255, 255, 255, 0.1);  /* Borda sutil */
+    opacity: 1 !important; /* Remove transparência se houver */
+    
+    /* Garante tamanho e alinhamento */
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+/* Efeito ao passar o mouse no botão sair */
+.btn-sidebar-logout:hover {
+    background-color: #ef4444 !important; /* Fundo fica vermelho */
+    color: #ffffff !important;            /* Ícone fica branco */
+    border-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); /* Brilho vermelho */
+}

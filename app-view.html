@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RH System | Edesoft</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           APP VIEWER - ENTERPRISE DARK (SLATE THEME)
+           ========================================================================== */
+        :root {
+            --header-bg: #0f172a;       
+            --header-border: #1e293b;   
+            --header-text: #ffffff;
+            --header-height: 52px;
+            
+            --bg-app: #f1f5f9;
+            --primary: #4f46e5; 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-app);
+        }
+
+        /* --- HEADER --- */
+        .app-bar {
+            height: var(--header-height);
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* BOTÃO INÍCIO */
+        .btn-home {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0; 
+            padding: 6px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .btn-home:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-home svg { width: 16px; height: 16px; stroke-width: 2.5; }
+        .btn-home span {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* DIVISOR */
+        .divider {
+            height: 24px;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+
+        /* SELECTOR DE MÓDULO */
+        .module-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module-selector label {
+            font-size: 11px;
+            color: #94a3b8; 
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .module-selector select {
+            height: 32px;
+            padding: 0 32px 0 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a; 
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+            min-width: 260px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 14px;
+        }
+        
+        .module-selector select:hover { background-color: #f8fafc; }
+        .module-selector select:focus { 
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4); 
+        }
+
+        /* --- DIREITA (USER) --- */
+        .app-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* Espaço entre Pill e Logout */
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px;
+            padding-right: 12px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.2s;
+            cursor: default;
+        }
+        
+        .user-pill:hover { background: rgba(255,255,255,0.1); }
+
+        .avatar-circle {
+            width: 28px;
+            height: 28px;
+            background: white;
+            color: var(--primary); 
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .user-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f1f5f9;
+            letter-spacing: 0.02em;
+        }
+
+        /* NOVO: BOTÃO SAIR */
+        .btn-header-logout {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-header-logout:hover {
+            color: #ef4444; /* Vermelho ao passar o mouse */
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* --- IFRAME --- */
+        .iframe-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            background: var(--bg-app);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-bar">
+        <div class="app-bar-left">
+            <a href="rh-system-edesoft.html" class="btn-home" title="Voltar para a Tela Inicial">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>Início</span>
+            </a>
+            
+            <div class="divider"></div>
+            
+            <div class="module-selector">
+                <label>Módulo Ativo:</label>
+                <select id="moduleSelect" onchange="trocarModulo(this.value)">
+                    <option value="modulos-treinamentos/001-admin-base-de-dados.html">Admin / Base de Dados</option>
+                    <option value="modulos-treinamentos/002-cadastro-de-colaborador.html">Gestão de Colaboradores</option>
+                    <option value="modulos-treinamentos/003-matriz-de-capacitacao.html">Matriz de Capacitação</option>
+                    <option value="modulos-treinamentos/004-declaracao-de-experiencia.html">Declaração de Experiência</option>
+                    <option value="modulos-treinamentos/005-controle-capacitacao-colaborador.html">Controle de Capacitação</option>
+                    <option value="modulos-treinamentos/006-manutencao-cursos.html">Catálogo de Cursos</option>
+                    <option value="modulos-treinamentos/007-agendamento-treinamentos.html">Agendamento de Turmas</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="app-bar-right">
+            <div class="user-pill">
+                <div class="avatar-circle" id="userAvatar">--</div>
+                <span class="user-name" id="userName">Carregando...</span>
+            </div>
+
+            <button onclick="logout()" class="btn-header-logout" title="Sair do Sistema">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="iframe-container">
+        <iframe id="contentFrame" src="" frameborder="0"></iframe>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. VERIFICAÇÃO DE SESSÃO
+            const sessionRaw = localStorage.getItem('rh_session');
+            
+            if (!sessionRaw) {
+                // Sem login, volta pra tela de login
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 2. PREENCHIMENTO DE DADOS
+            const session = JSON.parse(sessionRaw);
+            const elName = document.getElementById('userName');
+            const elAvatar = document.getElementById('userAvatar');
+
+            if (elName) elName.textContent = session.user;
+            if (elAvatar) elAvatar.textContent = session.user.substring(0, 2).toUpperCase();
+
+            // 3. CARREGAMENTO DO IFRAME (Código original)
+            const params = new URLSearchParams(window.location.search);
+            const src = params.get('src');
+            const iframe = document.getElementById('contentFrame');
+            const select = document.getElementById('moduleSelect');
+
+            if (src) {
+                iframe.src = src;
+                select.value = src;
+            } else {
+                iframe.src = select.options[0].value;
+            }
+        });
+
+        // TROCA DE MÓDULO
+        function trocarModulo(url) {
+            const iframe = document.getElementById('contentFrame');
+            iframe.src = url;
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?src=' + url;
+            window.history.pushState({path:newUrl},'',newUrl);
+        }
+
+        // FUNÇÃO DE LOGOUT
+        function logout() {
+            if(confirm("Deseja encerrar a sessão?")) {
+                localStorage.removeItem('rh_session');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

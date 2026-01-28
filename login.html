@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso RH System | Edesoft</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0; height: 100vh; font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; display: flex; align-items: center; justify-content: center;
+            border-top: 6px solid #0f172a;
+        }
+        .login-card {
+            background: #fff; width: 380px; padding: 48px; border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); text-align: center;
+        }
+        .brand {
+            font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .brand span { color: #3b82f6; }
+        .subtitle { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+        
+        .input-group { margin-bottom: 16px; text-align: left; }
+        .input-group label { display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; }
+        input { 
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; 
+            font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;
+        }
+        input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        button {
+            width: 100%; padding: 14px; background: #0f172a; color: #fff; border: none;
+            border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 14px;
+            margin-top: 16px; transition: 0.2s;
+        }
+        button:hover { background: #1e293b; }
+        .footer { margin-top: 24px; font-size: 11px; color: #94a3b8; }
+        .error { color: #ef4444; font-size: 12px; margin-top: 16px; display: none; font-weight: 600;}
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="brand">RH SYSTEM <span>EDESOFT</span></div>
+        <div class="subtitle">Faça login para acessar o portal do colaborador</div>
+
+        <div class="input-group">
+            <label>Usuário Corporativo</label>
+            <input type="text" id="user" placeholder="ex: admin.rh" autofocus>
+        </div>
+        <div class="input-group">
+            <label>Senha</label>
+            <input type="password" id="pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') login()">
+        </div>
+
+        <button onclick="login()">ENTRAR NO SISTEMA</button>
+        <div id="msgError" class="error">Credenciais inválidas.</div>
+
+        <div class="footer">© 2024 Edesoft • Internal Tools</div>
+    </div>
+
+    <script>
+        function login() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+
+            // --- LÓGICA DE VALIDAÇÃO ---
+            if (u === 'admin' && p === 'admin') {
+                // SESSÃO ADMIN
+                salvarSessao('Administrador', 'ADMIN');
+            } else if (u === 'user' && p === '123') {
+                // SESSÃO VISITANTE
+                salvarSessao('Colaborador', 'VIEWER');
+            } else {
+                document.getElementById('msgError').style.display = 'block';
+            }
+        }
+
+        function salvarSessao(nome, role) {
+            const sessao = {
+                user: nome,
+                role: role, // 'ADMIN' ou 'VIEWER'
+                token: 'session-' + Date.now()
+            };
+            localStorage.setItem('rh_session', JSON.stringify(sessao));
+            
+            // REDIRECIONA PARA O MENU PRINCIPAL
+            window.location.href = 'rh-system-edesoft.html';
+        }
+        
+        // Se já tiver sessão, redireciona direto (opcional)
+        // if(localStorage.getItem('rh_session')) window.location.href = 'rh-system-edesoft.html';
+    </script>
+</body>
+</html>
