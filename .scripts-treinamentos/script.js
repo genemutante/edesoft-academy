@@ -1,0 +1,1 @@
+.scripts-treinamentos/script.js
