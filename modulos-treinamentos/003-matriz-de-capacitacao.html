@@ -318,8 +318,7 @@
         </div>
     </div>
 
-    <script src="../bd-treinamentos/data.js"></script>
-    <script src="../bd-treinamentos/db-handler.js"></script>
+    <script type="module" src="../scripts-treinamentos/script.js"></script>
 
     <script>
         // Define a variável global que o script.js usa
@@ -331,6 +330,7 @@
             // 1. SEM LOGIN? CHUTA PRA FORA
             if (!sessionRaw) {
                 console.warn("⛔ Acesso negado. Redirecionando...");
+                // Ajuste se o login estiver na mesma pasta ou outra
                 window.top.location.href = '../login.html'; 
                 return;
             }
@@ -349,8 +349,5 @@
         });
     </script>
 
-    <script src="../scripts-treinamentos/script.js"></script>
-
 </body>
-
 </html>
