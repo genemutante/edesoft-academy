@@ -19,19 +19,19 @@ let lastHighlightedCol = null;
 
 
 
-// =============================================================================
-// 1. IMPORTAÇÃO DIRETA (ES MODULES)
-// =============================================================================
-// Importa o createClient diretamente da CDN
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Usa o Handler para pegar tudo pronto
+        const dados = await DBHandler.carregarDadosIniciais();
 
-// Substitua pelas suas chaves REAIS
-const SUPABASE_URL = 'SUA_URL_DO_SUPABASE';
-const SUPABASE_KEY = 'SUA_ANON_KEY_DO_SUPABASE';
+        config = dados; // config.treinamentos e config.cargos
 
-// Cria o cliente usando a função importada
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+        if (typeof init === 'function') init();
 
+    } catch (e) {
+        console.error("Erro ao carregar:", e);
+    }
+});
 
 
 // ... (O resto do seu código: função init(), renderMatrix(), etc.) ...
@@ -1028,5 +1028,6 @@ function confirmarAcaoSegura() {
     fecharModalConfirmacao();
 
 }
+
 
 
