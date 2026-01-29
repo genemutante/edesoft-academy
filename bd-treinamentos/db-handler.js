@@ -5,8 +5,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 // Configuração (Mesmas chaves que você usou antes)
-const SUPABASE_URL = 'SUA_URL_DO_SUPABASE';
-const SUPABASE_KEY = 'SUA_ANON_KEY_DO_SUPABASE';
+const SUPABASE_URL = 'https://mtblwyrcidrszwvjgxao.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Ymx3eXJjaWRyc3p3dmpneGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MTg4NTUsImV4cCI6MjA4NTI5NDg1NX0.6CipXB_HI0t0Gcle3pTlZTe9rqoh-8-EhfxQy-VodH0';
 
 // Cliente Privado (só este arquivo acessa diretamente)
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -99,3 +99,4 @@ export const DBHandler = {
         }
     }
 };
+
