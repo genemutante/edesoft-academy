@@ -4,20 +4,19 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// Configuração (Mesmas chaves que você usou antes)
+// Configuração (Suas chaves)
 const SUPABASE_URL = 'https://mtblwyrcidrszwvjgxao.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Ymx3eXJjaWRyc3p3dmpneGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MTg4NTUsImV4cCI6MjA4NTI5NDg1NX0.6CipXB_HI0t0Gcle3pTlZTe9rqoh-8-EhfxQy-VodH0';
 
-// Cliente Privado (só este arquivo acessa diretamente)
+// Cliente Privado
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export const DBHandler = {
 
-    // --- 1. LEITURA INICIAL (Carrega tudo para a tela) ---
+    // --- 1. LEITURA INICIAL ---
     async carregarDadosIniciais() {
         console.log("🔄 Buscando dados do Supabase...");
         
-        // Busca Treinamentos
         const { data: treinos, error: errT } = await supabase
             .from('treinamentos')
             .select('id, nome, categoria, desc:desc_curta, color, link')
@@ -25,7 +24,6 @@ export const DBHandler = {
             
         if (errT) throw errT;
 
-        // Busca Cargos (usando a View que criamos)
         const { data: cargos, error: errC } = await supabase
             .from('view_matriz_cargos')
             .select('*')
@@ -36,30 +34,28 @@ export const DBHandler = {
         return { treinamentos: treinos, cargos: cargos };
     },
 
-    // --- 2. GERENCIAR TREINAMENTOS (Criar / Editar) ---
+    // --- 2. GERENCIAR TREINAMENTOS ---
     async salvarTreinamento(treino) {
-        // Remove campos que não existem no banco ou são undefined
         const payload = {
             nome: treino.nome,
             categoria: treino.categoria,
-            desc_curta: treino.desc, // Mapeia 'desc' do JS para 'desc_curta' do banco
+            desc_curta: treino.desc,
             link: treino.link,
             color: treino.color
         };
 
-        // Se tiver ID, é atualização. Se não, é criação.
         if (treino.id) {
             payload.id = treino.id;
         }
 
         const { data, error } = await supabase
             .from('treinamentos')
-            .upsert(payload) // Upsert faz Insert ou Update dependendo se tem ID
+            .upsert(payload)
             .select()
             .single();
 
         if (error) throw error;
-        return data; // Retorna o objeto salvo (com o novo ID se for criação)
+        return data;
     },
 
     // --- 3. EXCLUIR TREINAMENTO ---
@@ -72,10 +68,9 @@ export const DBHandler = {
         if (error) throw error;
     },
 
-    // --- 4. ATUALIZAR MATRIZ (Lógica Relacional) ---
-    // Esta função substitui a lógica complexa de arrays do localStorage
+    // --- 4. ATUALIZAR MATRIZ ---
     async atualizarRegra(cargoId, treinoId, novoStatus) {
-        // 1. Primeiro limpamos qualquer regra existente para esse par (Reset)
+        // Limpa regra anterior
         const { error: errDel } = await supabase
             .from('matriz_regras')
             .delete()
@@ -83,7 +78,7 @@ export const DBHandler = {
             
         if (errDel) throw errDel;
 
-        // 2. Se o novo status não for 'none', inserimos a nova regra
+        // Insere nova regra se necessário
         if (novoStatus !== 'none') {
             const tipoBanco = novoStatus === 'mandatory' ? 'OBRIGATORIO' : 'RECOMENDADO';
             
@@ -97,9 +92,7 @@ export const DBHandler = {
                 
             if (errIns) throw errIns;
         }
-    }
-};
-
+    }, // <--- A VÍRGULA SALVADORA ESTÁ AQUI
 
     // --- 5. AUTENTICAÇÃO ---
     async validarLogin(username, password) {
@@ -107,10 +100,10 @@ export const DBHandler = {
             .from('usuarios_sistema')
             .select('*')
             .eq('username', username)
-            .eq('password', password) // Busca match exato
-            .maybeSingle(); // Retorna null se não encontrar, sem dar erro
+            .eq('password', password)
+            .maybeSingle();
 
         if (error) throw error;
-        return data; // Retorna o objeto do usuário (com role, nome, etc) ou null
+        return data;
     }
-// ... (fim do objeto DBHandler)
+};
