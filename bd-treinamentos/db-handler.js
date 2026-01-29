@@ -1,125 +1,101 @@
-/* db-handler.js - O Cérebro da Persistência */
+// =============================================================================
+// db-handler.js - Camada de Serviço do Supabase
+// =============================================================================
 
-const DB_KEY = "EDESOFT_PDI_DB_V1"; // Chave única no LocalStorage
-const SENHA_ADMIN = "admin123"; // Simulação de segurança
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const DBHandler = {
-    
-    // --- 1. ESTRUTURA PADRÃO (Para quando estiver vazio) ---
-    defaults: {
-        meta: {
-            versao: "1.0",
-            dataCriacao: new Date().toISOString(),
-            autor: "Sistema Padrão",
-            descricao: "Base inicial vazia"
-        },
-        dados: {
-            colaboradores: [],
-            cargos: [],
-            treinamentos: [],
-            treinamentos_realizados: [],
-            agendamentos: [],
-            homologacoes: [],
-            historico_cargos: []
-        }
+// Configuração (Mesmas chaves que você usou antes)
+const SUPABASE_URL = 'SUA_URL_DO_SUPABASE';
+const SUPABASE_KEY = 'SUA_ANON_KEY_DO_SUPABASE';
+
+// Cliente Privado (só este arquivo acessa diretamente)
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+export const DBHandler = {
+
+    // --- 1. LEITURA INICIAL (Carrega tudo para a tela) ---
+    async carregarDadosIniciais() {
+        console.log("🔄 Buscando dados do Supabase...");
+        
+        // Busca Treinamentos
+        const { data: treinos, error: errT } = await supabase
+            .from('treinamentos')
+            .select('id, nome, categoria, desc:desc_curta, color, link')
+            .order('nome');
+            
+        if (errT) throw errT;
+
+        // Busca Cargos (usando a View que criamos)
+        const { data: cargos, error: errC } = await supabase
+            .from('view_matriz_cargos')
+            .select('*')
+            .order('nome');
+
+        if (errC) throw errC;
+
+        return { treinamentos: treinos, cargos: cargos };
     },
 
-    // --- 2. INICIALIZAÇÃO ---
-    init: function() {
-        console.log("🔄 DBHandler: Iniciando...");
-        const raw = localStorage.getItem(DB_KEY);
-        
-        if (!raw) {
-            console.warn("⚠️ Base Local vazia. Verificando base estática...");
-            // Tenta carregar do arquivo data.js se ele existir como variável global 'initialConfig'
-            if (typeof initialConfig !== 'undefined') {
-                this.save(initialConfig, "Carga Inicial Automática");
-                return initialConfig;
-            } else {
-                // Se não tiver nada, inicia zerado
-                this.save(this.defaults, "Criação de Base Limpa");
-                return this.defaults;
-            }
-        } else {
-            console.log("✅ Base Local carregada com sucesso.");
-            return JSON.parse(raw);
-        }
-    },
-
-    // --- 3. LEITURA (Get) ---
-    get: function() {
-        const raw = localStorage.getItem(DB_KEY);
-        return raw ? JSON.parse(raw) : this.init();
-    },
-
-    // --- 4. GRAVAÇÃO (Set) ---
-    save: function(dbObject, motivo = "Atualização do Sistema") {
-        // Atualiza Metadados automaticamente
-        dbObject.meta.dataUltimaModificacao = new Date().toISOString();
-        dbObject.meta.ultimoLog = motivo;
-
-        localStorage.setItem(DB_KEY, JSON.stringify(dbObject));
-        console.log(`💾 DB Salvo: ${motivo}`);
-        
-        // Dispara evento para telas atualizarem se precisarem
-        window.dispatchEvent(new Event('db-updated'));
-    },
-
-    // --- 5. EXPORTAÇÃO (Gerar Arquivo) ---
-    exportarArquivo: function() {
-        const db = this.get();
-        const nomeArquivo = `Backup_PDI_${db.meta.versao}_${new Date().toISOString().slice(0,10)}.json`;
-        
-        const blob = new Blob([JSON.stringify(db, null, 4)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = nomeArquivo;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    },
-
-    // --- 6. IMPORTAÇÃO (Ler Arquivo) ---
-    importarArquivo: function(file, callbackSucesso) {
-        // Simulação de Segurança
-        const senha = prompt("🔒 AÇÃO DESTRUTIVA: Esta importação irá SOBRESCREVER todos os dados atuais.\n\nDigite a senha de administrador para confirmar:");
-        
-        if (senha !== SENHA_ADMIN) {
-            alert("⛔ Senha incorreta. Operação cancelada.");
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const json = JSON.parse(e.target.result);
-                
-                // Validação básica se é um banco válido nosso
-                if (!json.meta || !json.dados) {
-                    throw new Error("Estrutura do arquivo inválida.");
-                }
-
-                // Salva no LocalStorage
-                localStorage.setItem(DB_KEY, JSON.stringify(json));
-                alert(`✅ Sucesso!\nBase "${json.meta.descricao}" (v${json.meta.versao}) importada.`);
-                
-                if (callbackSucesso) callbackSucesso();
-                
-            } catch (err) {
-                alert("Erro ao ler arquivo: " + err.message);
-            }
+    // --- 2. GERENCIAR TREINAMENTOS (Criar / Editar) ---
+    async salvarTreinamento(treino) {
+        // Remove campos que não existem no banco ou são undefined
+        const payload = {
+            nome: treino.nome,
+            categoria: treino.categoria,
+            desc_curta: treino.desc, // Mapeia 'desc' do JS para 'desc_curta' do banco
+            link: treino.link,
+            color: treino.color
         };
-        reader.readAsText(file);
+
+        // Se tiver ID, é atualização. Se não, é criação.
+        if (treino.id) {
+            payload.id = treino.id;
+        }
+
+        const { data, error } = await supabase
+            .from('treinamentos')
+            .upsert(payload) // Upsert faz Insert ou Update dependendo se tem ID
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data; // Retorna o objeto salvo (com o novo ID se for criação)
     },
 
-    // --- 7. LIMPEZA (Reset) ---
-    resetarFabrica: function() {
-        if (confirm("⚠️ Tem certeza? Isso apagará tudo e voltará ao estado inicial.")) {
-            localStorage.removeItem(DB_KEY);
-            location.reload();
+    // --- 3. EXCLUIR TREINAMENTO ---
+    async excluirTreinamento(id) {
+        const { error } = await supabase
+            .from('treinamentos')
+            .delete()
+            .eq('id', id);
+            
+        if (error) throw error;
+    },
+
+    // --- 4. ATUALIZAR MATRIZ (Lógica Relacional) ---
+    // Esta função substitui a lógica complexa de arrays do localStorage
+    async atualizarRegra(cargoId, treinoId, novoStatus) {
+        // 1. Primeiro limpamos qualquer regra existente para esse par (Reset)
+        const { error: errDel } = await supabase
+            .from('matriz_regras')
+            .delete()
+            .match({ cargo_id: cargoId, treinamento_id: treinoId });
+            
+        if (errDel) throw errDel;
+
+        // 2. Se o novo status não for 'none', inserimos a nova regra
+        if (novoStatus !== 'none') {
+            const tipoBanco = novoStatus === 'mandatory' ? 'OBRIGATORIO' : 'RECOMENDADO';
+            
+            const { error: errIns } = await supabase
+                .from('matriz_regras')
+                .insert({
+                    cargo_id: cargoId,
+                    treinamento_id: treinoId,
+                    tipo: tipoBanco
+                });
+                
+            if (errIns) throw errIns;
         }
     }
 };
