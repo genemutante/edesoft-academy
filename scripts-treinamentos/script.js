@@ -18,48 +18,21 @@ let colCache = {};
 let lastHighlightedCol = null;
 
 
-// Substitua o seu 'document.addEventListener' atual por este:
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Chave única para salvar/ler os dados
-    const STORAGE_KEY = 'rh_system_data'; 
 
-    try {
-        // 1. TENTA LER DO LOCALSTORAGE (Prioridade: Dados Salvos/Novos)
-        const dadosLocais = localStorage.getItem(STORAGE_KEY);
-        
-        if (dadosLocais) {
-            const dbLocal = JSON.parse(dadosLocais);
-            if (dbLocal && dbLocal.dados) {
-                config = dbLocal.dados;
-                db = dbLocal; 
-                console.log("✅ Dados carregados do LocalStorage.");
-            }
-        } 
-        
-        // 2. FALLBACK: SE NÃO ACHOU, TENTA OS ARQUIVOS ORIGINAIS
-        if (!config) {
-            if (typeof DBHandler !== 'undefined') {
-                db = DBHandler.get();
-                config = db.dados ? db.dados : db; 
-            } else if (typeof initialConfig !== 'undefined') {
-                config = initialConfig.dados ? initialConfig.dados : initialConfig;
-            }
-        }
+// =============================================================================
+// 1. IMPORTAÇÃO DIRETA (ES MODULES)
+// =============================================================================
+// Importa o createClient diretamente da CDN
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    } catch (e) {
-        console.error("⛔ Erro ao carregar dados:", e);
-    }
+// Substitua pelas suas chaves REAIS
+const SUPABASE_URL = 'SUA_URL_DO_SUPABASE';
+const SUPABASE_KEY = 'SUA_ANON_KEY_DO_SUPABASE';
 
-    // Inicializa a tela se tiver dados
-    if (config && typeof init === 'function') {
-        init();
-    } else {
-        console.error("⛔ Configuração não carregada ou função init() ausente.");
-    }
-	// Verifica se veio da tela de login
-    verificarSessaoInicial();
-});
+// Cria o cliente usando a função importada
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
 
 // ... (O resto do seu código: função init(), renderMatrix(), etc.) ...
 function init() {
@@ -1055,4 +1028,5 @@ function confirmarAcaoSegura() {
     fecharModalConfirmacao();
 
 }
+
 
