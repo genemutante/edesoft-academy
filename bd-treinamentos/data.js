@@ -34,8 +34,8 @@ const initialConfig = {
         // --- 00. EDUCAÇÃO ---
         { 
             id: 60, 
-            categoria: "EDUCAÇÃO", 
-            nome: "00 - EDUCAÇÃO: Ensino Médio", 
+            categoria: "00 - EDUCAÇÃO", 
+            nome: "Ensino Médio", 
             color: colors.blueLight, 
             desc: "Fornece a base educacional necessária para compreender conceitos fundamentais e desenvolver as habilidades básicas exigidas pelo mercado."
         },
@@ -13788,6 +13788,7 @@ colaboradores: [
     
     }
 }; // Fim do objeto config
+
 
 
 
