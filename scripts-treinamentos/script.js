@@ -1,3 +1,8 @@
+// =============================================================================
+// 1. IMPORTAÇÃO E VARIÁVEIS GLOBAIS
+// =============================================================================
+import { DBHandler } from './db-handler.js';
+
 const icons = {
     lupa: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`,
     user: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`,
@@ -8,31 +13,41 @@ const icons = {
     filterClear: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" /></svg>`
 };
 
-
 // Variáveis globais
-// 1. Defina as variáveis globais no topo
 let db;
 let config;
+
 // CACHE DE PERFORMANCE
 let colCache = {}; 
 let lastHighlightedCol = null;
 
-
-
+// =============================================================================
+// 2. INICIALIZAÇÃO (CONEXÃO COM BANCO)
+// =============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Usa o Handler para pegar tudo pronto
+        console.log("🔄 Iniciando sistema...");
+
+        // 1. Carrega dados via DBHandler (que já traz a View formatada)
         const dados = await DBHandler.carregarDadosIniciais();
+        config = dados; 
+        
+        // Atribui ao db também para manter compatibilidade se usado em outro lugar
+        db = { dados: config };
 
-        config = dados; // config.treinamentos e config.cargos
-
+        console.log("✅ Dados carregados!", config);
+        
+        // 2. Inicializa a tela
         if (typeof init === 'function') init();
+        
+        // 3. Verifica sessão
+        if (typeof verificarSessaoInicial === 'function') verificarSessaoInicial();
 
     } catch (e) {
-        console.error("Erro ao carregar:", e);
+        console.error("⛔ Erro fatal na inicialização:", e);
+        alert("Erro ao conectar com o banco de dados. Veja o console.");
     }
 });
-
 
 // ... (O resto do seu código: função init(), renderMatrix(), etc.) ...
 function init() {
@@ -552,8 +567,7 @@ function fecharModalTreinamento() {
 }
 
 
-function salvarNovoTreinamento() {
-    // Coleta dados
+async function salvarNovoTreinamento() {
     const idExistente = document.getElementById('inputHiddenId').value;
     const nome = document.getElementById('inputNomeTreino').value.trim();
     const categoria = document.getElementById('inputCatTreino').value.trim();
@@ -563,74 +577,31 @@ function salvarNovoTreinamento() {
 
     if (!nome || !categoria) { alert("Preencha Nome e Categoria!"); return; }
 
-    // Objeto com os dados novos
-    const dadosFormulario = {
-        nome, categoria: categoria.toUpperCase(), desc, link, color: cor
-    };
+    const dadosFormulario = { nome, categoria: categoria.toUpperCase(), desc, link, color: cor };
+    if (idExistente) dadosFormulario.id = parseInt(idExistente);
 
-    if (idExistente) {
-        // --- MODO EDIÇÃO: ABRE AUDITORIA ---
-        const original = config.treinamentos.find(t => t.id == idExistente);
-        dadosFormulario.id = parseInt(idExistente);
-
-        // Monta texto de "Diff" (O que mudou)
-        let diffHtml = `Atualização Cadastral ID #${idExistente}`;
-        if (original.nome !== nome) {
-            diffHtml += `<br><span style="font-size:11px; color:#64748b">Nome:</span> ${original.nome} &rarr; <b>${nome}</b>`;
-        }
-
-        exibirModalAuditoria(diffHtml, {
-            TIPO: 'EDICAO_TREINO',
-            novosDados: dadosFormulario
-        });
-
-    } else {
-        // --- MODO CRIAÇÃO: SALVA DIRETO (Geralmente criação é menos crítica, mas pode por auditoria se quiser) ---
-        const maxId = config.treinamentos.reduce((max, t) => Math.max(max, t.id || 0), 0);
-        dadosFormulario.id = maxId + 1;
+    try {
+        // CHAMA O BANCO DE DADOS
+        await DBHandler.salvarTreinamento(dadosFormulario);
         
-        config.treinamentos.push(dadosFormulario);
-        persistirDados(`Novo Treinamento Criado: ${nome}`);
+        // RECARREGA TUDO PARA ATUALIZAR A TELA
+        const dadosAtualizados = await DBHandler.carregarDadosIniciais();
+        config = dadosAtualizados;
         
-        init();
+        init(); // Recria filtros e listas
         atualizarFiltros();
         fecharModalTreinamento();
-        alert("Curso criado com sucesso!");
+        alert("Salvo com sucesso!");
+
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao salvar no banco.");
     }
 }
 // =============================================================================
 // HELPER DE PERSISTÊNCIA (CORRIGIDO PARA SALVAR CARGOS E REGRAS)
 // =============================================================================
 
-function persistirDados(msgLog) {
-    try {
-        const STORAGE_KEY = 'rh_system_data';
-        
-        // 1. Lê o banco atual ou cria vazio
-        let dbAtual = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        
-        // 2. Garante a estrutura básica
-        if (!dbAtual.dados) dbAtual.dados = {};
-
-        // 3. ATUALIZAÇÃO COMPLETA
-        // Antes salvávamos apenas .treinamentos. Agora salvamos .cargos também!
-        // É nos 'cargos' que ficam as listas de 'obrigatorios' e 'recomendados'.
-        dbAtual.dados.treinamentos = config.treinamentos;
-        dbAtual.dados.cargos = config.cargos; 
-
-        // 4. Meta dados
-        if (!dbAtual.meta) dbAtual.meta = {};
-        dbAtual.meta.dataUltimaModificacao = new Date().toISOString();
-
-        // 5. Grava no navegador
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dbAtual));
-        console.log(`💾 ${msgLog} - SALVO COM SUCESSO (Cargos e Treinos)!`);
-
-    } catch (e) {
-        console.error("Erro fatal ao persistir dados:", e);
-        alert("Erro ao salvar alterações no navegador. Verifique o console.");
-    }
-}
 
 
 // Atualiza o texto do Hexadecimal quando muda a cor
@@ -710,24 +681,32 @@ function editarTreinamento(id) {
     abrirModalTreinamento();
 }
 
-function excluirTreinamento() {
+async function excluirTreinamento() {
     const id = document.getElementById('inputHiddenId').value;
     if (!id) return;
 
     if (confirm("Tem certeza que deseja EXCLUIR este treinamento permanentemente?")) {
-        // Remove do array na memória
-        config.treinamentos = config.treinamentos.filter(t => t.id != id); // != compara string com int se precisar
-        
-        // Persiste a mudança
-        persistirDados("Treinamento excluído");
-        
-        // Atualiza tela
-        fecharModalTreinamento();
-        init(); // Recarrega filtros e categorias
-        atualizarFiltros();
+        try {
+            // 1. Envia o comando de exclusão para o banco
+            await DBHandler.excluirTreinamento(id);
+            
+            // 2. Recarrega os dados atualizados do banco
+            const dadosAtualizados = await DBHandler.carregarDadosIniciais();
+            config = dadosAtualizados;
+            
+            // 3. Atualiza a interface
+            fecharModalTreinamento();
+            init(); // Recria as listas de filtros/categorias
+            atualizarFiltros();
+            
+            alert("Treinamento excluído com sucesso!");
+
+        } catch (e) {
+            console.error("Erro ao excluir:", e);
+            alert("Não foi possível excluir o treinamento. Verifique o console.");
+        }
     }
 }
-
 
 // =============================================================================
 // 8. CONTROLE DE ACESSO E SESSÃO (LOGIN PERSISTENTE)
@@ -978,56 +957,46 @@ function fecharModalConfirmacao() {
     pendingChange = null;
 }
 
-function confirmarAcaoSegura() {
+async function confirmarAcaoSegura() {
     if (!pendingChange) return;
 
-    // --- CENÁRIO A: RELAÇÃO ---
-    if (pendingChange.TIPO === 'RELACAO') {
-        const { cargoIndex, treinoId, novoStatus } = pendingChange;
-        const cargo = config.cargos[cargoIndex];
+    try {
+        // --- CENÁRIO A: MUDANÇA DE REGRA (MATRIZ) ---
+        if (pendingChange.TIPO === 'RELACAO') {
+            const { cargoIndex, treinoId, novoStatus } = pendingChange;
+            // No banco precisamos do ID do cargo, não do índice do array
+            const cargoId = config.cargos[cargoIndex].id; 
 
-        // *** CORREÇÃO DO ERRO ***
-        // Adicionamos esta verificação. Se o cargo não existir, aborta sem quebrar.
-        if (!cargo) {
-            console.error("Erro Crítico: Cargo indefinido durante gravação.");
-            alert("Erro ao salvar: Cargo não encontrado.");
-            fecharModalConfirmacao();
-            return;
+            // 1. Envia comando ao banco
+            await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
+        }
+        
+        // --- CENÁRIO B: EDIÇÃO DE TREINAMENTO (VIA AUDITORIA) ---
+        else if (pendingChange.TIPO === 'EDICAO_TREINO') {
+            const { novosDados } = pendingChange;
+            await DBHandler.salvarTreinamento(novosDados);
         }
 
-        // Garante arrays antes de filtrar
-        if (!cargo.obrigatorios) cargo.obrigatorios = [];
-        if (!cargo.recomendados) cargo.recomendados = [];
-
-        // Aplica a lógica
-        cargo.obrigatorios = cargo.obrigatorios.filter(id => id !== treinoId);
-        cargo.recomendados = cargo.recomendados.filter(id => id !== treinoId);
+        // --- PÓS-GRAVAÇÃO: RECARREGA DADOS ---
+        const dadosFrescos = await DBHandler.carregarDadosIniciais();
+        config = dadosFrescos;
         
-        if (novoStatus === 'mandatory') cargo.obrigatorios.push(treinoId);
-        else if (novoStatus === 'recommended') cargo.recomendados.push(treinoId);
+        // Atualiza a interface
+        renderizarMatriz(
+            getCargoIdByName(document.getElementById('roleFilter').value),
+            document.getElementById('categoryFilter').value || 'all',
+            document.getElementById('textSearch').value.toLowerCase(),
+            document.getElementById('statusFilter').value
+        );
 
-        persistirDados(`Regra de Matriz alterada (Auditado)`);
-        atualizarFiltros();
+        fecharModalConfirmacao();
+
+    } catch (e) {
+        console.error("Erro na operação:", e);
+        alert("Erro ao salvar alteração: " + e.message);
     }
-    
-    // --- CENÁRIO B: EDIÇÃO TREINO ---
-    else if (pendingChange.TIPO === 'EDICAO_TREINO') {
-        const { novosDados } = pendingChange;
-        const idx = config.treinamentos.findIndex(t => t.id === novosDados.id);
-        
-        if (idx !== -1) {
-            config.treinamentos[idx] = novosDados;
-            persistirDados(`Treinamento ID ${novosDados.id} Atualizado`);
-            
-            init(); // Recarrega categorias se mudou
-            atualizarFiltros();
-            fecharModalTreinamento(); 
-        }
-    }
-
-    fecharModalConfirmacao();
-
 }
+
 
 
 
