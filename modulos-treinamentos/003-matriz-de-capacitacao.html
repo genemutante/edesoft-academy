@@ -9,11 +9,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="../.estilos-treinamentos/style.css">
+    <link rel="stylesheet" href="../estilos-treinamentos/style.css">
     
     <style>
         /* =========================================================
-           LAYOUT 100VH (TELA ÚNICA FIXA)
+           LAYOUT 100VH (TELA ÚNICA FIXA - IDÊNTICO AO REFERÊNCIA)
            ========================================================= */
         html, body {
             height: 100%; margin: 0; padding: 0;
@@ -60,6 +60,29 @@
             padding-bottom: 20px;
         }
 
+        /* Estilos da Tabela (Garantindo alinhamento) */
+        table {
+            border-collapse: separate; 
+            border-spacing: 0; 
+            width: 100%;
+        }
+        
+        /* Cabeçalho Sticky */
+        thead th {
+            position: sticky; top: 0; z-index: 20;
+            background: #fff; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        /* Primeira Coluna Sticky */
+        tbody th, thead th:first-child {
+            position: sticky; left: 0; z-index: 10;
+            background: #fff;
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        thead th:first-child { z-index: 30; } /* Canto superior esquerdo */
+
         /* =========================================================
            SEGURANÇA & BADGE VISUAL
            ========================================================= */
@@ -98,187 +121,211 @@
         }
         .btn-new-course:hover { background-color: #334155; transform: translateY(-1px); }
 
+        /* Classes Utilitárias do Script (Necessárias para o JS funcionar) */
+        .hidden { display: none !important; }
+        
+        /* Estilos dos Modais (Caso não estejam no CSS externo) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-card {
+            background: #fff; padding: 24px; border-radius: 12px; width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        /* Menu de Contexto */
+        .context-menu {
+            position: absolute; background: #fff; border: 1px solid #cbd5e1;
+            border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            width: 160px; z-index: 95; padding: 4px 0;
+        }
+        .context-menu-item {
+            padding: 8px 12px; font-size: 13px; color: #334155; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .context-menu-item:hover { background-color: #f8fafc; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .status-dot.O { background-color: #ef4444; }
+        .status-dot.R { background-color: #f59e0b; }
+
     </style>
 </head>
 <body>
 
     <header class="page-header">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div class="header-title">MATRIZ DE CAPACITAÇÃO</div>
+        <div style="display: flex; align-items: center;">
+            <h1>Matriz de Capacitação</h1>
             
             <div id="viewerWarning" class="viewer-badge">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                MODO LEITURA
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Modo Leitura</span>
             </div>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <div style="display: flex; gap: 16px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="status-dot O" style="background:#1e293b; width:10px; height:10px;"></span> OBRIGATÓRIO
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <div class="header-legend">
+                <div class="legend-item">
+                    <span class="status-dot O legend-dot"></span>
+                    <span>Obrigatório</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="status-dot R" style="border:2px solid #f59e0b; width:10px; height:10px;"></span> RECOMENDÁVEL
+                <div class="legend-item">
+                    <span class="status-dot R legend-dot"></span>
+                    <span>Recomendável</span>
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="abrirModalTreinamento()">
-                + Novo Curso
+            <button class="btn-new-course admin-only" onclick="abrirModalTreinamento()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Novo Curso</span>
             </button>
-
-            <div id="btnAdminToggle" onclick="toggleAdminMode()" style="cursor: pointer; color: #94a3b8;">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            </div>
         </div>
     </header>
 
-    <div class="page-content">
-        
-        <div class="filters-container">
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Cargo</label>
-                <input type="text" id="roleFilter" list="roleList" class="filter-input" placeholder="Todos" oninput="atualizarFiltros()">
-                <datalist id="roleList"></datalist>
+    <nav class="filter-bar">
+        <div class="filter-group-left" style="display: flex; gap: 12px; align-items: center;">
+            
+            <div class="filter-wrapper">
+                <input type="search" list="roleList" id="roleFilter" class="filter-select combobox" 
+                       placeholder="Filtrar Cargo..." 
+                       oninput="atualizarFiltros()"
+                       onclick="this.value='';">
+               <datalist id="roleList"></datalist>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Categoria</label>
-                <input type="text" id="categoryFilter" list="catList" class="filter-input" placeholder="Todas" oninput="atualizarFiltros()" style="width: 140px;">
-                <datalist id="catList"></datalist>
+            <div class="filter-wrapper">
+                <input type="search" list="catList" id="categoryFilter" class="filter-select combobox" 
+                       placeholder="Categoria..." 
+                       oninput="atualizarFiltros()"
+                       onclick="this.value='';">
+               <datalist id="catList"></datalist>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
-                <label style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Busca Rápida</label>
-                <div style="position: relative;">
-                    <input type="text" id="textSearch" class="filter-input" placeholder="Filtrar..." oninput="atualizarFiltros()" style="width: 100%; padding-left: 32px;">
-                    <svg style="position: absolute; left: 10px; top: 10px; color: #94a3b8; width: 14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                </div>
+            <div id="statusWrapper" class="filter-wrapper" style="display: none;">
+                <select id="statusFilter" class="filter-select combobox" onchange="atualizarFiltros()" disabled></select>
             </div>
 
-            <div id="statusWrapper" style="display: none; flex-direction: column; gap: 4px;">
-                <label style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Status</label>
-                <select id="statusFilter" class="filter-input" onchange="atualizarFiltros()" style="width: 140px;">
-                    </select>
+            <div class="filter-wrapper">
+                <input type="text" id="textSearch" class="filter-select" placeholder="Busca rápida..." onkeyup="atualizarFiltros()">
             </div>
-
-            <button class="btn-icon" id="btnClearFilters" onclick="limparFiltros()" style="margin-top: 18px; border: none; background: none; cursor: pointer; color: #64748b;">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
+            
+            <div class="filter-wrapper" style="margin-left: auto;">
+                <button id="btnClearFilters" class="btn-clear-icon" title="Limpar Filtros" onclick="limparFiltros()" style="border:none; background:none; cursor:pointer;">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
         </div>
 
-        <div class="table-container">
-            <table id="matrixTable">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+        <div id="tagStatusContainer" class="hidden">
+            <span id="tagRole"></span><span id="tagCategory"></span><span id="tagStatus"></span>
+            <div id="hudDividerStatus"></div>
         </div>
-    </div>
+    </nav>
 
-    <div id="contextMenuOverlay" class="context-overlay hidden" onclick="fecharMenuContexto()"></div>
-    <div id="contextMenuCell" class="context-menu hidden">
-        <div class="ctx-item" onclick="selecionarOpcaoRelacao('mandatory')">
-            <span class="status-dot O" style="background:#1e293b;"></span> <span>Obrigatório</span>
-        </div>
-        <div class="ctx-item" onclick="selecionarOpcaoRelacao('recommended')">
-            <span class="status-dot R" style="border-color:#f59e0b;"></span> <span>Recomendável</span>
-        </div>
-        <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
-        <div class="ctx-item" onclick="selecionarOpcaoRelacao('none')" style="color: #ef4444;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
-            <span>Remover Regra</span>
-        </div>
+    <div class="table-wrapper">
+        <table id="matrixTable">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
     </div>
 
     <div id="modalTreino" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 id="modalTitle" style="margin-top: 0; color: #0f172a;">Novo Treinamento</h3>
-            
-            <input type="hidden" id="inputHiddenId">
-            
-            <label style="display:block; font-size:12px; color:#64748b; margin-top:16px; margin-bottom:4px;">Nome</label>
-            <input type="text" id="inputNomeTreino" class="filter-input" style="width: 100%; box-sizing: border-box;">
-            
-            <div style="display: flex; gap: 12px; margin-top: 12px;">
-                <div style="flex: 1;">
-                    <label style="display:block; font-size:12px; color:#64748b; margin-bottom:4px;">Categoria</label>
-                    <input type="text" id="inputCatTreino" list="catListModal" class="filter-input" style="width: 100%; box-sizing: border-box;">
+            <div class="modal-header">
+                <h3 id="modalTitle">Novo Treinamento</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="inputHiddenId">
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; font-size:12px; color:#64748b;">Nome</label>
+                    <input type="text" id="inputNomeTreino" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; font-size:12px; color:#64748b;">Categoria</label>
+                    <input type="text" id="inputCatTreino" list="catListModal" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
                     <datalist id="catListModal"></datalist>
                 </div>
-                <div style="width: 60px;">
-                    <label style="display:block; font-size:12px; color:#64748b; margin-bottom:4px;">Cor</label>
-                    <input type="color" id="inputCorTreino" value="#3b82f6" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px;">
-                    <span id="hexColorDisplay" style="display:none;"></span>
+                <div style="display:flex; gap:12px; margin-bottom: 12px;">
+                    <div style="flex:1">
+                        <label style="display:block; font-size:12px; color:#64748b;">Cor</label>
+                        <input type="color" id="inputCorTreino" value="#3b82f6" style="width:100%; height:38px;">
+                        <span id="hexColorDisplay" style="display:none"></span>
+                    </div>
+                    <div style="flex:1">
+                        <label style="display:block; font-size:12px; color:#64748b;">Link</label>
+                        <input type="text" id="inputLinkTreino" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; font-size:12px; color:#64748b;">Descrição</label>
+                    <textarea id="inputDescTreino" rows="3" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
                 </div>
             </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button id="btnExcluirTreino" onclick="excluirTreinamento()" style="display:none; margin-right:auto; color:red; border:none; background:none; cursor:pointer;">Excluir</button>
+                <button onclick="fecharModalTreinamento()" style="border:none; background:none; color:#64748b; cursor:pointer;">Cancelar</button>
+                <button class="btn-primary" onclick="salvarNovoTreinamento()" style="background:#0f172a; color:white; padding:8px 16px; border-radius:6px; border:none; cursor:pointer;">Salvar</button>
+            </div>
+        </div>
+    </div>
 
-            <label style="display:block; font-size:12px; color:#64748b; margin-top:12px; margin-bottom:4px;">Descrição</label>
-            <textarea id="inputDescTreino" rows="3" class="filter-input" style="width: 100%; box-sizing: border-box; font-family: sans-serif;"></textarea>
+    <div id="contextMenuCell" class="context-menu hidden">
+        <div class="context-menu-item" onclick="selecionarOpcaoRelacao('mandatory')">
+            <span class="status-dot O"></span> <span>Obrigatório</span>
+        </div>
+        <div class="context-menu-item" onclick="selecionarOpcaoRelacao('recommended')">
+            <span class="status-dot R"></span> <span>Recomendável</span>
+        </div>
+        <div class="context-menu-item" onclick="selecionarOpcaoRelacao('none')">
+            <span class="status-dot" style="border: 1px solid #cbd5e1;"></span> <span>Não Obrigatório</span>
+        </div>
+    </div>
+    <div id="contextMenuOverlay" class="modal-overlay hidden" style="background:transparent; z-index:90;" onclick="fecharMenuContexto()"></div>
+
+    <div id="modalConfirmacao" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>Confirmar Alteração</h3>
+            <p id="lblChangeDetail" style="margin: 16px 0; color:#64748b; font-size:13px;"></p>
             
-            <label style="display:block; font-size:12px; color:#64748b; margin-top:12px; margin-bottom:4px;">Link Externo</label>
-            <input type="text" id="inputLinkTreino" class="filter-input" style="width: 100%; box-sizing: border-box;">
+            <span id="auditTime" style="display:none"></span>
+            <span id="auditIP" style="display:none"></span>
 
-            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
-                <button id="btnExcluirTreino" onclick="excluirTreinamento()" style="display: none; margin-right: auto; background: #fee2e2; color: #ef4444; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 700; cursor: pointer;">Excluir</button>
-                
-                <button onclick="fecharModalTreinamento()" style="background: none; border: none; color: #64748b; font-weight: 600; cursor: pointer;">Cancelar</button>
-                <button onclick="salvarNovoTreinamento()" class="btn-primary">Salvar</button>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button onclick="fecharModalConfirmacao()" style="border:1px solid #cbd5e1; background:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancelar</button>
+                <button onclick="confirmarAcaoSegura()" style="background:#d97706; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Confirmar</button>
             </div>
         </div>
     </div>
 
-    <div id="modalConfirmacao" class="modal-overlay hidden" style="z-index: 100;">
-        <div class="modal-card" style="width: 380px;">
-            <div style="text-align: center;">
-                <div style="background: #fff7ed; width: 48px; height: 48px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                    <svg width="24" height="24" stroke="#d97706" fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-                <h3 style="margin: 0; color: #0f172a;">Confirmar Alteração</h3>
-                <p style="color: #64748b; font-size: 13px; margin: 8px 0 20px;">Esta ação será registrada no banco de dados.</p>
-            </div>
-
-            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: #94a3b8;">Usuário:</span>
-                    <span style="font-weight: 600; color: #0f172a;">Admin</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #94a3b8;">Detalhe:</span>
-                    <span id="lblChangeDetail" style="font-weight: 600; color: #0f172a;">-</span>
-                </div>
-                <span id="auditTime" style="display:none"></span>
-                <span id="auditIP" style="display:none"></span>
-            </div>
-
-            <div style="display: flex; justify-content: center; gap: 12px;">
-                <button onclick="fecharModalConfirmacao()" style="background: none; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 6px; cursor: pointer; color: #64748b; font-weight: 600;">Cancelar</button>
-                <button onclick="confirmarAcaoSegura()" style="background: #0f172a; color: #fff; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600;">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="../scripts-treinamentos/script.js"></script>
+    <script type="module" src="script.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const sessionRaw = localStorage.getItem('rh_session');
+            
+            // 1. SEM LOGIN? CHUTA PRA FORA
             if (!sessionRaw) {
+                console.warn("⛔ Acesso negado. Redirecionando...");
+                // Ajuste o caminho se seu login estiver na pasta anterior (../login.html) ou na mesma (index.html)
                 window.location.href = 'index.html'; 
                 return;
             }
+
             const session = JSON.parse(sessionRaw);
+
+            // 2. É ADMIN?
             if (session.role === 'ADMIN') {
                 document.body.classList.add('is-admin');
+                // A variável global window.isAdminMode é definida no script.js ou aqui se precisar
+                // window.isAdminMode = true; 
             } else {
-                document.getElementById('viewerWarning').style.display = 'flex';
-                const btnNew = document.querySelector('.btn-primary[onclick*="abrirModal"]');
-                if(btnNew) btnNew.style.display = 'none';
+                // É VISITANTE? Mostra badge
+                const badge = document.getElementById('viewerWarning');
+                if(badge) badge.style.display = 'flex';
             }
         });
     </script>
 
 </body>
 </html>
-
-
-
-
