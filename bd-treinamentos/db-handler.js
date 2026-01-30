@@ -154,3 +154,25 @@ async excluirTreinamento(id) {
 };
 
 
+// --- 6. GERENCIAR CARGOS (NOVO) ---
+    async salvarCargo(cargo) {
+        const payload = {
+            nome: cargo.nome,
+            cor_class: cargo.corClass, // Mapeia JS -> Banco
+            ordem: cargo.ordem || 99   // Se não tiver ordem, joga pro final
+        };
+
+        if (cargo.id) {
+            payload.id = cargo.id;
+        }
+
+        // Ajuste 'cargos' para o nome real da sua tabela, se for diferente
+        const { data, error } = await supabase
+            .from('cargos') 
+            .upsert(payload)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
