@@ -108,7 +108,6 @@ function init() {
 // =============================================================================
 // 3. RENDERIZAÇÃO DA MATRIZ (Versão com Menu de Contexto no Header)
 // =============================================================================
-
 function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrigatoriedade) {
     const table = document.getElementById('matrixTable');
     if (!table) return;
@@ -118,7 +117,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     colCache = {}; 
     lastHighlightedCol = null;
 
-    // --- A. Cabeçalho (Ajustado para Borda Hexagonal encostar no topo) ---
+    // --- A. Cabeçalho (Borda padronizada e alinhada ao topo) ---
     let headerHTML = '<tr><th class="top-left-corner"><div class="hud-card">' +
     '<div class="hud-top-label">' + icons.lupa + ' INSPEÇÃO</div>' +
     '<div id="hudScan" class="hud-scan"><div class="scan-icon-large">' + icons.lupa + '</div><div class="scan-msg">Explore a matriz<br>para ver detalhes</div></div>' +
@@ -133,8 +132,14 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
         // Identifica se é Hexadecimal ou classe legada
         const isHex = cargo.corClass && cargo.corClass.startsWith('#');
         
-        // Aplicação de Estilo: Padding zero na TH e Height 100% no wrapper garantem a borda no topo
-        const borderStyle = isHex ? `style="border-top: 4px solid ${cargo.corClass} !important; height: 100%; box-sizing: border-box;"` : '';
+        // PADRONIZAÇÃO: Definimos 8px para igualar a altura das bordas originais
+        const alturaBorda = "8px"; 
+        
+        // Aplicação de Estilo: Padding zero na TH e Height 100% garantem que a borda encoste no topo
+        const borderStyle = isHex 
+            ? `style="border-top: ${alturaBorda} solid ${cargo.corClass} !important; height: 100%; box-sizing: border-box;"` 
+            : `style="border-top: ${alturaBorda} solid transparent; height: 100%; box-sizing: border-box;"`;
+
         const extraClass = isHex ? '' : cargo.corClass;
 
         headerHTML += `
@@ -220,6 +225,8 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     vincularEventosLupa();
     vincularEventosDestaque();
 }
+
+
 
 // =============================================================================
 // 4. LÓGICA DE FILTROS & HUD
@@ -1049,6 +1056,7 @@ window.fecharMenus = function() {
 
     tempCargoIndexParaMenu = null;
 };
+
 
 
 
