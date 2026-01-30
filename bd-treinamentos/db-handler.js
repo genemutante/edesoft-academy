@@ -1,14 +1,15 @@
 // =============================================================================
-// db-handler.js - Camada de Serviço do Supabase (VERSÃO FINAL COMPLETA)
+// db-handler.js - Camada de Serviço do Supabase (Autocontida)
 // =============================================================================
 
+// Importa o Supabase direto da CDN (não precisa de arquivo local extra)
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 // Configuração (Suas chaves)
 const SUPABASE_URL = 'https://mtblwyrcidrszwvjgxao.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Ymx3eXJjaWRyc3p3dmpneGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MTg4NTUsImV4cCI6MjA4NTI5NDg1NX0.6CipXB_HI0t0Gcle3pTlZTe9rqoh-8-EhfxQy-VodH0';
 
-// Cliente Privado
+// Inicializa o Cliente
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export const DBHandler = {
@@ -63,7 +64,6 @@ export const DBHandler = {
         };
 
         if (treino.id) {
-            // Se tem ID, é Edição (Update)
             payload.id = treino.id;
         }
 
@@ -93,7 +93,7 @@ export const DBHandler = {
 
     // --- 4. ATUALIZAR REGRA (OBRIGATORIEDADE) ---
     async atualizarRegra(cargoId, treinoId, novoStatus) {
-        // 1. Limpa regra anterior (se existir)
+        // 1. Limpa regra anterior
         const { error: errDel } = await supabase
             .from('matriz_regras')
             .delete()
@@ -101,7 +101,7 @@ export const DBHandler = {
             
         if (errDel) throw errDel;
 
-        // 2. Insere nova regra (se não for remoção completa)
+        // 2. Insere nova regra
         if (novoStatus !== 'none') {
             const tipoBanco = novoStatus === 'mandatory' ? 'OBRIGATORIO' : 'RECOMENDADO';
             
@@ -125,12 +125,11 @@ export const DBHandler = {
                 usuario: usuario,
                 acao: acao,
                 detalhes: detalhes,
-                ip: '192.168.1.10' // IP Fixo ou capturado se possível
+                ip: '192.168.1.10'
             });
 
         if (error) {
             console.error("Erro silencioso ao gravar log:", error);
-            // Não damos throw para não travar a operação principal
         }
     },
 
