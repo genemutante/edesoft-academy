@@ -846,20 +846,24 @@ window.confirmarAcaoSegura = async function() {
 // GESTÃO DE CARGOS (MODAL & LOGICA)
 // =============================================================================
 
+// Adicione este ouvinte de evento (pode ser dentro do init ou global)
+document.getElementById('inputCorCargo')?.addEventListener('input', (e) => {
+    document.getElementById('hexColorDisplayCargo').textContent = e.target.value.toUpperCase();
+});
+
 window.abrirModalCargo = function() {
-    // IMPORTANTE: Limpa o ID para garantir que o banco crie um NOVO registro
-    const inputId = document.getElementById('inputHiddenIdCargo');
-    if (inputId) inputId.value = ''; 
-
-    document.getElementById('inputNomeCargo').value = '';
-    document.getElementById('inputCorCargo').value = 'default';
-    document.getElementById('inputOrdemCargo').value = '';
-
-    const modal = document.getElementById('modalCargo');
-    if(modal) modal.classList.remove('hidden');
+    window.fecharMenus(); // Garante limpeza de menus abertos
     
+    document.getElementById('inputHiddenIdCargo').value = '';
+    document.getElementById('inputNomeCargo').value = '';
+    document.getElementById('inputCorCargo').value = '#334155';
+    document.getElementById('hexColorDisplayCargo').textContent = '#334155';
+    document.getElementById('inputLinkCargo').value = '';
+    document.getElementById('inputOrdemCargo').value = '';
+    document.getElementById('modalTitleCargo').textContent = "Novo Cargo";
+
+    document.getElementById('modalCargo').classList.remove('hidden');
     setTimeout(() => document.getElementById('inputNomeCargo')?.focus(), 100);
-    obterIPReal();
 };
 
 window.fecharModalCargo = function() {
@@ -870,39 +874,54 @@ window.fecharModalCargo = function() {
 window.salvarNovoCargo = async function() {
     const idVal = document.getElementById('inputHiddenIdCargo').value;
     const nome = document.getElementById('inputNomeCargo').value.trim();
-    const corClass = document.getElementById('inputCorCargo').value;
+    // Agora capturamos o valor Hexadecimal do seletor de cores
+    const corHex = document.getElementById('inputCorCargo').value;
+    const link = document.getElementById('inputLinkCargo') ? document.getElementById('inputLinkCargo').value.trim() : '';
     const ordem = document.getElementById('inputOrdemCargo').value;
 
-    if (!nome) { alert("O nome do cargo é obrigatório!"); return; }
+    if (!nome) { 
+        alert("O nome do cargo é obrigatório!"); 
+        return; 
+    }
 
+    // Montamos o objeto de dados
     const dadosCargo = { 
         nome: nome, 
-        corClass: corClass,
+        corClass: corHex, // Armazenamos o Hexadecimal na coluna de estilo
+        link: link,
         ordem: ordem ? parseInt(ordem) : null
     };
     
-    // SÓ ADICIONA O ID SE ELE REALMENTE EXISTIR (EDIÇÃO)
-    // Se estiver vazio, o Supabase gerará um novo ID automaticamente (SERIAL)
+    // SEGURANÇA: Só adiciona o ID se for uma edição (campo preenchido)
+    // Se estiver vazio, o Supabase gera um novo ID automaticamente
     if (idVal && idVal !== '') {
         dadosCargo.id = parseInt(idVal);
     }
 
     const nomeUsuario = currentUser && currentUser.user ? currentUser.user : 'Admin';
     const acaoLog = dadosCargo.id ? 'EDITAR_CARGO' : 'CRIAR_CARGO';
-    const msgLog = `Cargo: ${nome} | Classe: ${corClass}`;
+    
+    // Log detalhado incluindo a cor e o link, seguindo o padrão de cursos
+    const msgLog = `Cargo: ${nome} | Cor: ${corHex.toUpperCase()}${link ? ' | Link: ' + link : ''}`;
 
     try {
+        // 1. Salva no Banco de Dados
         await DBHandler.salvarCargo(dadosCargo);
+        
+        // 2. Grava Log de Auditoria com IP Real
         const ipReal = await obterIPReal();
         await DBHandler.registrarLog(nomeUsuario, acaoLog, msgLog, ipReal);
 
+        // 3. Atualiza os dados locais e a interface
         const dadosAtualizados = await DBHandler.carregarDadosIniciais();
         config = dadosAtualizados;
+        if (typeof db !== 'undefined') db.dados = config;
         
         init(); 
         window.atualizarFiltros(); 
         window.fecharModalCargo();
-        alert("Cargo salvo com sucesso!");
+        
+        alert("Cargo e preferências salvos com sucesso!");
     } catch (e) {
         console.error("Erro ao salvar cargo:", e);
         alert("Erro ao salvar: " + e.message);
@@ -967,15 +986,20 @@ window.editarCargoContexto = function() {
     if (tempCargoIndexParaMenu === null) return;
     const cargo = config.cargos[tempCargoIndexParaMenu];
     
-    // Preenche o modal de cargo já existente
     document.getElementById('inputHiddenIdCargo').value = cargo.id;
     document.getElementById('inputNomeCargo').value = cargo.nome;
-    document.getElementById('inputCorCargo').value = cargo.corClass || 'default';
+    
+    // Define a cor (se for uma classe CSS antiga 'b-blue', define um cinza padrão ou mapeie)
+    const corHex = cargo.corClass?.startsWith('#') ? cargo.corClass : '#334155';
+    document.getElementById('inputCorCargo').value = corHex;
+    document.getElementById('hexColorDisplayCargo').textContent = corHex.toUpperCase();
+    
+    document.getElementById('inputLinkCargo').value = cargo.link || '';
     document.getElementById('inputOrdemCargo').value = cargo.ordem || '';
     
-    document.getElementById('modalTitleCargo').textContent = "Editar Cargo"; // Ajuste o ID do título se necessário
+    document.getElementById('modalTitleCargo').textContent = "Editar Cargo";
     document.getElementById('modalCargo').classList.remove('hidden');
-    fecharMenus();
+    window.fecharMenus();
 };
 
 window.excluirCargoContexto = async function() {
@@ -1024,6 +1048,7 @@ window.fecharMenus = function() {
 
     tempCargoIndexParaMenu = null;
 };
+
 
 
 
