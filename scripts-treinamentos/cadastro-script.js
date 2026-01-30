@@ -360,14 +360,43 @@ window.editar = async function editar(id) {
 };
 
 async function abrirFicha(id, mode = "view") {
+  // 1. Busca os dados e define o estado
   const colab = await DBHandler.buscarColaboradorPorId(id);
+  if (!colab) return;
+  
   currentId = colab.id;
 
+  // 2. Atualiza o Header Persistente (Nome e Badge de Status)
+  const headerNome = $("headerNome");
+  const statusBadge = $("formStatusBadge");
+
+  if (headerNome) {
+    headerNome.textContent = colab.nome || "Novo Colaborador";
+  }
+
+  if (statusBadge) {
+    const ativo = isAtivo(colab); // Usa sua função utilitária isAtivo
+    statusBadge.textContent = ativo ? "ATIVO" : "INATIVO";
+    statusBadge.className = `badge-status ${ativo ? "status-ativo" : "status-inativo"}`;
+    statusBadge.style.display = "inline-block";
+  }
+
+  // 3. Preenche os inputs do formulário
   preencherForm(colab);
+
+  // 4. Sincronização em tempo real (Nome no Header acompanha o Input)
+  const inputNome = $("inpNome"); // Certifique-se que o ID do input de nome é 'inpNome'
+  if (inputNome && headerNome) {
+    inputNome.oninput = (e) => {
+      headerNome.textContent = e.target.value || "Novo Colaborador";
+    };
+  }
+
+  // 5. Interface e Modos
   $("formTitle").textContent = mode === "edit" ? "Editar Colaborador" : "Ficha do Colaborador";
 
-  showView(false);
-  setModoForm(mode);
+  showView(false); // Alterna para a tela do formulário
+  setModoForm(mode); // Configura se os campos são editáveis ou apenas leitura
 }
 
 
@@ -579,6 +608,7 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
 
 
