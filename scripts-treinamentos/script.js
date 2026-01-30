@@ -861,18 +861,20 @@ document.getElementById('inputCorCargo')?.addEventListener('input', (e) => {
 });
 
 window.abrirModalCargo = function() {
-    window.fecharMenus(); // Garante limpeza de menus abertos
+    window.fecharMenus();
     
+    // Reset total dos campos
     document.getElementById('inputHiddenIdCargo').value = '';
     document.getElementById('inputNomeCargo').value = '';
-    document.getElementById('inputCorCargo').value = '#334155';
-    document.getElementById('hexColorDisplayCargo').textContent = '#334155';
-    document.getElementById('inputLinkCargo').value = '';
     document.getElementById('inputOrdemCargo').value = '';
+    
+    // Define cor padrão (ex: Cinza Slate)
+    const corPadrao = '#334155';
+    document.getElementById('inputCorCargo').value = corPadrao;
+    document.getElementById('hexColorDisplayCargo').textContent = corPadrao;
+    
     document.getElementById('modalTitleCargo').textContent = "Novo Cargo";
-
     document.getElementById('modalCargo').classList.remove('hidden');
-    setTimeout(() => document.getElementById('inputNomeCargo')?.focus(), 100);
 };
 
 window.fecharModalCargo = function() {
@@ -1080,6 +1082,7 @@ window.fecharMenus = function() {
 
     tempCargoIndexParaMenu = null;
 };
+
 
 
 
