@@ -896,6 +896,66 @@ window.salvarNovoCargo = async function() {
     }
 };
 
+let tempCargoIndexParaMenu = null;
+
+window.abrirMenuCargo = function(e, index) {
+    if (!window.isAdminMode) return;
+    e.preventDefault(); 
+    e.stopPropagation();
+
+    tempCargoIndexParaMenu = index;
+    const menu = document.getElementById('contextMenuHeader');
+    const overlay = document.getElementById('contextMenuOverlay'); // Reutiliza o overlay existente
+
+    menu.style.left = `${e.pageX}px`;
+    menu.style.top = `${e.pageY}px`;
+    menu.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+};
+
+window.editarCargoContexto = function() {
+    if (tempCargoIndexParaMenu === null) return;
+    const cargo = config.cargos[tempCargoIndexParaMenu];
+    
+    // Preenche o modal de cargo já existente
+    document.getElementById('inputHiddenIdCargo').value = cargo.id;
+    document.getElementById('inputNomeCargo').value = cargo.nome;
+    document.getElementById('inputCorCargo').value = cargo.corClass || 'default';
+    document.getElementById('inputOrdemCargo').value = cargo.ordem || '';
+    
+    document.getElementById('modalTitleCargo').textContent = "Editar Cargo"; // Ajuste o ID do título se necessário
+    document.getElementById('modalCargo').classList.remove('hidden');
+    fecharMenus();
+};
+
+window.excluirCargoContexto = async function() {
+    if (tempCargoIndexParaMenu === null) return;
+    const cargo = config.cargos[tempCargoIndexParaMenu];
+    
+    if (confirm(`⚠️ ATENÇÃO: Excluir o cargo "${cargo.nome}" removerá TODAS as regras vinculadas a ele na matriz.\n\nDeseja continuar?`)) {
+        try {
+            await DBHandler.excluirCargo(cargo.id); // Certifique-se de ter esta função no db-handler
+            const ipReal = await obterIPReal();
+            await DBHandler.registrarLog(currentUser.user, 'EXCLUIR_CARGO', `Excluiu cargo: ${cargo.nome}`, ipReal);
+            
+            // Refresh total
+            const dados = await DBHandler.carregarDadosIniciais();
+            config = dados;
+            init();
+            atualizarFiltros();
+            fecharMenus();
+            alert("Cargo excluído com sucesso!");
+        } catch (e) {
+            alert("Erro ao excluir cargo: " + e.message);
+        }
+    }
+};
+
+function fecharMenus() {
+    document.getElementById('contextMenuHeader')?.classList.add('hidden');
+    document.getElementById('contextMenuCell')?.classList.add('hidden');
+    document.getElementById('contextMenuOverlay')?.classList.add('hidden');
+}
 
 
 
