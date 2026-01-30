@@ -704,23 +704,29 @@ window.confirmarAcaoSegura = async function() {
             const cargo = config.cargos[cargoIndex];
             const cargoId = cargo.id;
 
+            // --- NOVO: BUSCA O NOME DO CURSO NA LISTA ---
+            const treinoEncontrado = config.treinamentos.find(t => t.id === treinoId);
+            const nomeDoCurso = treinoEncontrado ? treinoEncontrado.nome : `Curso ID ${treinoId}`;
+
             // 1. Atualiza Banco
             await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
 
-            // 2. Grava Log (Usando o Mapa Traduzido)
+            // 2. Grava Log (Agora com o nome do curso)
             const txtAntes = STATUS_MAP[statusAnterior] || statusAnterior;
             const txtDepois = STATUS_MAP[novoStatus] || novoStatus;
             
-            const msgLog = `Alterou regra do cargo '${cargo.nome}' (Curso ID ${treinoId}). De: ${txtAntes} -> Para: ${txtDepois}`;
+            // Mensagem ajustada:
+            const msgLog = `Cargo: ${cargo.nome} | Curso: ${nomeDoCurso} | Alterado de: ${txtAntes} -> Para: ${txtDepois}`;
+            
             await DBHandler.registrarLog(nomeUsuario, 'ALTERAR_REGRA', msgLog);
         }
         
-        // Refresh
+        // Refresh dos dados
         const dadosFrescos = await DBHandler.carregarDadosIniciais();
         config = dadosFrescos;
         db.dados = config;
 
-        // Redesenha mantendo filtros
+        // Redesenha a tela mantendo filtros
         const roleName = document.getElementById('roleFilter').value;
         const cargoId = getCargoIdByName(roleName);
         renderizarMatriz(
@@ -738,5 +744,14 @@ window.confirmarAcaoSegura = async function() {
         alert("Erro ao salvar alteração: " + e.message);
     }
 };
+        window.fecharModalConfirmacao();
+        alert("✅ Alteração salva e registrada no log!");
+
+    } catch (e) {
+        console.error("Erro na operação:", e);
+        alert("Erro ao salvar alteração: " + e.message);
+    }
+};
+
 
 
