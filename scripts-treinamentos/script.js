@@ -90,8 +90,9 @@ function init() {
 }
 
 
+
 // =============================================================================
-// 3. RENDERIZAÇÃO DA MATRIZ (Compacta e em 1 Linha)
+// 3. RENDERIZAÇÃO DA MATRIZ (Versão Ultra-Compacta)
 // =============================================================================
 function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrigatoriedade) {
     const table = document.getElementById('matrixTable');
@@ -102,7 +103,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     colCache = {}; 
     lastHighlightedCol = null;
 
-    // --- A. Cabeçalho (HUD + CARGOS) ---
+    // --- A. Cabeçalho (Sem alterações na altura do cabeçalho de cargos) ---
     let headerHTML = '<tr><th class="top-left-corner"><div class="hud-card">' +
     '<div class="hud-top-label">' + icons.lupa + ' INSPEÇÃO</div>' +
     '<div id="hudScan" class="hud-scan"><div class="scan-icon-large">' + icons.lupa + '</div><div class="scan-msg">Explore a matriz<br>para ver detalhes</div></div>' +
@@ -118,10 +119,16 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     headerHTML += '</tr>';
     thead.innerHTML = headerHTML;
 
-    // --- B. Corpo (LINHAS DE CURSOS COMPACTAS) ---
+    // --- B. Corpo (Linhas "Blindadas" contra altura excessiva) ---
     let bodyHTML = '';
+    
+    // Definição de Estilos Inline para garantir prioridade
+    const styleRow = 'height: 30px !important; max-height: 30px !important;';
+    const styleTH = 'height: 30px !important; max-height: 30px !important; padding: 0 !important; vertical-align: middle !important;';
+    const styleTD = 'height: 30px !important; max-height: 30px !important; padding: 0 !important; vertical-align: middle !important;';
+    const styleFlex = 'display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; width: 100%; box-sizing: border-box;';
+
     config.treinamentos.forEach((treino, treinoIndex) => {
-        // Filtros
         if (filtroCategoria && filtroCategoria !== 'all' && filtroCategoria !== '' && treino.categoria.trim() !== filtroCategoria.trim()) return;
         if (filtroTexto && !treino.nome.toLowerCase().includes(filtroTexto.toLowerCase())) return;
 
@@ -139,9 +146,11 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
             
             const activeClassCell = (filtroCargo === cargo.id.toString()) ? 'selected-col' : '';
             
-            // Célula Interativa
-            rowCellsHTML += `<td class="${activeClassCell}" data-col="${index}" data-status="${tipoReq}" onclick="abrirMenuContexto(event, ${index}, ${treino.id})">
-                                 <div class="cell-content">${ehO ? '<span class="status-dot O"></span>' : (ehR ? '<span class="status-dot R"></span>' : '')}</div>
+            // Aplica estilo forçado na TD também
+            rowCellsHTML += `<td class="${activeClassCell}" style="${styleTD}" data-col="${index}" data-status="${tipoReq}" onclick="abrirMenuContexto(event, ${index}, ${treino.id})">
+                                 <div class="cell-content" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                                    ${ehO ? '<span class="status-dot O"></span>' : (ehR ? '<span class="status-dot R"></span>' : '')}
+                                 </div>
                              </td>`;
         });
 
@@ -150,20 +159,18 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
             const badgeColor = treino.color || "#64748b";
             const categoriaDisplay = treino.categoria || "GERAL";
             
-            // --- AJUSTE DE ALTURA AQUI (De 34px para 28px e padding menor) ---
             bodyHTML += `
-            <tr data-row="${treinoIndex}">
-                <th style="--cat-color: ${badgeColor}; background-color: ${badgeColor}15; cursor: pointer; height: 15px; max-height: 15px; padding: 0;" 
+            <tr data-row="${treinoIndex}" style="${styleRow}">
+                <th style="--cat-color: ${badgeColor}; background-color: ${badgeColor}15; cursor: pointer; ${styleTH}" 
                     data-tooltip="${tooltipText}"
                     onclick="editarTreinamento(${treino.id})">
                     
-                    <div class="row-header-flex" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 6px; height: 100%; padding: 0 10px; width: 100%;">
-                        
-                        <div style="background: #ffffff; border: 1px solid ${badgeColor}; color: ${badgeColor}; font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; line-height: 1;">
+                    <div style="${styleFlex}">
+                        <div style="background: #ffffff; border: 1px solid ${badgeColor}; color: ${badgeColor}; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; line-height: 1;">
                             ${categoriaDisplay}
                         </div>
 
-                        <div style="color: #334155; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; text-align: left; line-height: 28px;">
+                        <div style="color: #334155; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; text-align: left; line-height: normal;">
                             ${treino.nome}
                         </div>
                     </div>
@@ -174,7 +181,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     });
     tbody.innerHTML = bodyHTML;
     
-    // Reconstrói Cache para Hover
+    // Reconstrói Cache
     const allCells = table.querySelectorAll('[data-col]');
     allCells.forEach(cell => {
         const cIndex = cell.dataset.col;
@@ -674,5 +681,6 @@ function fazerLogout() {
     document.body.classList.remove('is-admin');
     window.location.href = 'index.html'; 
 }
+
 
 
