@@ -167,3 +167,11 @@ export const DBHandler = {
     }
 };
 
+async excluirCargo(id) {
+    // 1. Limpa regras vinculadas ao cargo na matriz
+    await supabase.from('matriz_regras').delete().eq('cargo_id', id);
+    
+    // 2. Exclui o cargo de fato
+    const { error } = await supabase.from('cargos').delete().eq('id', id);
+    if (error) throw error;
+};
