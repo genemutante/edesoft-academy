@@ -1,802 +1,135 @@
-// =============================================================================
-// 1. IMPORTAÇÃO E VARIÁVEIS GLOBAIS
-// =============================================================================
-import { DBHandler } from '../bd-treinamentos/db-handler.js';
+// Importa o cliente do Supabase (ajuste o caminho se necessário)
+import { supabase } from './supabase-client.js';
 
-const icons = {
-    lupa: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`,
-    user: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`,
-    book: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>`,
-    check: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`,
-    star: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>`,
-    ban: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>`,
-    filterClear: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" /></svg>`
-};
+export const DBHandler = {
 
-// Variáveis globais de dados e controle
-let config = { treinamentos: [], cargos: [] };
-let db = { dados: config };
-let colCache = {}; 
-let lastHighlightedCol = null;
-
-// Controle de Contexto (Admin)
-let contextoAdmin = {
-    cargoId: null,
-    treinoId: null,
-    acaoPendente: null
-};
-let pendingChange = null; // Para o modal de auditoria
-
-// Variáveis para o Menu de Contexto
-let tempCargoIndex = null;
-let tempTreinoId = null;
-
-// Exposição Global de variáveis de controle
-window.isAdminMode = false;
-let currentUser = null;
-
-// =============================================================================
-// 2. INICIALIZAÇÃO (CONEXÃO COM BANCO)
-// =============================================================================
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        console.log("🔄 Iniciando sistema...");
-
-        // 1. Carrega dados via DBHandler
-        const dados = await DBHandler.carregarDadosIniciais();
-        config = dados; 
-        db = { dados: config };
-
-        console.log("✅ Dados carregados!", config);
+    // --- 1. LEITURA INICIAL ---
+    async carregarDadosIniciais() {
+        console.log("🔄 Buscando dados do Supabase...");
         
-        // 2. Inicializa a tela
-        init();
-        
-        // 3. Verifica Sessão
-        verificarSessaoInicial();
-        
-    } catch (e) {
-        console.error("⛔ Erro fatal na inicialização:", e);
-        alert("Erro ao conectar com o banco de dados. Veja o console.");
-    }
-});
+        // 1. Busca Treinamentos
+        const { data: treinosRaw, error: errT } = await supabase
+            .from('treinamentos')
+            .select('id, nome, categoria, descricao, cor, link_externo') 
+            .order('categoria', { ascending: true }) 
+            .order('nome', { ascending: true });
+            
+        if (errT) throw errT;
 
-function init() {
-    if (typeof config === 'undefined') return;
+        const treinos = treinosRaw.map(t => ({
+            id: t.id,
+            nome: t.nome,
+            categoria: t.categoria,
+            desc: t.descricao,
+            color: t.cor,
+            link: t.link_externo
+        }));
 
-    // --- 1. POPULAR DATALIST DE CARGOS ---
-    const roleList = document.getElementById('roleList');
-    if (roleList) {
-        roleList.innerHTML = '';
-        config.cargos.forEach(cargo => {
-            const option = document.createElement('option');
-            option.value = cargo.nome; 
-            roleList.appendChild(option);
-        });
-    }
+        // 2. Busca Cargos (Via View)
+        const { data: cargosRaw, error: errC } = await supabase
+            .from('view_matriz_cargos')
+            .select('*')
+            .order('id', { ascending: true });
 
-    // --- 2. POPULAR DATALIST DE CATEGORIAS ---
-    const catList = document.getElementById('catList');
-    const catListModal = document.getElementById('catListModal');
-    
-    if (catList) {
-        const categoriasUnicas = [...new Set(config.treinamentos.map(t => t.categoria))].filter(Boolean);
-        const optionsHTML = categoriasUnicas.sort().map(cat => `<option value="${cat}">`).join('');
-        
-        catList.innerHTML = optionsHTML;
-        if(catListModal) catListModal.innerHTML = optionsHTML;
-    }
+        if (errC) throw errC;
 
-    // --- 3. POPULAR SELECT DE STATUS ---
-    const statusSelect = document.getElementById('statusFilter'); 
-    if (statusSelect) {
-        statusSelect.innerHTML = `
-            <option value="all">Todas</option>
-            <option value="mandatory">Obrigatório</option>
-            <option value="recommended">Recomendável</option>
-            <option value="none">Não Obrigatório</option>
-        `;
-    }
+        // Mapeia cor_class para corClass
+        const cargos = cargosRaw.map(c => ({
+            ...c,
+            corClass: c.cor_class 
+        }));
 
-    const btnClear = document.getElementById('btnClearFilters');
-    if (btnClear) btnClear.innerHTML = icons.filterClear || "Limpar";
-    
-    // Chama o filtro inicial
-    atualizarFiltros(); 
-}
+        return { treinamentos: treinos, cargos: cargos };
+    }, // <--- VÍRGULA IMPORTANTE AQUI
 
-// =============================================================================
-// 3. RENDERIZAÇÃO DA MATRIZ
-// =============================================================================
-function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrigatoriedade) {
-    const table = document.getElementById('matrixTable');
-    if (!table) return;
-    const thead = table.querySelector('thead');
-    const tbody = table.querySelector('tbody');
+    // --- 2. ATUALIZAR REGRA (Obrigatoriedade) ---
+    async atualizarRegra(cargoId, treinoId, novoStatus) {
+        // Primeiro: Remove qualquer regra existente para esse par (limpeza)
+        const { error: errDel } = await supabase
+            .from('matriz_regras')
+            .delete()
+            .match({ cargo_id: cargoId, treinamento_id: treinoId });
 
-    // Reset do Cache
-    colCache = {}; 
-    lastHighlightedCol = null;
+        if (errDel) throw errDel;
 
-    // --- A. CABEÇALHO (HUD + CARGOS) ---
-    let headerHTML = '<tr><th class="top-left-corner"><div class="hud-card">' +
-    '<div class="hud-top-label">' + icons.lupa + ' INSPEÇÃO</div>' +
-    '<div id="hudScan" class="hud-scan">' +
-        '<div class="scan-icon-large">' + icons.lupa + '</div>' +
-        '<div class="scan-msg">Explore a matriz<br>para ver detalhes</div>' +
-    '</div>' +
-    '<div id="hudData" class="hud-data-state animate-entry" style="display:none;">' +
-        '<div id="hudBody" class="hud-body">' + 
-            '<div class="hud-group">' +
-                '<div class="hud-label-row"><div class="hud-icon">' + icons.user + '</div><span class="info-label">Cargo</span></div>' +
-                '<div id="hudRole" class="info-value role-value">-</div>' + 
-            '</div>' +
-            '<div class="hud-group">' +
-                '<div class="hud-label-row"><div class="hud-icon">' + icons.book + '</div><span class="info-label">Treinamento</span></div>' +
-                '<div id="hudCourse" class="info-value">-</div>' +
-            '</div>' +
-        '</div>' +
-    '</div>' + 
-    '<div id="hudStatus" class="hud-footer status-bg-none">' + icons.ban + ' Selecione</div>' +
-    '</div></th>';
-    
-    config.cargos.forEach((cargo, index) => {
-        if (filtroCargo !== 'all' && cargo.id.toString() !== filtroCargo) return;
-        const isSelected = (filtroCargo === cargo.id.toString());
-        const activeClass = isSelected ? 'selected-col-header' : '';
-        headerHTML += `<th class="${activeClass}" data-col="${index}" onclick="document.getElementById('roleFilter').value='${cargo.nome}'; atualizarFiltros();"><div class="role-wrapper ${cargo.corClass}"><div class="vertical-text">${cargo.nome}</div></div></th>`;
-    });
-    headerHTML += '</tr>';
-    thead.innerHTML = headerHTML;
+        // Segundo: Se o status não for 'none', insere a nova regra
+        if (novoStatus !== 'none') {
+            const tipoRegra = (novoStatus === 'mandatory') ? 'OBRIGATORIO' : 'RECOMENDADO';
+            
+            const { error: errIns } = await supabase
+                .from('matriz_regras')
+                .insert({
+                    cargo_id: cargoId,
+                    treinamento_id: treinoId,
+                    tipo: tipoRegra
+                });
 
-    // --- B. CORPO (LINHAS DE CURSOS) ---
-    let bodyHTML = '';
-    const treinamentosSorted = config.treinamentos;
-
-    treinamentosSorted.forEach((treino, treinoIndex) => {
-        // --- FILTROS ---
-        if (filtroCategoria && filtroCategoria !== 'all' && filtroCategoria !== '') {
-            const catAtual = (treino.categoria || "").trim();
-            const catFiltro = filtroCategoria.trim();
-            if (catAtual !== catFiltro) return;
+            if (errIns) throw errIns;
         }
+    }, // <--- VÍRGULA IMPORTANTE AQUI
 
-        if (filtroTexto && !treino.nome.toLowerCase().includes(filtroTexto.toLowerCase())) return;
+    // --- 3. SALVAR TREINAMENTO (Novo ou Edição) ---
+    async salvarTreinamento(treino) {
+        const payload = {
+            nome: treino.nome,
+            categoria: treino.categoria,
+            descricao: treino.desc,
+            link_externo: treino.link,
+            cor: treino.color
+        };
 
-        let rowCellsHTML = '';
-        let linhaPassa = (filtroObrigatoriedade === 'all'); 
+        if (treino.id) {
+            // UPDATE
+            const { data, error } = await supabase
+                .from('treinamentos')
+                .update(payload)
+                .eq('id', treino.id)
+                .select()
+                .single();
 
-        config.cargos.forEach((cargo, index) => {
-            if (filtroCargo !== 'all' && cargo.id.toString() !== filtroCargo) return;
-            
-            const ehO = cargo.obrigatorios?.includes(treino.id);
-            const ehR = cargo.recomendados?.includes(treino.id);
-            let tipoReq = ehO ? 'mandatory' : (ehR ? 'recommended' : 'none');
-            
-            if (filtroObrigatoriedade !== 'all' && tipoReq === filtroObrigatoriedade) linhaPassa = true;
-            
-            const isSelected = (filtroCargo === cargo.id.toString());
-            const activeClassCell = isSelected ? 'selected-col' : '';
-            
-            // Célula Interativa
-            rowCellsHTML += `<td class="${activeClassCell}" 
-                                 data-col="${index}" 
-                                 data-status="${tipoReq}" 
-                                 onclick="abrirMenuContexto(event, ${index}, ${treino.id})">
-                                 <div class="cell-content">
-                                    ${ehO ? '<span class="status-dot O"></span>' : (ehR ? '<span class="status-dot R"></span>' : '')}
-                                 </div>
-                             </td>`;
-        });
-
-        if (linhaPassa) {
-            const tooltipText = treino.desc ? treino.desc : "Sem descrição disponível.";
-            const badgeColor = treino.color || "#64748b";
-            const categoriaDisplay = treino.categoria || "GERAL";
-            
-            bodyHTML += `
-            <tr data-row="${treinoIndex}">
-                <th style="--cat-color: ${badgeColor}; background-color: ${badgeColor}15; cursor: pointer;" 
-                    data-tooltip="${tooltipText}"
-                    onclick="editarTreinamento(${treino.id})">
-                    
-                    <div class="row-header-content" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 6px; height: 100%; padding: 0 8px; width: 100%;">
-                        <div style="background: #ffffff; border: 1px solid ${badgeColor}; color: ${badgeColor}; font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); line-height: 1.2;">
-                            ${categoriaDisplay}
-                        </div>
-
-                        <div style="background: #ffffff; color: #1e293b; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 100px; border: 1px solid #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; min-width: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); line-height: 1.2;">
-                            ${treino.nome}
-                        </div>
-                    </div>
-                </th>
-                ${rowCellsHTML}
-            </tr>`;
-        }
-    });
-    tbody.innerHTML = bodyHTML;
-    
-    // Reconstrói cache para hover
-    const allCells = table.querySelectorAll('[data-col]');
-    allCells.forEach(cell => {
-        const cIndex = cell.dataset.col;
-        if (!colCache[cIndex]) colCache[cIndex] = [];
-        colCache[cIndex].push(cell);
-    });
-
-    // Reativa eventos do HUD
-    vincularEventosLupa();
-    vincularEventosDestaque();
-}
-
-// =============================================================================
-// 4. LÓGICA DE FILTROS & HUD
-// =============================================================================
-function getCargoIdByName(nome) {
-    if (!nome) return 'all';
-    const cargo = config.cargos.find(c => c.nome === nome);
-    return cargo ? cargo.id.toString() : 'all';
-}
-
-window.atualizarFiltros = function(valorCargoClick) {
-    if (valorCargoClick !== undefined) {
-        const cargoObj = config.cargos.find(c => c.id.toString() === valorCargoClick);
-        const inputRole = document.getElementById('roleFilter');
-        if (cargoObj) {
-            inputRole.value = (inputRole.value === cargoObj.nome) ? '' : cargoObj.nome;
-        }
-    }
-
-    const roleName = document.getElementById('roleFilter').value;
-    const roleVal = getCargoIdByName(roleName); 
-    let catVal = document.getElementById('categoryFilter').value;
-    if (catVal === '') catVal = 'all'; 
-
-    const obrigSelect = document.getElementById('statusFilter');
-    const statusWrapper = document.getElementById('statusWrapper'); 
-    const textVal = document.getElementById('textSearch').value.toLowerCase();
-
-    if (roleVal === 'all') {
-        if (statusWrapper) statusWrapper.style.display = 'none';
-        obrigSelect.value = 'all';
-        obrigSelect.disabled = true;
-    } else {
-        if (statusWrapper) statusWrapper.style.display = 'flex';
-        obrigSelect.disabled = false;
-    }
-
-    atualizarFiltroHUD(roleVal, catVal, obrigSelect.value);
-    renderizarMatriz(roleVal, catVal, textVal, obrigSelect.value);
-}
-
-function atualizarFiltroHUD(cargoId, categoria, obrigatoriedade) {
-    const tagRole = document.getElementById('tagRole');
-    const tagCat = document.getElementById('tagCategory');
-    const tagStatus = document.getElementById('tagStatus');
-    const tagStatusContainer = document.getElementById('tagStatusContainer');
-    const hudDividerStatus = document.getElementById('hudDividerStatus');
-
-    if (!tagRole) return; 
-
-    let roleText = "Todos";
-    if (cargoId !== 'all') {
-        const cargoObj = config.cargos.find(c => c.id.toString() === cargoId);
-        if (cargoObj) roleText = cargoObj.nome;
-    }
-    
-    tagRole.textContent = roleText;
-    tagRole.style.color = "#3b82f6"; 
-    tagCat.textContent = categoria === '' || categoria === 'all' ? "Todas" : categoria;
-    tagCat.style.color = "#3b82f6"; 
-
-    const obrigatoriedadeMap = { mandatory: 'Obrigatório', recommended: 'Recomendável', none: 'Não Obrigatório', all: 'Todas' };
-    tagStatus.textContent = obrigatoriedadeMap[obrigatoriedade] || "Todas";
-    tagStatus.style.color = "#3b82f6"; 
-    
-    if (tagStatusContainer && hudDividerStatus) {
-        if (obrigatoriedade !== 'all') {
-            tagStatusContainer.classList.remove('hidden');
-            hudDividerStatus.classList.remove('hidden');
+            if (error) throw error;
+            return data;
         } else {
-            tagStatusContainer.classList.add('hidden');
-            hudDividerStatus.classList.add('hidden');
+            // INSERT
+            const { data, error } = await supabase
+                .from('treinamentos')
+                .insert(payload)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
         }
-    }
-}
+    }, // <--- VÍRGULA IMPORTANTE AQUI
 
-window.limparFiltros = function() {
-    document.getElementById('roleFilter').value = '';
-    document.getElementById('categoryFilter').value = '';
-    document.getElementById('textSearch').value = '';
-    document.getElementById('statusFilter').value = 'all';
-    window.atualizarFiltros();
-}
+    // --- 4. EXCLUIR TREINAMENTO ---
+    async excluirTreinamento(id) {
+        // Primeiro remove as regras associadas (Cascata manual por segurança)
+        await supabase.from('matriz_regras').delete().eq('treinamento_id', id);
 
-// =============================================================================
-// 5. GESTÃO DE MODAIS E TREINAMENTOS
-// =============================================================================
+        // Remove o treinamento
+        const { error } = await supabase
+            .from('treinamentos')
+            .delete()
+            .eq('id', id);
 
-window.abrirModalTreinamento = function() {
-    const modal = document.getElementById('modalTreino');
-    if (modal) {
-        modal.classList.remove('hidden');
-        
-        const datalist = document.getElementById('catListModal');
-        if (datalist && config.treinamentos) {
-            datalist.innerHTML = '';
-            const cats = [...new Set(config.treinamentos.map(t => t.categoria))].filter(Boolean).sort();
-            cats.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat;
-                datalist.appendChild(opt);
+        if (error) throw error;
+    }, // <--- VÍRGULA IMPORTANTE AQUI
+
+    // --- 5. REGISTRAR LOG (AUDITORIA) ---
+    async registrarLog(usuario, acao, detalhes) {
+        const { error } = await supabase
+            .from('logs_sistema')
+            .insert({
+                usuario: usuario,
+                acao: acao,
+                detalhes: detalhes,
+                ip: '192.168.1.10' // Pode pegar via API externa se quiser no futuro
             });
-        }
-        
-        setTimeout(() => {
-            const input = document.getElementById('inputNomeTreino');
-            if(input) input.focus();
-        }, 100);
-    }
-};
 
-window.fecharModalTreinamento = function() {
-    const modal = document.getElementById('modalTreino');
-    if (modal) modal.classList.add('hidden');
-    
-    const fields = ['inputHiddenId', 'inputNomeTreino', 'inputCatTreino', 'inputDescTreino', 'inputLinkTreino'];
-    fields.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.value = '';
-    });
-
-    const colorPicker = document.getElementById('inputCorTreino');
-    if(colorPicker) colorPicker.value = '#3b82f6';
-    const hexDisplay = document.getElementById('hexColorDisplay');
-    if(hexDisplay) hexDisplay.textContent = '#3B82F6';
-    
-    const title = document.getElementById('modalTitle');
-    if(title) title.textContent = "Novo Treinamento";
-    
-    const btnDel = document.getElementById('btnExcluirTreino');
-    if(btnDel) btnDel.style.display = 'none';
-};
-
-window.salvarNovoTreinamento = async function() {
-    const idExistente = document.getElementById('inputHiddenId').value;
-    const nome = document.getElementById('inputNomeTreino').value.trim();
-    const categoria = document.getElementById('inputCatTreino').value.trim();
-    const desc = document.getElementById('inputDescTreino').value.trim();
-    const link = document.getElementById('inputLinkTreino').value.trim();
-    const cor = document.getElementById('inputCorTreino').value;
-
-    if (!nome || !categoria) { alert("Preencha Nome e Categoria!"); return; }
-
-    const dadosFormulario = { nome, categoria: categoria.toUpperCase(), desc, link, color: cor };
-    if (idExistente) dadosFormulario.id = parseInt(idExistente);
-
-    try {
-        await DBHandler.salvarTreinamento(dadosFormulario);
-        
-        const dadosAtualizados = await DBHandler.carregarDadosIniciais();
-        config = dadosAtualizados;
-        db.dados = config; 
-        
-        init(); 
-        window.atualizarFiltros();
-        window.fecharModalTreinamento();
-        alert("Salvo com sucesso!");
-
-    } catch (e) {
-        console.error(e);
-        alert("Erro ao salvar no banco.");
-    }
-};
-
-window.editarTreinamento = function(id) {
-    if (!window.isAdminMode) return; 
-
-    const treino = config.treinamentos.find(t => t.id === id);
-    if (!treino) return;
-
-    document.getElementById('inputHiddenId').value = treino.id;
-    document.getElementById('inputNomeTreino').value = treino.nome;
-    document.getElementById('inputCatTreino').value = treino.categoria;
-    document.getElementById('inputDescTreino').value = treino.desc || '';
-    document.getElementById('inputLinkTreino').value = treino.link || '';
-    
-    const cor = treino.color || '#3b82f6';
-    document.getElementById('inputCorTreino').value = cor;
-    
-    const hexDisplay = document.getElementById('hexColorDisplay');
-    if(hexDisplay) {
-        hexDisplay.textContent = cor.toUpperCase();
-        hexDisplay.style.display = 'inline';
-    }
-    
-    document.getElementById('modalTitle').textContent = "Editar Treinamento";
-    document.getElementById('btnExcluirTreino').style.display = 'block';
-
-    window.abrirModalTreinamento();
-};
-
-window.excluirTreinamento = async function() {
-    const id = document.getElementById('inputHiddenId').value;
-    if (!id) return;
-
-    if (confirm("Tem certeza que deseja EXCLUIR este treinamento?")) {
-        try {
-            await DBHandler.excluirTreinamento(parseInt(id));
-            const dadosAtualizados = await DBHandler.carregarDadosIniciais();
-            config = dadosAtualizados;
-            db.dados = config;
-
-            window.fecharModalTreinamento();
-            init();
-            window.atualizarFiltros();
-            alert("Excluído com sucesso!");
-        } catch (e) {
-            console.error("Erro ao excluir:", e);
-            alert("Erro ao excluir.");
+        if (error) {
+            console.error("Erro silencioso ao gravar log:", error);
+            // Não damos throw aqui para não travar a operação principal se o log falhar
         }
     }
 };
-
-// Automação de Cor por Categoria
-const inputCat = document.getElementById('inputCatTreino');
-const inputCor = document.getElementById('inputCorTreino');
-if (inputCat && inputCor) {
-    inputCor.addEventListener('input', (e) => {
-        const hexDisplay = document.getElementById('hexColorDisplay');
-        if(hexDisplay) hexDisplay.textContent = e.target.value.toUpperCase();
-    });
-
-    inputCat.addEventListener('input', function() {
-        const valorDigitado = this.value.trim();
-        if (!valorDigitado || typeof config === 'undefined') return;
-
-        const match = config.treinamentos.find(t => 
-            t.categoria.toUpperCase() === valorDigitado.toUpperCase()
-        );
-
-        if (match && match.color) {
-            inputCor.value = match.color;
-            const hexDisplay = document.getElementById('hexColorDisplay');
-            if (hexDisplay) hexDisplay.textContent = match.color.toUpperCase();
-        }
-    });
-}
-
-// =============================================================================
-// 6. EVENTOS DE UI (HUD Hover e Destaques)
-// =============================================================================
-
-function vincularEventosLupa() {
-    const table = document.getElementById('matrixTable');
-    if (!table) return;
-
-    table.onmouseover = null;
-    table.onmouseleave = null;
-
-    table.onmouseover = (e) => {
-        const target = e.target;
-        const td = target.closest('td');
-        const thRow = target.closest('tbody th');
-        const thCol = target.closest('thead th');
-
-        if (!td && !thRow && !thCol) return;
-
-        const hudScan = document.getElementById('hudScan');
-        const hudData = document.getElementById('hudData');
-        const hudRole = document.getElementById('hudRole');
-        const hudCourse = document.getElementById('hudCourse');
-        const hudStatus = document.getElementById('hudStatus');
-        const hudBody = document.getElementById('hudBody'); 
-
-        if (!hudData || !hudBody) return;
-
-        const getCleanCourseName = (rowIndex) => {
-            if (!config.treinamentos[rowIndex]) return "-";
-            const fullName = config.treinamentos[rowIndex].nome;
-            return fullName.includes(':') ? fullName.substring(fullName.indexOf(':') + 1).trim() : fullName;
-        };
-
-        const resetBackgroundClasses = () => {
-            hudBody.classList.remove('bg-mandatory', 'bg-recommended', 'bg-none');
-        };
-
-        if (td && td.dataset.col) {
-            const colIndex = parseInt(td.dataset.col);
-            const tr = td.closest('tr');
-            const rowIndex = parseInt(tr.dataset.row);
-            const tipoReq = td.dataset.status;
-
-            hudScan.style.display = 'none';
-            hudData.style.display = 'flex';
-            hudRole.textContent = config.cargos[colIndex] ? config.cargos[colIndex].nome : "-";
-            hudCourse.textContent = getCleanCourseName(rowIndex);
-
-            resetBackgroundClasses();
-            if (tipoReq === 'mandatory') hudBody.classList.add('bg-mandatory');
-            else if (tipoReq === 'recommended') hudBody.classList.add('bg-recommended');
-            else hudBody.classList.add('bg-none');
-
-            hudStatus.className = 'hud-footer status-bg-' + tipoReq;
-            if (tipoReq === 'mandatory') hudStatus.innerHTML = `${icons.check} Obrigatório`;
-            else if (tipoReq === 'recommended') hudStatus.innerHTML = `${icons.star} Recomendável`;
-            else hudStatus.innerHTML = `${icons.ban} Não Obrigatório`;
-        } 
-        else if (thRow && thRow.parentElement.dataset.row) {
-            const rowIndex = parseInt(thRow.parentElement.dataset.row);
-            hudScan.style.display = 'none';
-            hudData.style.display = 'flex';
-            hudRole.textContent = "-";
-            hudCourse.textContent = getCleanCourseName(rowIndex);
-            resetBackgroundClasses();
-            hudBody.classList.add('bg-none');
-            hudStatus.className = 'hud-footer status-bg-none';
-            hudStatus.innerHTML = `${icons.ban} Selecione um Cargo`;
-        }
-        else if (thCol && thCol.dataset.col) {
-            const colIndex = parseInt(thCol.dataset.col);
-            hudScan.style.display = 'none';
-            hudData.style.display = 'flex';
-            hudRole.textContent = config.cargos[colIndex] ? config.cargos[colIndex].nome : "-";
-            hudCourse.textContent = "-";
-            resetBackgroundClasses();
-            hudBody.classList.add('bg-none');
-            hudStatus.className = 'hud-footer status-bg-none';
-            hudStatus.innerHTML = `${icons.user} Visualizando Cargo`;
-        }
-    };
-    
-    table.onmouseleave = () => {
-        const hudScan = document.getElementById('hudScan');
-        const hudData = document.getElementById('hudData');
-        const hudStatus = document.getElementById('hudStatus');
-        
-        if (hudScan && hudData) {
-            hudScan.style.display = 'flex';
-            hudData.style.display = 'none';
-            if (hudStatus) {
-                hudStatus.className = 'hud-footer status-bg-none';
-                hudStatus.innerHTML = `${icons.ban} Selecione`;
-            }
-        }
-    };
-}
-
-function vincularEventosDestaque() {
-    const table = document.getElementById('matrixTable');
-    if (!table) return;
-    
-    table.removeEventListener('mouseover', handleMouseOverOpt);
-    table.removeEventListener('mouseleave', limparDestaqueOpt);
-    table.addEventListener('mouseover', handleMouseOverOpt);
-    table.addEventListener('mouseleave', limparDestaqueOpt);
-}
-
-function handleMouseOverOpt(e) {
-    const target = e.target;
-    const el = target.closest('[data-col]');
-    
-    if (!el) {
-        if (lastHighlightedCol !== null) limparDestaqueOpt();
-        return;
-    }
-    
-    const newColIndex = el.dataset.col;
-    if (lastHighlightedCol === newColIndex) return;
-    
-    limparDestaqueOpt();
-    destacarColunaOpt(newColIndex);
-}
-
-function destacarColunaOpt(index) {
-    lastHighlightedCol = index;
-    const cellsToHighlight = colCache[index];
-    if (cellsToHighlight) {
-        for (let i = 0; i < cellsToHighlight.length; i++) {
-            const cell = cellsToHighlight[i];
-            if (cell.tagName === 'TH') {
-                cell.classList.add('hover-col-header');
-            } else {
-                cell.classList.add('hover-col');
-            }
-        }
-    }
-}
-
-function limparDestaqueOpt() {
-    if (lastHighlightedCol !== null) {
-        const cellsToClear = colCache[lastHighlightedCol];
-        if (cellsToClear) {
-            for (let i = 0; i < cellsToClear.length; i++) {
-                const cell = cellsToClear[i];
-                cell.classList.remove('hover-col', 'hover-col-header');
-            }
-        }
-        lastHighlightedCol = null;
-    }
-}
-
-// =============================================================================
-// 7. CONTROLE DE ACESSO E ADMIN (MENU CONTEXTO & AUDITORIA)
-// =============================================================================
-
-window.abrirMenuContexto = function(e, cargoIndex, treinoId) {
-    if (!window.isAdminMode) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    tempCargoIndex = parseInt(cargoIndex);
-    tempTreinoId = parseInt(treinoId);
-
-    const menu = document.getElementById('contextMenuCell');
-    const overlay = document.getElementById('contextMenuOverlay');
-    
-    let x = e.pageX;
-    let y = e.pageY;
-    if (x + 160 > window.innerWidth) x -= 160; // Ajuste borda direita
-    
-    menu.style.left = `${x}px`;
-    menu.style.top = `${y}px`;
-    menu.classList.remove('hidden');
-    overlay.classList.remove('hidden');
-};
-
-window.fecharMenuContexto = function() {
-    const menu = document.getElementById('contextMenuCell');
-    const overlay = document.getElementById('contextMenuOverlay');
-    if (menu) menu.classList.add('hidden');
-    if (overlay) overlay.classList.add('hidden');
-};
-
-window.selecionarOpcaoRelacao = function(novoStatus) {
-    if (tempCargoIndex === null || tempTreinoId === null) return;
-    
-    const cargo = config.cargos[tempCargoIndex];
-    if (!cargo) return;
-
-    const mapa = { 
-        'mandatory': '<span style="color:#ef4444; font-weight:800;">OBRIGATÓRIO</span>', 
-        'recommended': '<span style="color:#eab308; font-weight:800;">RECOMENDÁVEL</span>', 
-        'none': '<span style="color:#94a3b8; font-weight:800;">NÃO OBRIGATÓRIO</span>' 
-    };
-    
-    const msg = `Alterar regra para: ${mapa[novoStatus]}`;
-    fecharMenuContexto();
-    
-    exibirModalAuditoria(msg, {
-        TIPO: 'RELACAO',
-        cargoIndex: tempCargoIndex,
-        treinoId: tempTreinoId,
-        novoStatus: novoStatus
-    });
-};
-
-function exibirModalAuditoria(mensagemHTML, changeObject) {
-    pendingChange = changeObject;
-    const lbl = document.getElementById('lblChangeDetail');
-    if(lbl) lbl.innerHTML = mensagemHTML;
-    
-    const timeEl = document.getElementById('auditTime');
-    if(timeEl) timeEl.textContent = new Date().toLocaleString('pt-BR');
-
-    const elIP = document.getElementById('auditIP');
-    if(elIP) {
-        elIP.textContent = "Verificando...";
-        setTimeout(() => elIP.textContent = "192.168.1." + Math.floor(Math.random() * 255), 300);
-    }
-
-    const modal = document.getElementById('modalConfirmacao');
-    if(modal) modal.classList.remove('hidden');
-}
-
-window.fecharModalConfirmacao = function() {
-    const modal = document.getElementById('modalConfirmacao');
-    if(modal) modal.classList.add('hidden');
-    pendingChange = null;
-};
-
-window.confirmarAcaoSegura = async function() {
-    if (!pendingChange) return;
-
-    // Pega o usuário da sessão (ou define 'Admin' se não tiver)
-    const usuarioLogado = currentUser ? currentUser.user : 'Admin';
-
-    try {
-        // --- CENÁRIO A: MUDANÇA DE REGRA ---
-        if (pendingChange.TIPO === 'RELACAO') {
-            const { cargoIndex, treinoId, novoStatus } = pendingChange;
-            const cargo = config.cargos[cargoIndex];
-            const cargoId = cargo.id;
-
-            // 1. Executa a Ação Real
-            await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
-
-            // 2. Grava o Log (Auditoria)
-            const msgLog = `Alterou regra do cargo '${cargo.nome}' (ID ${cargoId}) para o treino ID ${treinoId}. Novo status: ${novoStatus}`;
-            await DBHandler.registrarLog(usuarioLogado, 'ALTERAR_REGRA', msgLog);
-        }
-        
-        // --- CENÁRIO B: EDIÇÃO DE TREINAMENTO ---
-        // (Caso implemente edição via auditoria futuramente)
-        
-        // 3. Refresh na Tela
-        const dadosFrescos = await DBHandler.carregarDadosIniciais();
-        config = dadosFrescos;
-        if (typeof db !== 'undefined') db.dados = config;
-
-        window.atualizarFiltros(); 
-        fecharModalConfirmacao();
-        
-        // Feedback
-        alert("✅ Alteração salva e registrada no log!");
-
-    } catch (e) {
-        console.error("Erro na operação:", e);
-        alert("Erro ao salvar: " + e.message);
-    }
-};
-
-// =============================================================================
-// 8. CONTROLE DE SESSÃO
-// =============================================================================
-
-function verificarSessaoInicial() {
-    const sessionRaw = localStorage.getItem('rh_session');
-    if (sessionRaw) {
-        try {
-            currentUser = JSON.parse(sessionRaw);
-            console.log("👤 Usuário logado:", currentUser.user);
-            if (currentUser.role === 'ADMIN') ativarModoAdmin(true);
-        } catch (e) { console.error("Erro ao ler sessão", e); }
-    } else {
-        console.log("👤 Acesso anônimo (Leitura)");
-    }
-}
-
-window.toggleAdminMode = function() {
-    if (currentUser) {
-        if (confirm(`Deseja sair da conta de ${currentUser.user}?`)) fazerLogout();
-    } else {
-        window.location.href = 'login.html'; 
-    }
-};
-
-function ativarModoAdmin(silencioso = false) {
-    window.isAdminMode = true;
-    document.body.classList.add('is-admin');
-    
-    const btn = document.getElementById('btnAdminToggle');
-    const iconClosed = document.getElementById('iconLockClosed');
-    const iconOpen = document.getElementById('iconLockOpen');
-    
-    if (btn) {
-        btn.classList.add('unlocked');
-        btn.title = "Clique para Sair (Logout)";
-        if(iconClosed) iconClosed.style.display = 'none';
-        if(iconOpen) iconOpen.style.display = 'block';
-    }
-}
-
-function fazerLogout() {
-    window.isAdminMode = false;
-    currentUser = null;
-    localStorage.removeItem('rh_session');
-    document.body.classList.remove('is-admin');
-    
-    const btn = document.getElementById('btnAdminToggle');
-    const iconClosed = document.getElementById('iconLockClosed');
-    const iconOpen = document.getElementById('iconLockOpen');
-
-    if (btn) {
-        btn.classList.remove('unlocked');
-        btn.title = "Acesso Restrito";
-        if(iconClosed) iconClosed.style.display = 'block';
-        if(iconOpen) iconOpen.style.display = 'none';
-    }
-    window.location.href = 'index.html'; 
-}
-
