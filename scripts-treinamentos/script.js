@@ -684,8 +684,9 @@ window.selecionarOpcaoRelacao = function(novoStatus) {
 // =============================================================================
 // 11. CENTRAL DE SEGURANÇA E AUDITORIA (LOG COM NOME)
 // =============================================================================
-function exibirModalAuditoria(mensagemHTML, changeObject) {
+async function exibirModalAuditoria(mensagemHTML, changeObject) {
     pendingChange = changeObject;
+
     const lbl = document.getElementById('lblChangeDetail');
     if(lbl) lbl.innerHTML = mensagemHTML;
     
@@ -694,8 +695,10 @@ function exibirModalAuditoria(mensagemHTML, changeObject) {
 
     const elIP = document.getElementById('auditIP');
     if(elIP) {
-        elIP.textContent = "Verificando...";
-        setTimeout(() => elIP.textContent = "192.168.1." + Math.floor(Math.random() * 255), 300);
+        elIP.textContent = "Obtendo IP real...";
+        const ipReal = await obterIPReal(); // Busca o IP real
+        elIP.textContent = ipReal;
+        pendingChange.ipReal = ipReal; // Armazena para usar na confirmação
     }
 
     const modal = document.getElementById('modalConfirmacao');
@@ -714,42 +717,30 @@ window.confirmarAcaoSegura = async function() {
 
     try {
         if (pendingChange.TIPO === 'RELACAO') {
-            const { cargoIndex, treinoId, statusAnterior, novoStatus } = pendingChange;
+            const { cargoIndex, treinoId, statusAnterior, novoStatus, ipReal } = pendingChange;
             const cargo = config.cargos[cargoIndex];
             const cargoId = cargo.id;
 
-            // --- NOVO: BUSCA O NOME DO CURSO NA LISTA ---
             const treinoEncontrado = config.treinamentos.find(t => t.id === treinoId);
             const nomeDoCurso = treinoEncontrado ? treinoEncontrado.nome : `Curso ID ${treinoId}`;
 
             // 1. Atualiza Banco
             await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
 
-            // 2. Grava Log (Agora com o nome do curso)
+            // 2. Grava Log (Passando o IP real capturado)
             const txtAntes = STATUS_MAP[statusAnterior] || statusAnterior;
             const txtDepois = STATUS_MAP[novoStatus] || novoStatus;
-            
-            // Mensagem ajustada:
             const msgLog = `Cargo: ${cargo.nome} | Curso: ${nomeDoCurso} | Alterado de: ${txtAntes} -> Para: ${txtDepois}`;
             
-            await DBHandler.registrarLog(nomeUsuario, 'ALTERAR_REGRA', msgLog);
+            await DBHandler.registrarLog(nomeUsuario, 'ALTERAR_REGRA', msgLog, ipReal);
         }
         
-        // Refresh dos dados
+        // ... restante do código de refresh da tela (igual ao anterior)
         const dadosFrescos = await DBHandler.carregarDadosIniciais();
         config = dadosFrescos;
-        db.dados = config;
+        if (typeof db !== 'undefined') db.dados = config;
 
-        // Redesenha a tela mantendo filtros
-        const roleName = document.getElementById('roleFilter').value;
-        const cargoId = getCargoIdByName(roleName);
-        renderizarMatriz(
-            cargoId, 
-            document.getElementById('categoryFilter').value || 'all', 
-            document.getElementById('textSearch').value, 
-            document.getElementById('statusFilter').value
-        );
-
+        atualizarFiltros();
         window.fecharModalConfirmacao();
         alert("✅ Alteração salva e registrada no log!");
 
@@ -758,6 +749,15 @@ window.confirmarAcaoSegura = async function() {
         alert("Erro ao salvar alteração: " + e.message);
     }
 };
+        window.fecharModalConfirmacao();
+        alert("✅ Alteração salva e registrada no log!");
+
+    } catch (e) {
+        console.error("Erro na operação:", e);
+        alert("Erro ao salvar alteração: " + e.message);
+    }
+};
+
 
 
 
