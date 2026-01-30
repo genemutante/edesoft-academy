@@ -7,7 +7,7 @@ let CARGOS_MAP = new Map();
 let sortState = { key: "nome", asc: true };
 
 let currentId = null;
-let currentMode = "view"; // "view" | "edit" | "new"
+let Mode = "view"; // "view" | "edit" | "new"
 
 // ---------- Utils ----------
 function $(id) {
@@ -273,7 +273,7 @@ function limparForm() {
 }
 
 function setModoForm(mode) {
-  currentMode = mode;
+  
 
   console.log("⚙️ Modo atual:", mode);
 
@@ -548,4 +548,5 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
