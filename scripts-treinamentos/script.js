@@ -328,60 +328,107 @@ window.salvarNovoTreinamento = async function() {
 
     if (!nome || !categoria) { alert("Preencha Nome e Categoria!"); return; }
 
+    // Prepara objeto
     const dadosFormulario = { nome, categoria: categoria.toUpperCase(), desc, link, color: cor };
     if (idExistente) dadosFormulario.id = parseInt(idExistente);
 
+    // Dados para o Log
+    const nomeUsuario = currentUser && currentUser.user ? currentUser.user : 'Admin';
+    const acaoLog = idExistente ? 'EDITAR_CURSO' : 'CRIAR_CURSO';
+    const detalhesLog = `Curso: ${nome} | Categoria: ${categoria.toUpperCase()}`;
+
     try {
+        // 1. Salva no Banco (Operação Principal)
         await DBHandler.salvarTreinamento(dadosFormulario);
+        
+        // 2. Captura IP e Grava Log (Auditoria)
+        const ipReal = await obterIPReal();
+        await DBHandler.registrarLog(nomeUsuario, acaoLog, detalhesLog, ipReal);
+
+        // 3. Atualiza a Tela
         const dadosAtualizados = await DBHandler.carregarDadosIniciais();
         config = dadosAtualizados;
-        db.dados = config; 
+        if (typeof db !== 'undefined') db.dados = config;
+        
         init(); 
         window.atualizarFiltros();
         window.fecharModalTreinamento();
-        alert("Salvo com sucesso!");
+        
+        alert(`Sucesso! Curso ${idExistente ? 'atualizado' : 'criado'} e registrado no log.`);
+
     } catch (e) {
         console.error(e);
-        alert("Erro ao salvar.");
+        alert("Erro ao salvar no banco. Verifique o console.");
     }
 };
 
 window.editarTreinamento = function(id) {
-    if (!window.isAdminMode) return; 
+    // 1. Segurança: Só abre se for Admin
+    if (!window.isAdminMode) return;
+
+    // 2. Busca o treinamento na memória global (config.treinamentos)
     const treino = config.treinamentos.find(t => t.id === id);
     if (!treino) return;
 
+    // 3. Preenche os inputs do modal
     document.getElementById('inputHiddenId').value = treino.id;
     document.getElementById('inputNomeTreino').value = treino.nome;
     document.getElementById('inputCatTreino').value = treino.categoria;
     document.getElementById('inputDescTreino').value = treino.desc || '';
     document.getElementById('inputLinkTreino').value = treino.link || '';
     
+    // 4. Ajusta a cor e o código Hexadecimal visual
     const cor = treino.color || '#3b82f6';
     document.getElementById('inputCorTreino').value = cor;
-    document.getElementById('hexColorDisplay').textContent = cor.toUpperCase();
+    const hexDisplay = document.getElementById('hexColorDisplay');
+    if(hexDisplay) hexDisplay.textContent = cor.toUpperCase();
     
+    // 5. Configura o visual do modal para "Edição"
     document.getElementById('modalTitle').textContent = "Editar Treinamento";
-    document.getElementById('btnExcluirTreino').style.display = 'block';
+    document.getElementById('btnExcluirTreino').style.display = 'block'; // Mostra botão excluir
+
+    // 6. Abre o modal
     window.abrirModalTreinamento();
+    
+    // Dica: Já inicia a busca do IP em segundo plano para o log estar pronto ao salvar
+    obterIPReal(); 
 };
 
 window.excluirTreinamento = async function() {
     const id = document.getElementById('inputHiddenId').value;
     if (!id) return;
-    if (confirm("Tem certeza que deseja EXCLUIR este treinamento?")) {
+
+    // Busca o nome do curso ANTES de excluir para colocar no log
+    const treinoAlvo = config.treinamentos.find(t => t.id == id);
+    const nomeCurso = treinoAlvo ? treinoAlvo.nome : "Desconhecido";
+
+    if (confirm(`Tem certeza que deseja EXCLUIR o treinamento "${nomeCurso}" permanentemente?`)) {
+        
+        const nomeUsuario = currentUser && currentUser.user ? currentUser.user : 'Admin';
+        
         try {
+            // 1. Exclui do Banco
             await DBHandler.excluirTreinamento(parseInt(id));
+            
+            // 2. Grava Log
+            const ipReal = await obterIPReal();
+            const msgLog = `Excluiu permanentemente o curso: ${nomeCurso} (ID: ${id})`;
+            await DBHandler.registrarLog(nomeUsuario, 'EXCLUIR_CURSO', msgLog, ipReal);
+
+            // 3. Atualiza a Tela
             const dadosAtualizados = await DBHandler.carregarDadosIniciais();
             config = dadosAtualizados;
-            db.dados = config;
+            if (typeof db !== 'undefined') db.dados = config;
+
             window.fecharModalTreinamento();
             init();
             window.atualizarFiltros();
-            alert("Excluído com sucesso!");
+            
+            alert("Treinamento excluído e registrado no log!");
+
         } catch (e) {
-            console.error("Erro:", e);
-            alert("Erro ao excluir.");
+            console.error("Erro ao excluir:", e);
+            alert("Não foi possível excluir o treinamento.");
         }
     }
 };
@@ -749,6 +796,7 @@ window.confirmarAcaoSegura = async function() {
         alert("Erro ao salvar alteração: " + e.message);
     }
 };
+
 
 
 
