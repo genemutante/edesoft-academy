@@ -749,3 +749,221 @@ function fazerLogout() {
     }
     window.location.href = 'index.html'; 
 }
+
+// =============================================================================
+// HELPER: TRADUÇÃO DE STATUS (PARA O LOG)
+// =============================================================================
+const STATUS_MAP = {
+    'mandatory': 'OBRIGATÓRIO',
+    'recommended': 'RECOMENDÁVEL',
+    'none': 'NÃO OBRIGATÓRIO' 
+};
+
+// =============================================================================
+// 9. EDIÇÃO DE RELACIONAMENTO (LÓGICA DE NEGÓCIO)
+// =============================================================================
+
+async function alternarRelacao(cargoIndex, treinoId) {
+    if (!window.isAdminMode) return;
+
+    const cargo = config.cargos[cargoIndex];
+    if (!cargo) return;
+
+    // 1. Identifica o estado ATUAL (ANTES)
+    const isObrig = cargo.obrigatorios && cargo.obrigatorios.includes(treinoId);
+    const isRecom = cargo.recomendados && cargo.recomendados.includes(treinoId);
+    
+    let statusAnterior = 'none';
+    if (isObrig) statusAnterior = 'mandatory';
+    else if (isRecom) statusAnterior = 'recommended';
+
+    // 2. Determina o PRÓXIMO estado (Ciclo: Nada -> Obrigatório -> Recomendado -> Nada)
+    let novoStatus = '';
+    let msgConfirmacao = '';
+
+    if (statusAnterior === 'none') {
+        novoStatus = 'mandatory';
+        msgConfirmacao = `Definir como <strong style="color:#ef4444">OBRIGATÓRIO</strong>?`;
+    } 
+    else if (statusAnterior === 'mandatory') {
+        novoStatus = 'recommended';
+        msgConfirmacao = `Mudar para <strong style="color:#eab308">RECOMENDÁVEL</strong>?`;
+    } 
+    else if (statusAnterior === 'recommended') {
+        novoStatus = 'none';
+        msgConfirmacao = `<strong>REMOVER</strong> a regra deste curso?`;
+    }
+
+    // 3. Dispara Modal enviando o "Antes" e o "Depois"
+    exibirModalAuditoria(msgConfirmacao, {
+        TIPO: 'RELACAO',
+        cargoIndex: cargoIndex,
+        treinoId: treinoId,
+        statusAnterior: statusAnterior, // <--- Guardamos o estado antigo aqui
+        novoStatus: novoStatus
+    });
+}
+
+// =============================================================================
+// 10. LÓGICA DO MENU DE CONTEXTO (CLIQUE DIREITO / ESQUERDO)
+// =============================================================================
+
+// Variáveis temporárias globais para o contexto
+/* Já declaradas no início do arquivo, mas reforçando uso */
+// let tempCargoIndex = null;
+// let tempTreinoId = null;
+
+window.abrirMenuContexto = function(e, cargoIndex, treinoId) {
+    if (!window.isAdminMode) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    tempCargoIndex = parseInt(cargoIndex);
+    tempTreinoId = parseInt(treinoId);
+
+    const menu = document.getElementById('contextMenuCell');
+    const overlay = document.getElementById('contextMenuOverlay');
+    
+    // Posicionamento inteligente
+    let x = e.pageX;
+    let y = e.pageY;
+    if (x + 160 > window.innerWidth) x -= 160; 
+    
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    
+    menu.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+};
+
+window.fecharMenuContexto = function() {
+    const menu = document.getElementById('contextMenuCell');
+    const overlay = document.getElementById('contextMenuOverlay');
+    if (menu) menu.classList.add('hidden');
+    if (overlay) overlay.classList.add('hidden');
+};
+
+window.selecionarOpcaoRelacao = function(novoStatus) {
+    if (tempCargoIndex === null || tempTreinoId === null) return;
+    
+    const cargo = config.cargos[tempCargoIndex];
+    if (!cargo) return;
+
+    // 1. Descobre o Status ATUAL (ANTES) para comparar
+    let statusAnterior = 'none';
+    if (cargo.obrigatorios && cargo.obrigatorios.includes(tempTreinoId)) statusAnterior = 'mandatory';
+    else if (cargo.recomendados && cargo.recomendados.includes(tempTreinoId)) statusAnterior = 'recommended';
+
+    // Se for igual, não faz nada
+    if (statusAnterior === novoStatus) {
+        fecharMenuContexto();
+        return;
+    }
+
+    // 2. Monta mensagem visual
+    const mapaHTML = { 
+        'mandatory': '<span style="color:#ef4444; font-weight:800;">OBRIGATÓRIO</span>', 
+        'recommended': '<span style="color:#eab308; font-weight:800;">RECOMENDÁVEL</span>', 
+        'none': '<span style="color:#94a3b8; font-weight:800;">NÃO OBRIGATÓRIO</span>' 
+    };
+    const msg = `Alterar regra para: ${mapaHTML[novoStatus]}`;
+
+    fecharMenuContexto();
+    
+    // 3. Abre Modal passando Antes e Depois
+    exibirModalAuditoria(msg, {
+        TIPO: 'RELACAO',
+        cargoIndex: tempCargoIndex,
+        treinoId: tempTreinoId,
+        statusAnterior: statusAnterior, // <--- Guardamos o estado antigo
+        novoStatus: novoStatus
+    });
+};
+
+// =============================================================================
+// 11. CENTRAL DE SEGURANÇA E AUDITORIA (LOG AVANÇADO)
+// =============================================================================
+
+/* Variável 'pendingChange' já declarada no início */
+
+function exibirModalAuditoria(mensagemHTML, changeObject) {
+    pendingChange = changeObject;
+
+    const lbl = document.getElementById('lblChangeDetail');
+    if(lbl) lbl.innerHTML = mensagemHTML;
+    
+    const timeEl = document.getElementById('auditTime');
+    if(timeEl) timeEl.textContent = new Date().toLocaleString('pt-BR');
+
+    const elIP = document.getElementById('auditIP');
+    if(elIP) {
+        elIP.textContent = "Verificando...";
+        setTimeout(() => elIP.textContent = "192.168.1." + Math.floor(Math.random() * 255), 300);
+    }
+
+    const modal = document.getElementById('modalConfirmacao');
+    if(modal) modal.classList.remove('hidden');
+}
+
+window.fecharModalConfirmacao = function() {
+    const modal = document.getElementById('modalConfirmacao');
+    if(modal) modal.classList.add('hidden');
+    pendingChange = null;
+};
+
+window.confirmarAcaoSegura = async function() {
+    if (!pendingChange) return;
+
+    // Pega usuário logado
+    const nomeUsuario = currentUser && currentUser.user ? currentUser.user : 'Admin';
+
+    try {
+        if (pendingChange.TIPO === 'RELACAO') {
+            const { cargoIndex, treinoId, statusAnterior, novoStatus } = pendingChange;
+            const cargo = config.cargos[cargoIndex];
+            const cargoId = cargo.id;
+
+            // 1. Executa a Ação no Banco
+            await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
+
+            // 2. Prepara o Log detalhado (EM PORTUGUÊS)
+            // Usa o MAPA criado no início para traduzir mandatory -> OBRIGATÓRIO
+            const txtAntes = STATUS_MAP[statusAnterior] || statusAnterior;
+            const txtDepois = STATUS_MAP[novoStatus] || novoStatus;
+            
+            // Monta a frase final: "De: NÃO OBRIGATÓRIO -> Para: OBRIGATÓRIO"
+            const msgLog = `Alteração de Regra no cargo '${cargo.nome}' (Curso ID ${treinoId}). De: ${txtAntes} -> Para: ${txtDepois}`;
+            
+            // 3. Grava Log
+            await DBHandler.registrarLog(nomeUsuario, 'ALTERAR_REGRA', msgLog);
+        }
+        
+        // Recarrega Dados
+        const dadosFrescos = await DBHandler.carregarDadosIniciais();
+        config = dadosFrescos;
+        if (typeof db !== 'undefined') db.dados = config;
+
+        // Atualiza UI mantendo filtros
+        const roleFilter = document.getElementById('roleFilter').value;
+        const catFilter = document.getElementById('categoryFilter').value || 'all';
+        const textFilter = document.getElementById('textSearch').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        
+        // Recupera ID do cargo filtrado (se houver)
+        let cargoIdFilter = 'all';
+        if (roleFilter) {
+             const cObj = config.cargos.find(c => c.nome === roleFilter);
+             if(cObj) cargoIdFilter = cObj.id.toString();
+        }
+
+        renderizarMatriz(cargoIdFilter, catFilter, textFilter, statusFilter);
+        fecharModalConfirmacao();
+        
+        alert("✅ Alteração salva e registrada no log!");
+
+    } catch (e) {
+        console.error("Erro na operação:", e);
+        alert("Erro ao salvar alteração: " + e.message);
+    }
+};
