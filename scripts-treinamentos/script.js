@@ -106,9 +106,6 @@ function init() {
 
 
 // =============================================================================
-// 3. RENDERIZAÇÃO DA MATRIZ (Versão Ultra-Compacta)
-// =============================================================================
-// =============================================================================
 // 3. RENDERIZAÇÃO DA MATRIZ (Versão com Menu de Contexto no Header)
 // =============================================================================
 function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrigatoriedade) {
@@ -120,7 +117,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     colCache = {}; 
     lastHighlightedCol = null;
 
-    // --- A. Cabeçalho (Incluso suporte ao botão direito nos cargos) ---
+    // --- A. Cabeçalho (Suporte a Hexadecimal e Botão Direito) ---
     let headerHTML = '<tr><th class="top-left-corner"><div class="hud-card">' +
     '<div class="hud-top-label">' + icons.lupa + ' INSPEÇÃO</div>' +
     '<div id="hudScan" class="hud-scan"><div class="scan-icon-large">' + icons.lupa + '</div><div class="scan-msg">Explore a matriz<br>para ver detalhes</div></div>' +
@@ -132,13 +129,17 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
         if (filtroCargo !== 'all' && cargo.id.toString() !== filtroCargo) return;
         const activeClass = (filtroCargo === cargo.id.toString()) ? 'selected-col-header' : '';
         
-        // AJUSTE: Adicionado oncontextmenu para abrir o menu de edição/exclusão do cargo
+        // Verifica se corClass é um código Hexadecimal ou uma classe CSS
+        const isHex = cargo.corClass && cargo.corClass.startsWith('#');
+        const estiloFundo = isHex ? `style="background-color: ${cargo.corClass};"` : `class="role-wrapper ${cargo.corClass}"`;
+        const innerClass = isHex ? 'role-wrapper' : '';
+
         headerHTML += `
             <th class="${activeClass}" 
                 data-col="${index}" 
                 onclick="document.getElementById('roleFilter').value='${cargo.nome}'; atualizarFiltros();"
                 oncontextmenu="window.abrirMenuCargo(event, ${index})">
-                <div class="role-wrapper ${cargo.corClass}">
+                <div ${estiloFundo} class="${innerClass}">
                     <div class="vertical-text">${cargo.nome}</div>
                 </div>
             </th>`;
@@ -149,7 +150,6 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     // --- B. Corpo (Linhas "Blindadas" contra altura excessiva) ---
     let bodyHTML = '';
     
-    // Definição de Estilos Inline para garantir prioridade
     const styleRow = 'height: 30px !important; max-height: 30px !important;';
     const styleTH = 'height: 30px !important; max-height: 30px !important; padding: 0 !important; vertical-align: middle !important;';
     const styleTD = 'height: 30px !important; max-height: 30px !important; padding: 0 !important; vertical-align: middle !important;';
@@ -191,12 +191,10 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
                 <th style="--cat-color: ${badgeColor}; background-color: ${badgeColor}15; cursor: pointer; ${styleTH}" 
                     data-tooltip="${tooltipText}"
                     onclick="editarTreinamento(${treino.id})">
-                    
                     <div style="${styleFlex}">
                         <div style="background: #ffffff; border: 1px solid ${badgeColor}; color: ${badgeColor}; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; line-height: 1;">
                             ${categoriaDisplay}
                         </div>
-
                         <div style="color: #334155; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; text-align: left; line-height: normal;">
                             ${treino.nome}
                         </div>
@@ -208,7 +206,6 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     });
     tbody.innerHTML = bodyHTML;
     
-    // Reconstrói Cache de Colunas para Performance
     const allCells = table.querySelectorAll('[data-col]');
     allCells.forEach(cell => {
         const cIndex = cell.dataset.col;
@@ -219,7 +216,6 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     vincularEventosLupa();
     vincularEventosDestaque();
 }
-
 // =============================================================================
 // 4. LÓGICA DE FILTROS & HUD
 // =============================================================================
@@ -1048,6 +1044,7 @@ window.fecharMenus = function() {
 
     tempCargoIndexParaMenu = null;
 };
+
 
 
 
