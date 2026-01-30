@@ -1,366 +1,522 @@
-/* cadastro-script.js (COMPLETO / AJUSTADO)
-   - Usa Supabase via window.DBHandler
-   - ✅ Corrige o "item 2": validação no salvarColaborador()
-   - ✅ Remove duplicidade de salvarColaborador()
-*/
+// /scripts-treinamentos/cadastro-script.js
+import { DBHandler } from "../bd-treinamentos/db-handler.js";
 
-let colaboradoresCache = [];
-let colaboradorEditandoId = null;
+let COLABS = [];
+let CARGOS = [];
+let CARGOS_MAP = new Map();
+let sortState = { key: "nome", asc: true };
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Botões
-  const btnNovo = document.getElementById("btnNovo");
-  const btnCancelar = document.getElementById("btnCancelar");
-  const btnSalvar = document.getElementById("btnSalvar");
-  const inputBusca = document.getElementById("busca");
+let currentId = null;
+let currentMode = "view"; // "view" | "edit" | "new"
 
-  if (btnNovo) btnNovo.addEventListener("click", () => abrirFormularioNovo());
-  if (btnCancelar) btnCancelar.addEventListener("click", () => fecharFormulario());
-  if (btnSalvar) btnSalvar.addEventListener("click", (e) => {
-    e.preventDefault();
-    salvarColaborador(); // ✅ agora esse salva com validação dentro
+// ---------- Utils ----------
+function $(id) {
+  return document.getElementById(id);
+}
+function onlyDigits(v) {
+  return (v || "").toString().replace(/\D/g, "");
+}
+function fmtDateBR(iso) {
+  if (!iso) return "—";
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return `${d}/${m}/${y}`;
+}
+function isAtivo(c) {
+  return !c.data_demissao;
+}
+function getCargoNome(colab) {
+  const id = colab.cargo_atual_id ?? colab.cargoAtualId;
+  return CARGOS_MAP.get(Number(id)) || colab.cargo || "—";
+}
+function safeLower(v) {
+  return (v ?? "").toString().toLowerCase();
+}
+
+function showView(viewList) {
+  $("viewList").style.display = viewList ? "flex" : "none";
+  $("viewForm").style.display = viewList ? "none" : "block";
+}
+
+function setFormEnabled(enabled) {
+  const form = $("viewForm");
+  form.querySelectorAll("input, select, textarea").forEach((el) => {
+    // não desabilita hidden
+    if (el.type === "hidden") return;
+    el.disabled = !enabled;
   });
+}
 
-  if (inputBusca) inputBusca.addEventListener("input", () => renderTabela());
+// ---------- Boot ----------
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    // sessão já é verificada pelo HTML, mas deixo “safe”
+    const sessionRaw = localStorage.getItem("rh_session");
+    if (!sessionRaw) return;
 
-  // Inicialização
-  initTela();
+    await carregarCombos();
+    await carregarLista();
+
+    showView(true);
+    renderizarTabela();
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao inicializar tela de colaboradores:\n" + (e.message || e));
+  }
 });
 
-async function initTela() {
-  try {
-    if (!window.DBHandler) {
-      alert("DBHandler não carregou. Verifique se db-handler.js está sendo importado antes do cadastro-script.js");
-      return;
+async function carregarCombos() {
+  // Cargos
+  CARGOS = await DBHandler.listarCargos();
+  CARGOS_MAP = new Map(CARGOS.map((c) => [Number(c.id), c.nome]));
+
+  // combo do formulário
+  const selCargo = $("cargoAtualId");
+  selCargo.innerHTML = `<option value="">Selecione...</option>` + CARGOS.map(
+    (c) => `<option value="${c.id}">${c.nome}</option>`
+  ).join("");
+
+  // filtro de cargo
+  const filtroCargo = $("filtroCargo");
+  filtroCargo.innerHTML =
+    `<option value="todos">Cargo: Todos</option>` +
+    CARGOS.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+
+  // Gestores: (usa a própria lista de colaboradores como base)
+  const gestores = await DBHandler.listarColaboradores({ somenteAtivos: false });
+  const selGestor = $("gestorId");
+  selGestor.innerHTML =
+    `<option value="">Selecione...</option>` +
+    gestores
+      .slice()
+      .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""))
+      .map((g) => `<option value="${g.id}">${g.nome}</option>`)
+      .join("");
+}
+
+async function carregarLista() {
+  COLABS = await DBHandler.listarColaboradores({ somenteAtivos: false });
+
+  // filtro depto (dinâmico)
+  const deptos = Array.from(
+    new Set(COLABS.map((c) => c.departamento).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+
+  const filtroDepto = $("filtroDepto");
+  filtroDepto.innerHTML =
+    `<option value="todos">Depto: Todos</option>` +
+    deptos.map((d) => `<option value="${d}">${d}</option>`).join("");
+}
+
+// ---------- Tabela ----------
+function applyFilters(list) {
+  const q = safeLower($("searchBox").value);
+  const fStatus = $("filtroStatus").value;
+  const fDepto = $("filtroDepto").value;
+  const fCargo = $("filtroCargo").value;
+
+  return list.filter((c) => {
+    const ativo = isAtivo(c);
+
+    if (fStatus === "ativos" && !ativo) return false;
+    if (fStatus === "desligados" && ativo) return false;
+
+    if (fDepto && fDepto !== "todos" && (c.departamento || "") !== fDepto)
+      return false;
+
+    const cargoId = Number(c.cargo_atual_id ?? c.cargoAtualId ?? 0);
+    if (fCargo && fCargo !== "todos" && cargoId !== Number(fCargo))
+      return false;
+
+    if (q) {
+      const blob = [
+        c.nome,
+        getCargoNome(c),
+        c.departamento,
+        c.cpf,
+        c.email_empresarial,
+        c.email_pessoal,
+      ]
+        .map(safeLower)
+        .join(" ");
+      if (!blob.includes(q)) return false;
     }
 
-    // Preenche select de cargos (tenta Supabase; se falhar, tenta config)
-    await preencherCargos();
-
-    // Carrega colaboradores
-    await carregarColaboradores();
-    renderTabela();
-    fecharFormulario();
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao inicializar tela: " + (err.message || err));
-  }
+    return true;
+  });
 }
 
-async function preencherCargos() {
-  const selectCargo = document.getElementById("cargoAtualId");
-  if (!selectCargo) return;
+function applySort(list) {
+  const { key, asc } = sortState;
 
-  selectCargo.innerHTML = `<option value="">Selecione...</option>`;
+  const sorted = list.slice().sort((a, b) => {
+    if (key === "nome") return (a.nome || "").localeCompare(b.nome || "");
+    if (key === "cargo") return getCargoNome(a).localeCompare(getCargoNome(b));
+    if (key === "status") return Number(isAtivo(b)) - Number(isAtivo(a));
+    return 0;
+  });
 
-  // 1) tenta pelo Supabase (tabela cargos)
-  try {
-    const cargos = await window.DBHandler.listarCargos();
-    cargos.forEach((c) => {
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.nome;
-      selectCargo.appendChild(opt);
-    });
-    return;
-  } catch (e) {
-    // segue pro fallback
-  }
-
-  // 2) fallback: config.cargos (se existir)
-  if (window.config && Array.isArray(window.config.cargos)) {
-    window.config.cargos.forEach((c) => {
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.nome || c.titulo || `Cargo ${c.id}`;
-      selectCargo.appendChild(opt);
-    });
-  }
+  return asc ? sorted : sorted.reverse();
 }
 
-async function carregarColaboradores() {
-  colaboradoresCache = await window.DBHandler.listarColaboradores({ somenteAtivos: false });
+function updateSortIndicators() {
+  ["nome", "cargo", "status"].forEach((k) => {
+    const el = $(`sort-${k}`);
+    if (!el) return;
+    el.textContent = "";
+  });
+
+  const target = $(`sort-${sortState.key}`);
+  if (target) target.textContent = sortState.asc ? "▲" : "▼";
 }
 
-function renderTabela() {
-  const tbody = document.getElementById("tbodyColaboradores");
+function montarLinha(colab) {
+  const tr = document.createElement("tr");
+  const status = isAtivo(colab) ? "ATIVO" : "DESLIGADO";
+  const statusClass = isAtivo(colab) ? "status-ok" : "status-off";
+
+  tr.innerHTML = `
+    <td>${colab.nome || "—"}</td>
+    <td>${getCargoNome(colab)}</td>
+    <td>${colab.departamento || "—"}</td>
+    <td>${fmtDateBR(colab.data_admissao)}</td>
+    <td><span class="status-pill ${statusClass}">${status}</span></td>
+    <td style="text-align:right;">
+      <button class="btn-icon-action" onclick="visualizar(${colab.id})">👁️</button>
+      <button class="btn-icon-action admin-only" onclick="editar(${colab.id})">✏️</button>
+      ${
+        isAtivo(colab)
+          ? `<button class="btn-icon-action admin-only" onclick="abrirModalDesligamento(${colab.id})">🗑️</button>`
+          : `<button class="btn-icon-action admin-only" onclick="reativar(${colab.id})">♻️</button>`
+      }
+    </td>
+  `;
+  return tr;
+}
+
+// ---------- Funções globais exigidas pelo HTML ----------
+window.renderizarTabela = function renderizarTabela() {
+  const tbody = document.querySelector("#colabTable tbody");
   if (!tbody) return;
 
-  const termo = (document.getElementById("busca")?.value || "").trim().toLowerCase();
-
-  const lista = colaboradoresCache.filter((c) => {
-    if (!termo) return true;
-    const nome = (c.nome || "").toLowerCase();
-    const cpf = (c.cpf || "").toString().toLowerCase();
-    const emailEmp = (c.email_empresarial || "").toLowerCase();
-    const emailPes = (c.email_pessoal || "").toLowerCase();
-    return (
-      nome.includes(termo) ||
-      cpf.includes(termo) ||
-      emailEmp.includes(termo) ||
-      emailPes.includes(termo)
-    );
-  });
+  let list = applyFilters(COLABS);
+  list = applySort(list);
 
   tbody.innerHTML = "";
+  list.forEach((c) => tbody.appendChild(montarLinha(c)));
 
-  lista.forEach((col) => {
-    const tr = document.createElement("tr");
+  $("contadorRegistros").textContent = `${list.length} registro(s)`;
+  updateSortIndicators();
+};
 
-    const status = col.data_demissao ? "Inativo" : "Ativo";
-    const dataAdm = col.data_admissao || "";
-    const funcao = col.funcao || "";
+window.limparFiltros = function limparFiltros() {
+  $("searchBox").value = "";
+  $("filtroStatus").value = "todos";
+  $("filtroDepto").value = "todos";
+  $("filtroCargo").value = "todos";
+  renderizarTabela();
+};
 
-    tr.innerHTML = `
-      <td>${col.id ?? ""}</td>
-      <td>${escapeHtml(col.nome ?? "")}</td>
-      <td>${escapeHtml(funcao)}</td>
-      <td>${escapeHtml(dataAdm)}</td>
-      <td>${escapeHtml(status)}</td>
-      <td class="acoes">
-        <button type="button" class="btn-acao" data-acao="editar">Editar</button>
-        ${
-          col.data_demissao
-            ? `<button type="button" class="btn-acao" data-acao="reativar">Reativar</button>`
-            : `<button type="button" class="btn-acao btn-danger" data-acao="desativar">Desativar</button>`
-        }
-      </td>
-    `;
+window.ordenar = function ordenar(key) {
+  if (sortState.key === key) sortState.asc = !sortState.asc;
+  else sortState = { key, asc: true };
+  renderizarTabela();
+};
 
-    tr.querySelector('[data-acao="editar"]')?.addEventListener("click", () => editarColaborador(col.id));
-    tr.querySelector('[data-acao="desativar"]')?.addEventListener("click", () => desativarColaborador(col.id));
-    tr.querySelector('[data-acao="reativar"]')?.addEventListener("click", () => reativarColaborador(col.id));
+// ---------- Tabs ----------
+window.openTab = function openTab(tabId, btn) {
+  document.querySelectorAll(".tab-content").forEach((t) => t.classList.remove("active"));
+  document.querySelectorAll(".tab-link").forEach((b) => b.classList.remove("active"));
+  $(tabId).classList.add("active");
+  if (btn) btn.classList.add("active");
+};
 
-    tbody.appendChild(tr);
+// ---------- Navegação / Form ----------
+function limparForm() {
+  currentId = null;
+  $("colabId").value = "";
+
+  // limpa inputs/selects do form
+  $("mainForm").querySelectorAll("input, select, textarea").forEach((el) => {
+    if (el.type === "checkbox") el.checked = false;
+    else if (el.type === "hidden") el.value = "";
+    else el.value = "";
   });
+
+  // defaults
+  $("nacionalidade").value = "Brasileira";
+  $("moeda").value = "BRL";
 }
 
-function abrirFormularioNovo() {
-  colaboradorEditandoId = null;
-  limparFormulario();
-  abrirFormulario();
-}
+function setModoForm(mode) {
+  currentMode = mode;
 
-function abrirFormulario() {
-  const formBox = document.getElementById("formBox");
-  const listBox = document.getElementById("listBox");
-  if (formBox) formBox.style.display = "block";
-  if (listBox) listBox.style.display = "none";
-}
+  const isAdmin = document.body.classList.contains("is-admin");
+  const podeEditar = isAdmin && (mode === "edit" || mode === "new");
 
-function fecharFormulario() {
-  const formBox = document.getElementById("formBox");
-  const listBox = document.getElementById("listBox");
-  if (formBox) formBox.style.display = "none";
-  if (listBox) listBox.style.display = "block";
-}
+  // botões
+  $("btnSalvar").style.display = podeEditar ? "inline-flex" : "none";
+  $("btnIrParaEdicao").style.display =
+    isAdmin && mode === "view" && currentId ? "inline-flex" : "none";
 
-function limparFormulario() {
-  const form = document.getElementById("formColaborador");
-  if (form) form.reset();
+  // excluir/desligar/reativar (via modal/botão)
+  $("btnExcluir").style.display = "none";
 
-  // alguns campos não resetam como esperado em certos browsers, então garantimos:
-  setVal("id", "");
-}
+  setFormEnabled(podeEditar);
 
-async function editarColaborador(id) {
-  try {
-    const col = await window.DBHandler.buscarColaboradorPorId(id);
-    colaboradorEditandoId = id;
-
-    // Preenche formulário (snake_case -> inputs camelCase do HTML)
-    setVal("id", col.id ?? "");
-    setVal("gestorId", col.gestor_id ?? "");
-    setVal("cargoAtualId", col.cargo_atual_id ?? "");
-
-    setVal("nome", col.nome ?? "");
-    setVal("funcao", col.funcao ?? "");
-    setVal("matricula", col.matricula ?? "");
-
-    setVal("dataNascimento", col.data_nascimento ?? "");
-    setVal("genero", col.genero ?? "");
-    setVal("estadoCivil", col.estado_civil ?? "");
-
-    setVal("nacionalidade", col.nacionalidade ?? "");
-    setVal("naturalidade", col.naturalidade ?? "");
-
-    setVal("dataAdmissao", col.data_admissao ?? "");
-    setVal("dataDemissao", col.data_demissao ?? "");
-    setVal("motivoDemissao", col.motivo_demissao ?? "");
-
-    setVal("cep", col.cep ?? "");
-    setVal("logradouro", col.logradouro ?? "");
-    setVal("numero", col.numero ?? "");
-    setVal("complemento", col.complemento ?? "");
-    setVal("bairro", col.bairro ?? "");
-    setVal("cidade", col.cidade ?? "");
-    setVal("estado", col.estado ?? "");
-
-    setVal("celular", col.celular ?? "");
-    setVal("telefone", col.telefone ?? "");
-    setVal("telefoneEmergencia", col.telefone_emergencia ?? "");
-
-    setVal("emailEmpresarial", col.email_empresarial ?? "");
-    setVal("emailPessoal", col.email_pessoal ?? "");
-
-    setVal("cpf", col.cpf ?? "");
-    setVal("rg", col.rg ?? "");
-
-    abrirFormulario();
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao carregar colaborador: " + (err.message || err));
+  // badge status
+  const badge = $("formStatusBadge");
+  if (!currentId) {
+    badge.style.display = "none";
+  } else {
+    const col = COLABS.find((x) => x.id === currentId);
+    const ativo = col ? isAtivo(col) : true;
+    badge.style.display = "inline-flex";
+    badge.textContent = ativo ? "ATIVO" : "DESLIGADO";
   }
 }
 
-async function desativarColaborador(id) {
-  const motivo = prompt("Motivo da demissão/desativação (opcional):") || null;
+window.novoColaborador = function novoColaborador() {
+  limparForm();
+  $("formTitle").textContent = "Novo Colaborador";
+  showView(false);
+  setModoForm("new");
+};
 
-  try {
-    await window.DBHandler.desativarColaborador(id, {
-      dataDemissao: new Date().toISOString().slice(0, 10),
-      motivoDemissao: motivo,
-    });
-    await carregarColaboradores();
-    renderTabela();
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao desativar: " + (err.message || err));
-  }
+window.acaoVoltar = function acaoVoltar() {
+  showView(true);
+  renderizarTabela();
+};
+
+window.ativarModoEdicao = function ativarModoEdicao() {
+  if (!currentId) return;
+  setModoForm("edit");
+};
+
+// ---------- View/Edit ----------
+window.visualizar = async function visualizar(id) {
+  await abrirFicha(id, "view");
+};
+
+window.editar = async function editar(id) {
+  await abrirFicha(id, "edit");
+};
+
+async function abrirFicha(id, mode) {
+  const colab = await DBHandler.buscarColaboradorPorId(id);
+  currentId = colab.id;
+
+  preencherForm(colab);
+  $("formTitle").textContent = mode === "edit" ? "Editar Colaborador" : "Ficha do Colaborador";
+
+  showView(false);
+  setModoForm(mode);
 }
 
-async function reativarColaborador(id) {
-  try {
-    await window.DBHandler.reativarColaborador(id);
-    await carregarColaboradores();
-    renderTabela();
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao reativar: " + (err.message || err));
-  }
+function preencherForm(c) {
+  $("colabId").value = c.id ?? "";
+
+  // TAB Dados
+  $("nome").value = c.nome ?? "";
+  $("cpf").value = c.cpf ?? "";
+  $("dataNascimento").value = c.data_nascimento ?? "";
+  $("genero").value = c.genero ?? "";
+  $("estadoCivil").value = c.estado_civil ?? "";
+  $("nacionalidade").value = c.nacionalidade ?? "Brasileira";
+  $("naturalidade").value = c.naturalidade ?? "";
+  $("racaEtnia").value = c.raca_etnia ?? "";
+  $("escolaridade").value = c.escolaridade ?? "";
+  $("nomeMae").value = c.nome_mae ?? "";
+  $("nomePai").value = c.nome_pai ?? "";
+  $("pcd").checked = !!c.pcd;
+  $("candidato").checked = !!c.candidato;
+
+  // TAB Contrato
+  $("dataAdmissao").value = c.data_admissao ?? "";
+  $("cargoAtualId").value = c.cargo_atual_id ?? "";
+  $("departamento").value = c.departamento ?? "";
+  $("matricula").value = c.matricula ?? "";
+  $("tipoContrato").value = c.tipo_contrato ?? $("tipoContrato").value;
+  $("salario").value = c.salario ?? "";
+  $("moeda").value = c.moeda ?? "BRL";
+  $("unidade").value = c.unidade ?? "";
+  $("gestorId").value = c.gestor_id ?? "";
+  $("emailEmpresarial").value = c.email_empresarial ?? "";
+  $("turno").value = c.turno ?? "";
+
+  // TAB Docs
+  $("rg").value = c.rg ?? "";
+  $("orgaoExpedidor").value = c.orgao_expedidor ?? "";
+  $("dataExpedicao").value = c.data_expedicao ?? "";
+  $("pis").value = c.pis ?? "";
+  $("ctpsNum").value = c.ctps_num ?? "";
+  $("ctpsSerie").value = c.ctps_serie ?? "";
+  $("tituloEleitor").value = c.titulo_eleitor ?? "";
+  $("zonaEleitoral").value = c.zona_eleitoral ?? "";
+  $("reservista").value = c.reservista ?? "";
+  $("cnh").value = c.cnh ?? "";
+
+  // TAB Endereço
+  $("cep").value = c.cep ?? "";
+  $("logradouro").value = c.logradouro ?? "";
+  $("numero").value = c.numero ?? "";
+  $("complemento").value = c.complemento ?? "";
+  $("bairro").value = c.bairro ?? "";
+  $("cidade").value = c.cidade ?? "";
+  $("estado").value = c.estado ?? "";
+  $("emailPessoal").value = c.email_pessoal ?? "";
+  $("celular").value = c.celular ?? "";
+  $("telefoneEmergencia").value = c.telefone_emergencia ?? "";
+
+  // TAB Bancários
+  $("banco").value = c.banco ?? "";
+  $("agencia").value = c.agencia ?? "";
+  $("contaCorrente").value = c.conta_corrente ?? "";
 }
 
-/* =========================================================
-   ✅ ITEM 2 AQUI: salvarColaborador() chama validarFormulario()
-   ========================================================= */
-async function salvarColaborador() {
+function coletarPayload() {
+  const payload = {
+    nome: $("nome").value.trim(),
+    cpf: onlyDigits($("cpf").value),
+    data_admissao: $("dataAdmissao").value || null,
+    cargo_atual_id: $("cargoAtualId").value ? Number($("cargoAtualId").value) : null,
+
+    data_nascimento: $("dataNascimento").value || null,
+    genero: $("genero").value || null,
+    estado_civil: $("estadoCivil").value || null,
+    nacionalidade: $("nacionalidade").value || null,
+    naturalidade: $("naturalidade").value || null,
+    raca_etnia: $("racaEtnia").value || null,
+    escolaridade: $("escolaridade").value || null,
+    nome_mae: $("nomeMae").value || null,
+    nome_pai: $("nomePai").value || null,
+    pcd: !!$("pcd").checked,
+    candidato: !!$("candidato").checked,
+
+    departamento: $("departamento").value || null,
+    matricula: $("matricula").value || null,
+    tipo_contrato: $("tipoContrato").value || null,
+    salario: $("salario").value ? Number($("salario").value) : 0,
+    moeda: $("moeda").value || "BRL",
+    unidade: $("unidade").value || null,
+    gestor_id: $("gestorId").value ? Number($("gestorId").value) : null,
+    email_empresarial: $("emailEmpresarial").value || null,
+    turno: $("turno").value || null,
+
+    rg: $("rg").value || null,
+    orgao_expedidor: $("orgaoExpedidor").value || null,
+    data_expedicao: $("dataExpedicao").value || null,
+    pis: $("pis").value ? onlyDigits($("pis").value) : null,
+    ctps_num: $("ctpsNum").value || null,
+    ctps_serie: $("ctpsSerie").value || null,
+    titulo_eleitor: $("tituloEleitor").value || null,
+    zona_eleitoral: $("zonaEleitoral").value || null,
+    reservista: $("reservista").value || null,
+    cnh: $("cnh").value || null,
+
+    cep: $("cep").value || null,
+    logradouro: $("logradouro").value || null,
+    numero: $("numero").value || null,
+    complemento: $("complemento").value || null,
+    bairro: $("bairro").value || null,
+    cidade: $("cidade").value || null,
+    estado: $("estado").value || null,
+    email_pessoal: $("emailPessoal").value || null,
+    celular: $("celular").value || null,
+    telefone_emergencia: $("telefoneEmergencia").value || null,
+
+    banco: $("banco").value || null,
+    agencia: $("agencia").value || null,
+    conta_corrente: $("contaCorrente").value || null,
+  };
+
+  // regras mínimas (batem com seus NOT NULL que já te deram erro)
+  if (!payload.nome) throw new Error("Nome é obrigatório.");
+  if (!payload.cpf) throw new Error("CPF é obrigatório.");
+  if (!payload.data_admissao) throw new Error("Data de admissão é obrigatória.");
+  if (!payload.cargo_atual_id) throw new Error("Cargo é obrigatório.");
+
+  return payload;
+}
+
+window.salvarColaborador = async function salvarColaborador() {
   try {
-    const dados = montarPayloadDoForm();
+    const payload = coletarPayload();
 
-    // ✅ AQUI é onde você precisava mexer (ITEM 2)
-    const ok = validarFormulario(dados);
-    if (!ok) return;
-
-    if (colaboradorEditandoId) {
-      await window.DBHandler.atualizarColaborador(colaboradorEditandoId, dados);
+    if (!currentId) {
+      await DBHandler.inserirColaborador(payload);
     } else {
-      await window.DBHandler.inserirColaborador(dados);
+      await DBHandler.atualizarColaborador(currentId, payload);
     }
 
-    await carregarColaboradores();
-    renderTabela();
-    fecharFormulario();
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao salvar: " + (err.message || err));
+    await carregarLista();
+    showView(true);
+    renderizarTabela();
+    alert("✅ Registro salvo com sucesso.");
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao salvar:\n" + (e.message || e));
   }
-}
+};
 
-/* Monta payload no padrão do banco (snake_case) */
-function montarPayloadDoForm() {
-  const cpfRaw = getVal("cpf");
-  const cpfDigits = (cpfRaw || "").toString().replace(/\D/g, "");
+// ---------- Desligamento / Reativação ----------
+let modalTargetId = null;
 
-  return {
-    // id não precisa enviar no insert (mas não atrapalha no update se você preferir)
-    gestor_id: asNumberOrNull(getVal("gestorId")),
-    cargo_atual_id: asNumberOrNull(getVal("cargoAtualId")),
+window.abrirModalDesligamento = function abrirModalDesligamento(id) {
+  modalTargetId = id;
+  $("modalDataDemissao").value = new Date().toISOString().slice(0, 10);
+  $("modalMotivo").value = "";
+  $("modalDesligamento").style.display = "flex";
+};
 
-    nome: getVal("nome") || null,
-    funcao: getVal("funcao") || null,
-    matricula: getVal("matricula") || null,
+window.fecharModalDesligamento = function fecharModalDesligamento() {
+  $("modalDesligamento").style.display = "none";
+  modalTargetId = null;
+};
 
-    data_nascimento: getVal("dataNascimento") || null,
-    genero: getVal("genero") || null,
-    estado_civil: getVal("estadoCivil") || null,
+window.confirmarDesligamento = async function confirmarDesligamento() {
+  try {
+    if (!modalTargetId) return;
 
-    nacionalidade: getVal("nacionalidade") || null,
-    naturalidade: getVal("naturalidade") || null,
+    await DBHandler.desativarColaborador(modalTargetId, {
+      dataDemissao: $("modalDataDemissao").value,
+      motivoDemissao: $("modalMotivo").value || null,
+    });
 
-    data_admissao: getVal("dataAdmissao") || null,
-    data_demissao: getVal("dataDemissao") || null,
-    motivo_demissao: getVal("motivoDemissao") || null,
-
-    cep: getVal("cep") || null,
-    logradouro: getVal("logradouro") || null,
-    numero: getVal("numero") || null,
-    complemento: getVal("complemento") || null,
-    bairro: getVal("bairro") || null,
-    cidade: getVal("cidade") || null,
-    estado: getVal("estado") || null,
-
-    celular: getVal("celular") || null,
-    telefone: getVal("telefone") || null,
-    telefone_emergencia: getVal("telefoneEmergencia") || null,
-
-    email_empresarial: getVal("emailEmpresarial") || null,
-    email_pessoal: getVal("emailPessoal") || null,
-
-    // ✅ NOT NULL no seu banco (pelo erro que você mostrou)
-    cpf: cpfDigits || null,
-    rg: getVal("rg") || null,
-  };
-}
-
-function validarFormulario(dados) {
-  // Pelo seu erro do Supabase:
-  // - cpf é NOT NULL
-  // - data_admissao é NOT NULL
-  // então validamos aqui antes de chamar o banco.
-
-  const erros = [];
-
-  if (!dados.nome || !dados.nome.trim()) erros.push("Nome é obrigatório.");
-  if (!dados.cpf) erros.push("CPF é obrigatório (somente números).");
-  if (!dados.data_admissao) erros.push("Data de admissão é obrigatória.");
-
-  // valida email se preenchido
-  const emailEmp = dados.email_empresarial;
-  const emailPes = dados.email_pessoal;
-  if (emailEmp && !isEmailValido(emailEmp)) erros.push("E-mail empresarial inválido.");
-  if (emailPes && !isEmailValido(emailPes)) erros.push("E-mail pessoal inválido.");
-
-  if (erros.length) {
-    alert(erros.join("\n"));
-    return false;
+    fecharModalDesligamento();
+    await carregarLista();
+    renderizarTabela();
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao desligar:\n" + (e.message || e));
   }
-  return true;
-}
+};
 
-/* Helpers DOM */
-function getVal(id) {
-  const el = document.getElementById(id);
-  return el ? (el.value ?? "").trim() : "";
-}
-function setVal(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.value = value ?? "";
-}
+window.reativar = async function reativar(id) {
+  try {
+    await DBHandler.reativarColaborador(id);
+    await carregarLista();
+    renderizarTabela();
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao reativar:\n" + (e.message || e));
+  }
+};
 
-function asNumberOrNull(v) {
-  const n = Number((v || "").toString().trim());
-  return Number.isFinite(n) && n !== 0 ? n : (v ? n : null);
-}
+// ---------- ViaCEP ----------
+window.buscarCep = async function buscarCep(cep) {
+  try {
+    const clean = onlyDigits(cep);
+    if (clean.length !== 8) return;
 
-function isEmailValido(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
-}
+    const r = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+    const j = await r.json();
+    if (j.erro) return;
 
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+    $("logradouro").value = j.logradouro || "";
+    $("bairro").value = j.bairro || "";
+    $("cidade").value = j.localidade || "";
+    $("estado").value = j.uf || "";
+  } catch (e) {
+    console.warn("ViaCEP falhou:", e);
+  }
+};
