@@ -360,43 +360,45 @@ window.editar = async function editar(id) {
 };
 
 async function abrirFicha(id, mode = "view") {
-  // 1. Busca os dados e define o estado
   const colab = await DBHandler.buscarColaboradorPorId(id);
   if (!colab) return;
-  
+
   currentId = colab.id;
 
-  // 2. Atualiza o Header Persistente (Nome e Badge de Status)
-  const headerNome = $("headerNome");
-  const statusBadge = $("formStatusBadge");
-
-  if (headerNome) {
-    headerNome.textContent = colab.nome || "Novo Colaborador";
+  // 1. Atualiza o Nome no Header (com trava de segurança)
+  const elNome = $("headerNome");
+  if (elNome) {
+    elNome.textContent = colab.nome || "Novo Colaborador";
   }
 
-  if (statusBadge) {
-    const ativo = isAtivo(colab); // Usa sua função utilitária isAtivo
-    statusBadge.textContent = ativo ? "ATIVO" : "INATIVO";
-    statusBadge.className = `badge-status ${ativo ? "status-ativo" : "status-inativo"}`;
-    statusBadge.style.display = "inline-block";
+  // 2. Atualiza o Badge de Status (com trava de segurança)
+  const elBadge = $("formStatusBadge");
+  if (elBadge) {
+    const ativo = isAtivo(colab);
+    elBadge.textContent = ativo ? "ATIVO" : "INATIVO";
+    elBadge.className = `badge-status ${ativo ? "status-ativo" : "status-inativo"}`;
+    elBadge.style.display = "inline-block";
   }
 
-  // 3. Preenche os inputs do formulário
+  // 3. Preenche o formulário
   preencherForm(colab);
 
-  // 4. Sincronização em tempo real (Nome no Header acompanha o Input)
-  const inputNome = $("inpNome"); // Certifique-se que o ID do input de nome é 'inpNome'
-  if (inputNome && headerNome) {
+  // 4. Sincroniza o input com o Header em tempo real
+  const inputNome = $("inpNome");
+  if (inputNome && elNome) {
     inputNome.oninput = (e) => {
-      headerNome.textContent = e.target.value || "Novo Colaborador";
+      elNome.textContent = e.target.value || "Novo Colaborador";
     };
   }
 
-  // 5. Interface e Modos
-  $("formTitle").textContent = mode === "edit" ? "Editar Colaborador" : "Ficha do Colaborador";
+  // 5. Ajusta título auxiliar e exibe a tela
+  const elTitle = $("formTitle");
+  if (elTitle) {
+    elTitle.textContent = mode === "edit" ? "Editar Colaborador" : "Ficha do Colaborador";
+  }
 
-  showView(false); // Alterna para a tela do formulário
-  setModoForm(mode); // Configura se os campos são editáveis ou apenas leitura
+  showView(false);
+  setModoForm(mode);
 }
 
 
@@ -608,6 +610,7 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
 
 
