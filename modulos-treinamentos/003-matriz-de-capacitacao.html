@@ -1,263 +1,388 @@
-/* db-handler.js (global) */
-/* Requer no HTML (ANTES deste arquivo):
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-*/
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Colaboradores | Enterprise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/estilos-treinamentos/cadastro-style.css">
+    <script type="module" src="/scripts-treinamentos/cadastro-script.js"></script>
 
-(function () {
-  // ✅ Supabase via CDN global
-  if (!window.supabase || !window.supabase.createClient) {
-    console.error("Supabase JS não encontrado. Verifique o script CDN no HTML.");
-    return;
-  }
+    
+    <style>
+        /* =========================================================
+           LAYOUT 100VH (TELA ÚNICA FIXA)
+           ========================================================= */
+        html, body {
+            height: 100%; margin: 0; padding: 0;
+            overflow: hidden; /* Trava a rolagem da página inteira */
+            display: flex; flex-direction: column;
+            background-color: #f1f5f9;
+        }
 
-  // 🔐 Credenciais
-  const SUPABASE_URL = "https://mtblwyrcidrszwvjgxao.supabase.co";
-  const SUPABASE_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Ymx3eXJjaWRyc3p3dmpneGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MTg4NTUsImV4cCI6MjA4NTI5NDg1NX0.6CipXB_HI0t0Gcle3pTlZTe9rqoh-8-EhfxQy-VodH0";
+        /* 1. Ajuste do Header para ficar fixo */
+        .top-bar {
+            flex-shrink: 0; /* Não encolhe */
+            z-index: 50;
+        }
 
-  // ✅ Cliente único
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        /* 2. Container Principal Flexível */
+        .container {
+            flex: 1; /* Ocupa o resto da altura */
+            display: flex; flex-direction: column;
+            padding: 15px 20px 0 20px; /* Margens internas */
+            overflow: hidden; /* O scroll será nos filhos */
+            max-width: 100%;
+        }
 
-  function normalizeError(err) {
-    if (!err) return null;
-    if (typeof err === "string") return err;
-    if (err.message) return err.message;
-    try {
-      return JSON.stringify(err);
-    } catch {
-      return "Erro desconhecido";
-    }
-  }
+        /* 3. Área da Tabela com Scroll Independente */
+        #viewList {
+            display: flex; flex-direction: column;
+            height: 100%; overflow: hidden;
+        }
 
-  const DBHandler = {
-    supabaseClient,
+        .table-container {
+            flex: 1; /* Cresce para ocupar espaço */
+            overflow: hidden; /* Scroll fica na .table-scroll-area */
+            margin-bottom: 20px;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            display: flex; flex-direction: column;
+        }
 
-    // =========================
-    // 1) LEITURA INICIAL (MATRIZ TREINAMENTOS)
-    // =========================
-    async carregarDadosIniciais() {
-      console.log("🔄 Buscando dados do Supabase...");
+        .table-scroll-area {
+            flex: 1;
+            overflow-y: auto; /* Rolagem vertical aqui */
+            overflow-x: auto;
+        }
 
-      // 1. Treinamentos
-      const { data: treinosRaw, error: errT } = await supabaseClient
-        .from("treinamentos")
-        .select("id, nome, categoria, descricao, cor, link_externo")
-        .order("categoria", { ascending: true })
-        .order("nome", { ascending: true });
+        /* =========================================================
+           BADGE DE SEGURANÇA & UI
+           ========================================================= */
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: inline-flex !important; }
+        body.is-admin button.btn-primary-glow.admin-only { display: flex !important; }
 
-      if (errT) throw errT;
+        /* Badge no Cabeçalho */
+        .viewer-badge {
+            display: none; align-items: center; gap: 6px;
+            background-color: #fff7ed; color: #c2410c; 
+            border: 1px solid #ffedd5;
+            font-size: 11px; font-weight: 600; 
+            padding: 4px 12px; border-radius: 100px;
+            margin-left: 16px;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .viewer-badge svg { width: 14px; height: 14px; stroke-width: 2; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
-      const treinos = (treinosRaw || []).map((t) => ({
-        id: t.id,
-        nome: t.nome,
-        categoria: t.categoria,
-        desc: t.descricao,
-        color: t.cor,
-        link: t.link_externo,
-      }));
+        /* =========================================================
+           ÍCONES DA TABELA (SVG CLEAN)
+           ========================================================= */
+        .btn-icon-action {
+            width: 30px; height: 30px; 
+            padding: 0; border-radius: 6px;
+            border: 1px solid #e2e8f0; background: #fff;
+            color: #64748b; transition: all 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; margin-left: 4px;
+        }
+        .btn-icon-action svg { width: 15px; height: 15px; stroke-width: 2; }
 
-      // 2. Cargos (view ou tabela)
-      const { data: cargosRaw, error: errC } = await supabaseClient
-        .from("view_matriz_cargos")
-        .select("*")
-        .order("id", { ascending: true });
+        /* Cores de Hover */
+        .btn-icon-action:hover { border-color: #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-icon-action.action-view:hover { color: #3b82f6; background: #eff6ff; border-color: #bfdbfe; }
+        .btn-icon-action.action-edit:hover { color: #f59e0b; background: #fffbeb; border-color: #fde68a; }
+        .btn-icon-action.action-restore:hover { color: #10b981; background: #ecfdf5; border-color: #a7f3d0; }
+        .btn-icon-action.action-delete:hover { color: #ef4444; background: #fef2f2; border-color: #fecaca; }
 
-      if (errC) throw errC;
+        /* Esconde botões de ação para visitantes (exceto o ver) */
+        body:not(.is-admin) #colabTable tbody td:last-child > *:not(:first-child) {
+            display: none !important;
+        }
 
-      const cargos = (cargosRaw || []).map((c) => ({
-        ...c,
-        corClass: c.cor_class, // padroniza para o front
-      }));
+        /* Inputs Desabilitados */
+        input:disabled, select:disabled {
+            background-color: #f8fafc !important; color: #94a3b8 !important;
+            cursor: not-allowed; border-color: #e2e8f0 !important;
+        }
+    </style>
+</head>
+<body>
 
-      return { treinamentos: treinos, cargos };
-    },
+    <header class="top-bar">
+        <div style="display: flex; align-items: center;">
+            <h1>Gestão de Colaboradores</h1>
+            
+            <div id="viewerWarning" class="viewer-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Modo Leitura</span>
+            </div>
+        </div>
+    </header>
 
-    // =========================
-    // 2) TREINAMENTOS
-    // =========================
-    async salvarTreinamento(treino) {
-      const payload = {
-        nome: treino.nome,
-        categoria: treino.categoria,
-        descricao: treino.desc,
-        cor: treino.color,
-        link_externo: treino.link,
-      };
+    <main class="container">
+        
+        <section id="viewList" class="content-view">
+            
+            <div class="actions-container">
+                <div class="toolbar-left">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="searchBox" placeholder="Buscar colaborador..." onkeyup="renderizarTabela()">
+                    </div>
+                    <span class="counter-badge" id="contadorRegistros">Carregando...</span>
+                </div>
 
-      if (treino.id) payload.id = treino.id;
+                <div class="toolbar-right">
+                    <div class="filters-group">
+                        <div class="select-wrapper">
+                            <select id="filtroStatus" onchange="renderizarTabela()">
+                                <option value="todos">Status: Todos</option>
+                                <option value="ativos">Apenas Ativos</option>
+                                <option value="desligados">Desligados</option>
+                            </select>
+                        </div>
+                        <div class="select-wrapper">
+                            <select id="filtroDepto" onchange="renderizarTabela()"></select>
+                        </div>
+                        <div class="select-wrapper">
+                            <select id="filtroCargo" onchange="renderizarTabela()"></select>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-icon-soft" title="Limpar Filtros" onclick="limparFiltros()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3L2 3 10 12.46 10 19 14 21 14 12.46 22 3"></path></svg>
+                    </button>
 
-      const { data, error } = await supabaseClient
-        .from("treinamentos")
-        .upsert(payload)
-        .select()
-        .single();
+                    <div class="vertical-divider"></div>
+                    
+                    <button class="btn-primary-glow admin-only" onclick="novoColaborador()">+ Novo</button>
+                </div>
+            </div>
 
-      if (error) throw error;
-      return data;
-    },
+            <div class="table-container">
+                <div class="table-scroll-area">
+                    <table id="colabTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable" onclick="ordenar('nome')">NOME <span id="sort-nome"></span></th>
+                                <th class="sortable" onclick="ordenar('cargo')">CARGO <span id="sort-cargo"></span></th>
+                                <th>DEPTO</th>
+                                <th>ADMISSÃO</th>
+                                <th class="sortable" onclick="ordenar('status')">STATUS <span id="sort-status"></span></th>
+                                <th style="text-align: right;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-    async excluirTreinamento(id) {
-      // Remove regras primeiro (cascata manual)
-      await supabaseClient.from("matriz_regras").delete().eq("treinamento_id", id);
+        <section id="viewForm" class="content-view" style="display: none;">
+            <div class="form-header">
+                <h2 id="formTitle">Novo Colaborador</h2>
+                <div style="flex:1"></div>
+                <div class="form-status-badge" style="display:none;" id="formStatusBadge">ATIVO</div>
+            </div>
 
-      const { error } = await supabaseClient.from("treinamentos").delete().eq("id", id);
-      if (error) throw error;
-    },
+            <div class="form-tabs">
+                <button class="tab-link active" onclick="openTab('tabDados', this)">Dados Pessoais</button>
+                <button class="tab-link" onclick="openTab('tabContrato', this)">Contrato e Cargo</button>
+                <button class="tab-link" onclick="openTab('tabDocs', this)">Documentação</button>
+                <button class="tab-link" onclick="openTab('tabEndereco', this)">Endereço e Contato</button>
+                <button class="tab-link" onclick="openTab('tabBancarios', this)">Dados Bancários</button>
+            </div>
 
-    async atualizarRegra(cargoId, treinoId, novoStatus) {
-      // Limpa regra anterior
-      const { error: errDel } = await supabaseClient
-        .from("matriz_regras")
-        .delete()
-        .match({ cargo_id: cargoId, treinamento_id: treinoId });
+            <form id="mainForm" onsubmit="event.preventDefault();">
+                <input type="hidden" id="colabId">
+                
+                <div id="tabDados" class="tab-content active">
+                    <div class="grid-4">
+                        <div class="field span-2"> <label>Nome Completo <span style="color:red">*</span></label> <input type="text" id="nome" required> </div>
+                        <div class="field"> <label>CPF <span style="color:red">*</span></label> <input type="text" id="cpf" placeholder="000.000.000-00" required> </div>
+                        <div class="field"> <label>Data Nascimento</label> <input type="date" id="dataNascimento"> </div>
+                        
+                        <div class="field"> <label>Gênero</label> <select id="genero"><option value="">Selecione...</option><option>Masculino</option><option>Feminino</option><option>Outro</option></select> </div>
+                        <div class="field"> <label>Estado Civil</label> <select id="estadoCivil"><option value="">Selecione...</option><option>Solteiro(a)</option><option>Casado(a)</option><option>Divorciado(a)</option></select> </div>
+                        <div class="field"> <label>Nacionalidade</label> <input type="text" id="nacionalidade" value="Brasileira"> </div>
+                        <div class="field"> <label>Naturalidade</label> <input type="text" id="naturalidade"> </div>
 
-      if (errDel) throw errDel;
+                        <div class="field"> <label>Raça/Cor</label> <select id="racaEtnia"><option value="">Selecione...</option><option>Branca</option><option>Parda</option><option>Preta</option><option>Amarela</option><option>Indígena</option></select> </div>
+                        <div class="field"> <label>Grau de Instrução</label> <select id="escolaridade"><option value="">Selecione...</option><option>Médio Completo</option><option>Superior Cursando</option><option>Superior Completo</option><option>Pós-Graduação</option></select> </div>
+                        <div class="field span-2"> <label>Nome da Mãe</label> <input type="text" id="nomeMae"> </div>
+                        
+                        <div class="field span-2"> <label>Nome do Pai</label> <input type="text" id="nomePai"> </div>
+                        <div class="field checkbox-wrapper" style="margin-top: 25px;">
+                            <input type="checkbox" id="pcd"> <label for="pcd">Pessoa com Deficiência (PCD)</label>
+                        </div>
+                        <div class="field checkbox-wrapper" style="margin-top: 25px;">
+                            <input type="checkbox" id="candidato"> <label for="candidato">Candidato (Pré-Admissão)</label>
+                        </div>
+                    </div>
+                </div>
 
-      // Insere nova regra se necessário
-      if (novoStatus !== "none") {
-        const tipoBanco = novoStatus === "mandatory" ? "OBRIGATORIO" : "RECOMENDADO";
+                <div id="tabContrato" class="tab-content">
+                    <div class="grid-4">
+                        <div class="field"> <label>Data Admissão <span style="color:red">*</span></label> <input type="date" id="dataAdmissao" required> </div>
+                        <div class="field"> <label>Cargo <span style="color:red">*</span></label> <select id="cargoAtualId" required></select> </div>
+                        <div class="field"> <label>Departamento</label> <input type="text" id="departamento"> </div>
+                        <div class="field"> <label>Matrícula</label> <input type="text" id="matricula"> </div>
+                        <div class="field"> <label>Tipo de Contrato</label> <select id="tipoContrato"><option>CLT Indeterminado</option><option>CLT Determinado</option><option>Estágio</option><option>PJ</option><option>Jovem Aprendiz</option></select> </div>
+                        <div class="field"> <label>Salário Base</label> <input type="number" step="0.01" id="salario"> </div>
+                        <div class="field"> <label>Moeda</label> <select id="moeda"><option>BRL</option><option>USD</option><option>EUR</option></select> </div>
+                        <div class="field"> <label>Unidade/Filial</label> <input type="text" id="unidade"> </div>
+                        <div class="field"> <label>Gestor Imediato</label> <select id="gestorId"></select> </div>
+                        <div class="field"> <label>Email Corporativo</label> <input type="email" id="emailEmpresarial"> </div>
+                        <div class="field"> <label>Turno</label> <input type="text" id="turno"> </div>
+                        <div class="field"> <label>Banco de Horas?</label> <select id="bancoHoras"><option value="sim">Sim</option><option value="nao">Não</option></select> </div>
+                    </div>
+                </div>
+                <div id="tabDocs" class="tab-content">
+                    <div class="grid-4">
+                        <div class="field"> <label>RG</label> <input type="text" id="rg"> </div>
+                        <div class="field"> <label>Órgão Exp.</label> <input type="text" id="orgaoExpedidor"> </div>
+                        <div class="field"> <label>Data Expedição</label> <input type="date" id="dataExpedicao"> </div>
+                        <div class="field"> <label>PIS/PASEP</label> <input type="text" id="pis"> </div>
+                        <div class="field"> <label>CTPS Nº</label> <input type="text" id="ctpsNum"> </div>
+                        <div class="field"> <label>Série CTPS</label> <input type="text" id="ctpsSerie"> </div>
+                        <div class="field"> <label>Título Eleitor</label> <input type="text" id="tituloEleitor"> </div>
+                        <div class="field"> <label>Zona/Seção</label> <input type="text" id="zonaEleitoral"> </div>
+                        <div class="field"> <label>Reservista</label> <input type="text" id="reservista"> </div>
+                        <div class="field"> <label>CNH</label> <input type="text" id="cnh"> </div>
+                    </div>
+                </div>
+                <div id="tabEndereco" class="tab-content">
+                    <div class="grid-4">
+                        <div class="field"> <label>CEP</label> <input type="text" id="cep" onblur="buscarCep(this.value)"> </div>
+                        <div class="field span-2"> <label>Logradouro</label> <input type="text" id="logradouro"> </div>
+                        <div class="field"> <label>Número</label> <input type="text" id="numero"> </div>
+                        <div class="field"> <label>Complemento</label> <input type="text" id="complemento"> </div>
+                        <div class="field"> <label>Bairro</label> <input type="text" id="bairro"> </div>
+                        <div class="field"> <label>Cidade</label> <input type="text" id="cidade"> </div>
+                        <div class="field"> <label>Estado</label> <input type="text" id="estado"> </div>
+                        <div class="field sep-line span-4"></div>
+                        <div class="field span-2"> <label>Email Pessoal</label> <input type="email" id="emailPessoal"> </div>
+                        <div class="field"> <label>Celular</label> <input type="text" id="celular"> </div>
+                        <div class="field"> <label>Tel. Emergência</label> <input type="text" id="telefoneEmergencia"> </div>
+                    </div>
+                </div>
+                <div id="tabBancarios" class="tab-content">
+                    <div class="grid-3">
+                        <div class="field"> <label>Banco</label> <input type="text" id="banco"> </div>
+                        <div class="field"> <label>Agência</label> <input type="text" id="agencia"> </div>
+                        <div class="field"> <label>Conta Corrente</label> <input type="text" id="contaCorrente"> </div>
+                    </div>
+                </div>
+            </form>
 
-        const { error: errIns } = await supabaseClient.from("matriz_regras").insert({
-          cargo_id: cargoId,
-          treinamento_id: treinoId,
-          tipo: tipoBanco,
+            <div class="form-actions">
+                <button type="button" class="btn-danger-text admin-only" id="btnExcluir" style="display:none;">Excluir</button>
+                <div style="flex:1"></div>
+                <button type="button" class="btn-secondary" id="btnCancelarVoltar" onclick="acaoVoltar()">Voltar</button>
+                <button type="button" class="btn-primary admin-only" id="btnSalvar" onclick="salvarColaborador()">Salvar Dados</button>
+                <button type="button" class="btn-primary admin-only" id="btnIrParaEdicao" style="display:none;" onclick="ativarModoEdicao()">Editar Registro</button>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="modalDesligamento" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Confirmar Desligamento</h3>
+            </div>
+            <div class="modal-body">
+                <p>Você está prestes a desligar este colaborador.</p>
+                <div class="field"><label>Data</label><input type="date" id="modalDataDemissao"></div>
+                <div class="field"><label>Motivo</label><input type="text" id="modalMotivo"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="fecharModalDesligamento()">Cancelar</button>
+                <button class="btn-danger-solid" onclick="confirmarDesligamento()">Confirmar</button>
+            </div>
+        </div>
+    </div>  
+
+
+	
+	
+	
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sessionRaw = localStorage.getItem('rh_session');
+            if (!sessionRaw) { window.top.location.href = '../login.html'; return; }
+            const session = JSON.parse(sessionRaw);
+
+            if (session.role === 'ADMIN') {
+                document.body.classList.add('is-admin');
+            } else {
+                // Ativa a badge no header
+                const badge = document.getElementById('viewerWarning');
+                if(badge) badge.style.display = 'flex';
+                
+                // Trava formulário
+                const observer = new MutationObserver(() => {
+                    const form = document.getElementById('viewForm');
+                    if (form.style.display !== 'none') {
+                        form.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
+                    }
+                });
+                observer.observe(document.getElementById('viewForm'), { attributes: true });
+            }
         });
+    </script>
 
-        if (errIns) throw errIns;
-      }
-    },
+    
 
-    async registrarLog(usuario, acao, detalhes, ip) {
-      const { error } = await supabaseClient.from("logs_sistema").insert({
-        usuario,
-        acao,
-        detalhes,
-        ip: ip || "IP não detectado",
-      });
+    <script>
+        // Ícones SVG (Feather Icons)
+        const icons = {
+            view: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+            edit: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+            restore: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>',
+            trash: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>'
+        };
 
-      if (error) console.error("Erro silencioso ao gravar log:", error);
-    },
+        // Monitora a tabela para trocar emojis por SVGs assim que forem criados
+        const tableBody = document.querySelector('#colabTable tbody');
+        if (tableBody) {
+            const patcher = new MutationObserver(() => {
+                const buttons = tableBody.querySelectorAll('.btn-icon-action');
+                buttons.forEach(btn => {
+                    const html = btn.innerHTML;
+                    
+                    // Substitui Emoji de Olho
+                    if (html.includes('👁️')) {
+                        btn.innerHTML = icons.view;
+                        btn.classList.add('action-view');
+                        btn.title = "Visualizar Ficha";
+                    }
+                    // Substitui Emoji de Lápis
+                    else if (html.includes('✏️')) {
+                        btn.innerHTML = icons.edit;
+                        btn.classList.add('action-edit');
+                        btn.title = "Editar Dados";
+                    }
+                    // Substitui Emoji de Reciclagem (Reativar)
+                    else if (html.includes('♻️')) {
+                        btn.innerHTML = icons.restore;
+                        btn.classList.add('action-restore');
+                        btn.title = "Reativar Colaborador";
+                    }
+                    // Substitui Emoji de Lixo (Se houver)
+                    else if (html.includes('🗑️')) {
+                        btn.innerHTML = icons.trash;
+                        btn.classList.add('action-delete');
+                    }
+                });
+            });
+            patcher.observe(tableBody, { childList: true, subtree: true });
+        }
+    </script>
+</body>
 
-    // =========================
-    // 3) CARGOS
-    // =========================
-    async salvarCargo(cargo) {
-      const payload = {
-        nome: cargo.nome,
-        cor_class: cargo.corClass,
-        ordem: cargo.ordem || 99,
-      };
-      if (cargo.id) payload.id = cargo.id;
+</html>
 
-      const { data, error } = await supabaseClient
-        .from("cargos")
-        .upsert(payload)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-
-    async excluirCargo(id) {
-      const { error: errRegras } = await supabaseClient
-        .from("matriz_regras")
-        .delete()
-        .eq("cargo_id", id);
-
-      if (errRegras) throw errRegras;
-
-      const { error: errCargo } = await supabaseClient.from("cargos").delete().eq("id", id);
-      if (errCargo) throw errCargo;
-    },
-
-    // =========================
-    // 4) AUTH
-    // =========================
-    async validarLogin(username, password) {
-      const { data, error } = await supabaseClient
-        .from("usuarios_sistema")
-        .select("*")
-        .eq("username", username)
-        .eq("password", password)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-
-    // =========================
-    // 5) COLABORADORES
-    // =========================
-    async listarColaboradores({ somenteAtivos = false } = {}) {
-      let q = supabaseClient.from("colaboradores").select("*").order("nome", { ascending: true });
-      if (somenteAtivos) q = q.is("data_demissao", null);
-
-      const { data, error } = await q;
-      if (error) throw new Error(normalizeError(error));
-      return data || [];
-    },
-
-    async buscarColaboradorPorId(id) {
-      const { data, error } = await supabaseClient
-        .from("colaboradores")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw new Error(normalizeError(error));
-      return data;
-    },
-
-    async inserirColaborador(payload) {
-      const { data, error } = await supabaseClient
-        .from("colaboradores")
-        .insert([payload])
-        .select()
-        .single();
-
-      if (error) throw new Error(normalizeError(error));
-      return data;
-    },
-
-    async atualizarColaborador(id, payload) {
-      const { data, error } = await supabaseClient
-        .from("colaboradores")
-        .update(payload)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw new Error(normalizeError(error));
-      return data;
-    },
-
-    async desativarColaborador(id, { dataDemissao, motivoDemissao } = {}) {
-      const payload = {
-        data_demissao: dataDemissao || new Date().toISOString().slice(0, 10),
-        motivo_demissao: motivoDemissao || null,
-      };
-      return this.atualizarColaborador(id, payload);
-    },
-
-    async reativarColaborador(id) {
-      return this.atualizarColaborador(id, { data_demissao: null, motivo_demissao: null });
-    },
-
-    async listarCargos() {
-      const { data, error } = await supabaseClient
-        .from("cargos")
-        .select("id, nome")
-        .order("nome", { ascending: true });
-
-      if (error) throw new Error(normalizeError(error));
-      return data || [];
-    },
-  };
-
-  // ✅ expõe globalmente
-  window.supabaseClient = supabaseClient;
-  window.DBHandler = DBHandler;
-
-  console.log("✅ DBHandler carregado e Supabase conectado (client pronto).");
-})();
