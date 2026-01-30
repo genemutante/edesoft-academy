@@ -130,8 +130,7 @@ export const DBHandler = {
         }
     }, // <--- A VÍRGULA QUE FALTAVA ESTAVA AQUI!
 
-    // --- 6. GERENCIAR CARGOS (NOVO) ---
-   // No seu db-handler.js
+// --- 6. GERENCIAR CARGOS (CRIAR / EDITAR) ---
     async salvarCargo(cargo) {
         const payload = {
             nome: cargo.nome,
@@ -144,7 +143,7 @@ export const DBHandler = {
         }
 
         const { data, error } = await supabase
-            .from('cargos') // Certifique-se de que o nome é 'cargos'
+            .from('cargos') 
             .upsert(payload)
             .select()
             .single();
@@ -153,7 +152,26 @@ export const DBHandler = {
         return data;
     },
 
-    // --- 7. AUTENTICAÇÃO ---
+    // --- 7. EXCLUIR CARGO (COM LIMPEZA DE REGRAS) ---
+    async excluirCargo(id) {
+        // 1. Limpa regras vinculadas ao cargo na matriz para evitar dados órfãos
+        const { error: errRegras } = await supabase
+            .from('matriz_regras')
+            .delete()
+            .eq('cargo_id', id);
+        
+        if (errRegras) throw errRegras;
+        
+        // 2. Exclui o cargo de fato da tabela física
+        const { error: errCargo } = await supabase
+            .from('cargos')
+            .delete()
+            .eq('id', id);
+
+        if (errCargo) throw errCargo;
+    },
+
+    // --- 8. AUTENTICAÇÃO ---
     async validarLogin(username, password) {
         const { data, error } = await supabase
             .from('usuarios_sistema')
@@ -165,13 +183,5 @@ export const DBHandler = {
         if (error) throw error;
         return data;
     }
-};
+}; // Fim do objeto DBHandler
 
-async excluirCargo(id) {
-    // 1. Limpa regras vinculadas ao cargo na matriz
-    await supabase.from('matriz_regras').delete().eq('cargo_id', id);
-    
-    // 2. Exclui o cargo de fato
-    const { error } = await supabase.from('cargos').delete().eq('id', id);
-    if (error) throw error;
-};
