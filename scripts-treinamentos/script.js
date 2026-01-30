@@ -108,6 +108,9 @@ function init() {
 // =============================================================================
 // 3. RENDERIZAÇÃO DA MATRIZ (Versão Ultra-Compacta)
 // =============================================================================
+// =============================================================================
+// 3. RENDERIZAÇÃO DA MATRIZ (Versão com Menu de Contexto no Header)
+// =============================================================================
 function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrigatoriedade) {
     const table = document.getElementById('matrixTable');
     if (!table) return;
@@ -117,7 +120,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     colCache = {}; 
     lastHighlightedCol = null;
 
-    // --- A. Cabeçalho (Sem alterações na altura do cabeçalho de cargos) ---
+    // --- A. Cabeçalho (Incluso suporte ao botão direito nos cargos) ---
     let headerHTML = '<tr><th class="top-left-corner"><div class="hud-card">' +
     '<div class="hud-top-label">' + icons.lupa + ' INSPEÇÃO</div>' +
     '<div id="hudScan" class="hud-scan"><div class="scan-icon-large">' + icons.lupa + '</div><div class="scan-msg">Explore a matriz<br>para ver detalhes</div></div>' +
@@ -128,7 +131,17 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     config.cargos.forEach((cargo, index) => {
         if (filtroCargo !== 'all' && cargo.id.toString() !== filtroCargo) return;
         const activeClass = (filtroCargo === cargo.id.toString()) ? 'selected-col-header' : '';
-        headerHTML += `<th class="${activeClass}" data-col="${index}" onclick="document.getElementById('roleFilter').value='${cargo.nome}'; atualizarFiltros();"><div class="role-wrapper ${cargo.corClass}"><div class="vertical-text">${cargo.nome}</div></div></th>`;
+        
+        // AJUSTE: Adicionado oncontextmenu para abrir o menu de edição/exclusão do cargo
+        headerHTML += `
+            <th class="${activeClass}" 
+                data-col="${index}" 
+                onclick="document.getElementById('roleFilter').value='${cargo.nome}'; atualizarFiltros();"
+                oncontextmenu="window.abrirMenuCargo(event, ${index})">
+                <div class="role-wrapper ${cargo.corClass}">
+                    <div class="vertical-text">${cargo.nome}</div>
+                </div>
+            </th>`;
     });
     headerHTML += '</tr>';
     thead.innerHTML = headerHTML;
@@ -160,12 +173,12 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
             
             const activeClassCell = (filtroCargo === cargo.id.toString()) ? 'selected-col' : '';
             
-            // Aplica estilo forçado na TD também
-            rowCellsHTML += `<td class="${activeClassCell}" style="${styleTD}" data-col="${index}" data-status="${tipoReq}" onclick="abrirMenuContexto(event, ${index}, ${treino.id})">
-                                 <div class="cell-content" style="height: 100%; display: flex; align-items: center; justify-content: center;">
-                                    ${ehO ? '<span class="status-dot O"></span>' : (ehR ? '<span class="status-dot R"></span>' : '')}
-                                 </div>
-                             </td>`;
+            rowCellsHTML += `
+                <td class="${activeClassCell}" style="${styleTD}" data-col="${index}" data-status="${tipoReq}" onclick="abrirMenuContexto(event, ${index}, ${treino.id})">
+                    <div class="cell-content" style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                        ${ehO ? '<span class="status-dot O"></span>' : (ehR ? '<span class="status-dot R"></span>' : '')}
+                    </div>
+                </td>`;
         });
 
         if (linhaPassa) {
@@ -195,7 +208,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     });
     tbody.innerHTML = bodyHTML;
     
-    // Reconstrói Cache
+    // Reconstrói Cache de Colunas para Performance
     const allCells = table.querySelectorAll('[data-col]');
     allCells.forEach(cell => {
         const cIndex = cell.dataset.col;
@@ -898,19 +911,23 @@ window.salvarNovoCargo = async function() {
 
 let tempCargoIndexParaMenu = null;
 
+// --- script.js (Linha ~607) ---
 window.abrirMenuCargo = function(e, index) {
     if (!window.isAdminMode) return;
-    e.preventDefault(); 
+    e.preventDefault(); // Impede o menu padrão do Windows
     e.stopPropagation();
 
     tempCargoIndexParaMenu = index;
     const menu = document.getElementById('contextMenuHeader');
-    const overlay = document.getElementById('contextMenuOverlay'); // Reutiliza o overlay existente
+    const overlay = document.getElementById('contextMenuOverlay');
 
-    menu.style.left = `${e.pageX}px`;
-    menu.style.top = `${e.pageY}px`;
-    menu.classList.remove('hidden');
-    overlay.classList.remove('hidden');
+    if (menu && overlay) {
+        menu.style.left = `${e.pageX}px`;
+        menu.style.top = `${e.pageY}px`;
+        menu.style.display = 'block'; // Força a exibição caso o CSS falhe
+        menu.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+    }
 };
 
 window.editarCargoContexto = function() {
@@ -956,6 +973,7 @@ function fecharMenus() {
     document.getElementById('contextMenuCell')?.classList.add('hidden');
     document.getElementById('contextMenuOverlay')?.classList.add('hidden');
 }
+
 
 
 
