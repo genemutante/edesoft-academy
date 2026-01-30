@@ -108,6 +108,7 @@ function init() {
 // =============================================================================
 // 3. RENDERIZAÇÃO DA MATRIZ (Versão com Menu de Contexto no Header)
 // =============================================================================
+
 function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrigatoriedade) {
     const table = document.getElementById('matrixTable');
     if (!table) return;
@@ -117,7 +118,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     colCache = {}; 
     lastHighlightedCol = null;
 
-    // --- A. Cabeçalho (Suporte a Hexadecimal e Botão Direito) ---
+    // --- A. Cabeçalho (Suporte a Hexadecimal na Borda e Botão Direito) ---
     let headerHTML = '<tr><th class="top-left-corner"><div class="hud-card">' +
     '<div class="hud-top-label">' + icons.lupa + ' INSPEÇÃO</div>' +
     '<div id="hudScan" class="hud-scan"><div class="scan-icon-large">' + icons.lupa + '</div><div class="scan-msg">Explore a matriz<br>para ver detalhes</div></div>' +
@@ -129,17 +130,19 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
         if (filtroCargo !== 'all' && cargo.id.toString() !== filtroCargo) return;
         const activeClass = (filtroCargo === cargo.id.toString()) ? 'selected-col-header' : '';
         
-        // Verifica se corClass é um código Hexadecimal ou uma classe CSS
+        // IDENTIFICAÇÃO DE ESTILO: Diferencia Hexadecimal de Classe CSS antiga
         const isHex = cargo.corClass && cargo.corClass.startsWith('#');
-        const estiloFundo = isHex ? `style="background-color: ${cargo.corClass};"` : `class="role-wrapper ${cargo.corClass}"`;
-        const innerClass = isHex ? 'role-wrapper' : '';
+        
+        // APLICAÇÃO: Se for Hex, aplica border-top. Se for classe, mantém a classe (ex: b-red)
+        const borderStyle = isHex ? `style="border-top: 4px solid ${cargo.corClass} !important;"` : '';
+        const extraClass = isHex ? '' : cargo.corClass;
 
         headerHTML += `
             <th class="${activeClass}" 
                 data-col="${index}" 
                 onclick="document.getElementById('roleFilter').value='${cargo.nome}'; atualizarFiltros();"
                 oncontextmenu="window.abrirMenuCargo(event, ${index})">
-                <div ${estiloFundo} class="${innerClass}">
+                <div class="role-wrapper ${extraClass}" ${borderStyle}>
                     <div class="vertical-text">${cargo.nome}</div>
                 </div>
             </th>`;
@@ -216,6 +219,9 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     vincularEventosLupa();
     vincularEventosDestaque();
 }
+
+
+
 // =============================================================================
 // 4. LÓGICA DE FILTROS & HUD
 // =============================================================================
@@ -1044,6 +1050,7 @@ window.fecharMenus = function() {
 
     tempCargoIndexParaMenu = null;
 };
+
 
 
 
