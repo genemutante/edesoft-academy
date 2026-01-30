@@ -273,7 +273,11 @@ function limparForm() {
 }
 
 function setModoForm(mode) {
-  
+if (!["view", "edit", "new"].includes(mode)) {
+  console.warn("❗Modo inválido passado para setModoForm:", mode);
+  mode = "view";
+}
+
 
   console.log("⚙️ Modo atual:", mode);
 
@@ -549,6 +553,7 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
 
 
