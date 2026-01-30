@@ -1,504 +1,286 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matriz de Capacitação | Enterprise</title>
+// =============================================================================
+// db-handler.js - Camada de Serviço do Supabase (VERSÃO FINAL COM CARGOS)
+// =============================================================================
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// Configuração (Suas chaves)
+const SUPABASE_URL = 'https://mtblwyrcidrszwvjgxao.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Ymx3eXJjaWRyc3p3dmpneGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MTg4NTUsImV4cCI6MjA4NTI5NDg1NX0.6CipXB_HI0t0Gcle3pTlZTe9rqoh-8-EhfxQy-VodH0';
+
+// Cliente Privado
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+export const DBHandler = {
+
+    // --- 1. LEITURA INICIAL ---
+    async carregarDadosIniciais() {
+        console.log("🔄 Buscando dados do Supabase...");
+        
+        // 1. Busca Treinamentos
+        const { data: treinosRaw, error: errT } = await supabase
+            .from('treinamentos')
+            .select('id, nome, categoria, descricao, cor, link_externo') 
+            .order('categoria', { ascending: true }) 
+            .order('nome', { ascending: true });
+            
+        if (errT) throw errT;
+
+        const treinos = treinosRaw.map(t => ({
+            id: t.id,
+            nome: t.nome,
+            categoria: t.categoria,
+            desc: t.descricao,
+            color: t.cor,
+            link: t.link_externo
+        }));
+
+        // 2. Busca Cargos (Via View ou Tabela)
+        const { data: cargosRaw, error: errC } = await supabase
+            .from('view_matriz_cargos')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (errC) throw errC;
+
+        const cargos = cargosRaw.map(c => ({
+            ...c,
+            corClass: c.cor_class 
+        }));
+
+        return { treinamentos: treinos, cargos: cargos };
+    },
+
+    // --- 2. GERENCIAR TREINAMENTOS ---
+    async salvarTreinamento(treino) {
+        const payload = {
+            nome: treino.nome,
+            categoria: treino.categoria,
+            descricao: treino.desc,
+            cor: treino.color,
+            link_externo: treino.link
+        };
+
+        if (treino.id) {
+            payload.id = treino.id;
+        }
+
+        const { data, error } = await supabase
+            .from('treinamentos')
+            .upsert(payload)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // --- 3. EXCLUIR TREINAMENTO ---
+    async excluirTreinamento(id) {
+        // Remove regras primeiro (Cascata manual)
+        await supabase.from('matriz_regras').delete().eq('treinamento_id', id);
+
+        const { error } = await supabase
+            .from('treinamentos')
+            .delete()
+            .eq('id', id);
+            
+        if (error) throw error;
+    },
+
+    // --- 4. ATUALIZAR MATRIZ ---
+    async atualizarRegra(cargoId, treinoId, novoStatus) {
+        // Limpa regra anterior
+        const { error: errDel } = await supabase
+            .from('matriz_regras')
+            .delete()
+            .match({ cargo_id: cargoId, treinamento_id: treinoId });
+            
+        if (errDel) throw errDel;
+
+        // Insere nova regra se necessário
+        if (novoStatus !== 'none') {
+            const tipoBanco = novoStatus === 'mandatory' ? 'OBRIGATORIO' : 'RECOMENDADO';
+            
+            const { error: errIns } = await supabase
+                .from('matriz_regras')
+                .insert({
+                    cargo_id: cargoId,
+                    treinamento_id: treinoId,
+                    tipo: tipoBanco
+                });
+                
+            if (errIns) throw errIns;
+        }
+    },
+
+    // --- 5. REGISTRAR LOG (AUDITORIA) ---
+    async registrarLog(usuario, acao, detalhes, ip) {
+        const { error } = await supabase
+            .from('logs_sistema')
+            .insert({
+                usuario: usuario,
+                acao: acao,
+                detalhes: detalhes,
+                ip: ip || 'IP não detectado'
+            });
+
+        if (error) {
+            console.error("Erro silencioso ao gravar log:", error);
+        }
+    }, // <--- A VÍRGULA QUE FALTAVA ESTAVA AQUI!
+
+// --- 6. GERENCIAR CARGOS (CRIAR / EDITAR) ---
+    async salvarCargo(cargo) {
+        const payload = {
+            nome: cargo.nome,
+            cor_class: cargo.corClass, // O banco espera 'cor_class'
+            ordem: cargo.ordem || 99
+        };
+
+        if (cargo.id) {
+            payload.id = cargo.id;
+        }
+
+        const { data, error } = await supabase
+            .from('cargos') 
+            .upsert(payload)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // --- 7. EXCLUIR CARGO (COM LIMPEZA DE REGRAS) ---
+    async excluirCargo(id) {
+        // 1. Limpa regras vinculadas ao cargo na matriz para evitar dados órfãos
+        const { error: errRegras } = await supabase
+            .from('matriz_regras')
+            .delete()
+            .eq('cargo_id', id);
+        
+        if (errRegras) throw errRegras;
+        
+        // 2. Exclui o cargo de fato da tabela física
+        const { error: errCargo } = await supabase
+            .from('cargos')
+            .delete()
+            .eq('id', id);
+
+        if (errCargo) throw errCargo;
+    },
+
+    // --- 8. AUTENTICAÇÃO ---
+    async validarLogin(username, password) {
+        const { data, error } = await supabase
+            .from('usuarios_sistema')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password)
+            .maybeSingle();
+
+        if (error) throw error;
+        return data;
+    }
+
+// ===============================
+// COLABORADORES (CRUD)
+// ===============================
+async listarColaboradores() {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .select("*")
+    .order("nome", { ascending: true });
+
+  if (error) {
+    console.error("[Supabase] listarColaboradores:", error);
+    throw error;
+  }
+  return data ?? [];
+},
+
+async listarCargosBasicos() {
+  // Para alimentar o select de cargo_atual_id
+  const { data, error } = await supabase
+    .from("cargos")
+    .select("id, nome")
+    .order("nome", { ascending: true });
+
+  if (error) {
+    console.error("[Supabase] listarCargosBasicos:", error);
+    throw error;
+  }
+  return data ?? [];
+},
+
+async salvarColaborador(payload) {
+  // payload deve estar em snake_case (colunas do banco)
+  // Se id vier vazio, removemos para deixar o banco gerar (se houver identity/sequence)
+  const row = { ...payload };
+
+  if (row.id === "" || row.id === null || row.id === undefined) delete row.id;
+
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .upsert(row, { onConflict: "id" })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[Supabase] salvarColaborador:", error, row);
+    throw error;
+  }
+  return data;
+},
+
+async atualizarColaborador(id, patch) {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .update(patch)
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[Supabase] atualizarColaborador:", error, { id, patch });
+    throw error;
+  }
+  return data;
+},
+
+async inativarColaborador(id, data_demissao, motivo_demissao = null) {
+  return this.atualizarColaborador(id, {
+    data_demissao,
+    motivo_demissao,
+    atualizado_em: new Date().toISOString(),
+  });
+},
+
+async reativarColaborador(id) {
+  return this.atualizarColaborador(id, {
+    data_demissao: null,
+    motivo_demissao: null,
+    atualizado_em: new Date().toISOString(),
+  });
+},
+
+async excluirColaborador(id) {
+  const { error } = await supabase
+    .from("colaboradores")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("[Supabase] excluirColaborador:", error, { id });
+    throw error;
+  }
+  return true;
+},
+
+
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../estilos-treinamentos/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>   
-    <style>
-        /* =========================================================
-           LAYOUT 100VH (TELA ÚNICA FIXA)
-           ========================================================= */
-        html, body {
-            height: 100%; margin: 0; padding: 0;
-            overflow: hidden; /* Trava a rolagem da página inteira */
-            display: flex; flex-direction: column;
-            background-color: #f1f5f9;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* 1. Header Fixo */
-        .page-header {
-            flex-shrink: 0;
-            height: 56px !important;
-            background: #ffffff !important;
-            border-bottom: 1px solid #cbd5e1 !important;
-            padding: 0 24px !important;
-            display: flex; align-items: center; justify-content: space-between;
-            z-index: 50;
-        }
-        .page-header h1 { 
-            color: #0f172a !important; 
-            font-size: 16px !important; 
-            font-weight: 700 !important; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 !important; 
-        }
-
-        /* 2. Barra de Filtros Fixa */
-        .filter-bar {
-            flex-shrink: 0;
-            background: #fff;
-            border-bottom: 1px solid #cbd5e1;
-            padding: 10px 24px;
-            z-index: 40;
-        }
-
-        /* 3. Área da Tabela (Flexível e com Scroll Próprio) */
-        .table-wrapper {
-            flex: 1; /* Ocupa todo o espaço vertical restante */
-            overflow: auto; /* Rolagem interna */
-            position: relative;
-            background: #fff;
-            padding-bottom: 20px;
-        }
-
-        /* =========================================================
-           SEGURANÇA & BADGE VISUAL
-           ========================================================= */
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: inline-flex !important; }
-
-        /* Badge de Modo Leitura */
-        .viewer-badge {
-            display: none; /* Controlado via JS */
-            align-items: center; gap: 6px;
-            background-color: #fff7ed; 
-            color: #c2410c; 
-            border: 1px solid #ffedd5;
-            font-size: 11px; font-weight: 600; 
-            padding: 4px 12px; border-radius: 100px;
-            margin-left: 16px;
-            animation: fadeIn 0.3s ease-out;
-        }
-        .viewer-badge svg { width: 14px; height: 14px; stroke-width: 2; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* Legenda Ajustada */
-        .header-legend { display: flex; gap: 16px; align-items: center; }
-        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; }
-        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-        
-        /* Botão Novo Curso */
-        .btn-new-course {
-            display: flex; align-items: center; gap: 6px;
-            background-color: #0f172a; color: #fff;
-            border: 1px solid #0f172a; border-radius: 6px;
-            padding: 0 16px; height: 32px;
-            font-size: 11px; font-weight: 700; text-transform: uppercase;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-new-course:hover { background-color: #334155; transform: translateY(-1px); }
-/* Garante que os menus de contexto fiquem acima de tudo (Header Fixo e Tabela) */
-.context-menu {
-    position: absolute;
-    z-index: 10000 !important; /* Elevado para superar o z-index do header fixo */
-    background: white;
-    border: 1px solid #cbd5e1;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    padding: 5px;
-    min-width: 160px;
-    display: block; /* Controlado pela classe .hidden */
-}
-
-.context-menu.hidden {
-    display: none !important;
-}
-
-/* Estilização dos itens do menu para manter o padrão visual */
-.context-menu-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #334155;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background 0.2s;
-    gap: 8px;
-}
-
-.context-menu-item:hover {
-    background-color: #f1f5f9;
-}
-
-.context-menu-item svg {
-    flex-shrink: 0;
-    opacity: 0.7;
-}
-
-/* Camada invisível para fechar o menu ao clicar fora */
-.menu-overlay {
-    position: fixed;
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%;
-    z-index: 9999; /* Logo abaixo do .context-menu */
-    background: transparent;
-}
-
-.menu-overlay.hidden {
-    display: none !important;
-}
-
-
-/* Garante que o wrapper ocupe todo o espaço da célula para a borda não encolher */
-#matrixTable thead th {
-    padding: 0 !important;
-    height: 120px; /* Ou a altura fixa que você definiu para o cabeçalho */
-}
-
-.role-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end; /* Mantém o texto na base */
-    padding-bottom: 10px;
-    box-sizing: border-box;
-    transition: background 0.2s;
-}
-
-/* Ajuste para as classes legadas continuarem funcionando igual ao Hex */
-.role-wrapper.b-red { border-top: 4px solid #ef4444 !important; }
-.role-wrapper.b-black { border-top: 4px solid #000000 !important; }
-
-
-
-
-
-
-
-
-        
-</style>
-</head>
-<body>
-
-<header class="page-header">
-        <div style="display: flex; align-items: center;">
-            <h1>Matriz de Capacitação</h1>
-            
-            <div id="viewerWarning" class="viewer-badge">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>Modo Leitura</span>
-            </div>
-        </div>
-        
-        <div style="display: flex; align-items: center; gap: 24px;">
-            <div class="header-legend">
-                <div class="legend-item">
-                    <span class="status-dot O legend-dot"></span>
-                    <span>Obrigatório</span>
-                </div>
-                <div class="legend-item">
-                    <span class="status-dot R legend-dot"></span>
-                    <span>Recomendável</span>
-                </div>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <button class="btn-new-course admin-only" onclick="abrirModalCargo()" style="background-color: #334155; border-color: #334155;" title="Adicionar novo cargo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span>Novo Cargo</span>
-                </button>
-
-                <button class="btn-new-course admin-only" onclick="abrirModalTreinamento()" title="Adicionar novo treinamento">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    <span>Novo Curso</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <nav class="filter-bar">
-        <div class="filter-group-left">
-            
-            <div class="filter-wrapper">
-                <span class="filter-label">Cargo</span>
-                <input type="search" list="roleList" id="roleFilter" class="filter-select combobox" 
-                       placeholder="Todos" 
-                       oninput="atualizarFiltros()"
-                       onmousedown="this.setAttribute('data-temp', this.value); this.value=''; atualizarFiltros();"
-                       onblur="if(this.value=='' && this.getAttribute('data-temp')){this.value=this.getAttribute('data-temp');}"
-                       onclick="this.value='';">
-               <datalist id="roleList"></datalist>
-            </div>
-
-            <div class="filter-wrapper">
-                <span class="filter-label">Categoria</span>
-                <input type="search" list="catList" id="categoryFilter" class="filter-select combobox" 
-                       placeholder="Todas" 
-                       oninput="atualizarFiltros()"
-                       onmousedown="this.setAttribute('data-temp', this.value); this.value=''; atualizarFiltros();"
-                       onblur="if(this.value=='' && this.getAttribute('data-temp')){this.value=this.getAttribute('data-temp');}"
-                       onclick="this.value='';">
-               <datalist id="catList"></datalist>
-            </div>
-
-            <div id="statusWrapper" class="filter-wrapper" style="display: none;">
-                <span class="filter-label">Status</span>
-                <select id="statusFilter" class="filter-select combobox" onchange="atualizarFiltros()" disabled></select>
-            </div>
-
-            <div class="filter-wrapper">
-                <span class="filter-label">Busca Rápida</span>
-                <input type="text" id="textSearch" class="filter-select" placeholder="Filtrar..." onkeyup="atualizarFiltros()">
-            </div>
-            
-            <div class="filter-wrapper" style="justify-content: flex-end;">
-                <button id="btnClearFilters" class="btn-clear-icon" title="Limpar Filtros" onclick="limparFiltros()">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-        </div>
-
-        <div id="filterHUD" class="lupafiltros-wrapper">
-            <div class="lupafiltros-top-label">
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <span>LUPA DO FILTRO</span>
-            </div>
-            <div class="lupafiltros-panel">
-                <div class="lupafiltros-item">
-                    <span class="lupafiltros-key">CARGO</span>
-                    <span class="lupafiltros-val" id="tagRole">Global</span>
-                </div>
-                <div class="lupafiltros-divider"></div>
-                <div class="lupafiltros-item">
-                    <span class="lupafiltros-key">CATEGORIA</span>
-                    <span class="lupafiltros-val" id="tagCategory">Todas</span>
-                </div>
-                <div id="hudDividerStatus" class="lupafiltros-divider hidden"></div>
-                <div id="tagStatusContainer" class="lupafiltros-item hidden">
-                    <span class="lupafiltros-key">STATUS</span>
-                    <span class="lupafiltros-val" id="tagStatus">Todas</span>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="table-wrapper">
-        <table id="matrixTable">
-            <thead></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <div id="modalTreino" class="modal-overlay hidden">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3 id="modalTitle">Novo Treinamento</h3>
-                <button class="btn-close-modal" onclick="fecharModalTreinamento()">✕</button>
-            </div>
-            <div class="modal-body">
-                
-                <input type="hidden" id="inputHiddenId">
-
-                <div class="form-group">
-                    <label>Nome do Treinamento</label>
-                    <input type="text" id="inputNomeTreino" class="form-input" placeholder="Ex: Gestão Ágil 2.0">
-                </div>
-
-                <div class="form-group">
-                    <label>Categoria</label>
-                    <input type="search" 
-                           id="inputCatTreino" 
-                           class="form-input combobox" 
-                           list="catListModal" 
-                           placeholder="Selecione ou digite..."
-                           onmousedown="this.value='';" 
-                           onclick="this.value='';">
-                    <datalist id="catListModal"></datalist>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group half">
-                        <label>Cor da Etiqueta</label>
-                        <div class="color-picker-wrapper">
-                            <input type="color" id="inputCorTreino" value="#3b82f6">
-                            <span id="hexColorDisplay">#3B82F6</span>
-                        </div>
-                    </div>
-                    <div class="form-group half">
-                        <label>Link (Opcional)</label>
-                        <input type="text" id="inputLinkTreino" class="form-input" placeholder="http://...">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Descrição Curta</label>
-                    <textarea id="inputDescTreino" class="form-textarea" rows="3" placeholder="O que será abordado..."></textarea>
-                </div>
-
-            </div>
-            <div class="modal-footer">
-                <button id="btnExcluirTreino" class="btn-ghost" style="color: #ef4444; margin-right: auto; display: none;" onclick="excluirTreinamento()">Excluir</button>
-                
-                <button class="btn-ghost" onclick="fecharModalTreinamento()">Cancelar</button>
-                <button class="btn-primary" onclick="salvarNovoTreinamento()">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="contextMenuCell" class="context-menu hidden">
-        <div class="context-menu-item" onclick="selecionarOpcaoRelacao('mandatory')">
-            <span class="status-dot O"></span> <span>Obrigatório</span>
-        </div>
-        <div class="context-menu-item" onclick="selecionarOpcaoRelacao('recommended')">
-            <span class="status-dot R"></span> <span>Recomendável</span>
-        </div>
-        <div class="context-menu-item" onclick="selecionarOpcaoRelacao('none')">
-            <span class="status-dot" style="border: 1px solid #cbd5e1;"></span> <span>Não Obrigatório</span>
-        </div>
-    </div>
-    <div id="contextMenuOverlay" class="menu-overlay hidden" onclick="fecharMenuContexto()"></div>
-
-    <div id="modalConfirmacao" class="modal-overlay hidden">
-        <div class="modal-card" style="width: 400px; border-top: 4px solid #f59e0b;">
-            <div class="modal-body" style="padding: 24px;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <div style="width: 48px; height: 48px; background: #fffbeb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #d97706;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    </div>
-                    <h3 style="margin: 0; font-size: 16px; color: #1e293b; text-align: center;">Confirmação de Alteração</h3>
-                    <p style="margin: 0; font-size: 13px; color: #64748b; text-align: center; line-height: 1.4;">
-                        Esta ação afetará as regras de conformidade da empresa.<br>
-                        <span id="lblChangeDetail" style="font-weight: 700; color: #0f172a;">De: ... Para: ...</span>
-                    </p>
-                </div>
-
-                <div class="audit-box">
-                    <div class="audit-row">
-                        <span class="audit-label">USER ID:</span>
-                        <span class="audit-val">ADMIN_ROOT</span>
-                    </div>
-                    <div class="audit-row">
-                        <span class="audit-label">IP ADDR:</span>
-                        <span class="audit-val" id="auditIP">Detectando...</span>
-                    </div>
-                    <div class="audit-row">
-                        <span class="audit-label">TIMESTAMP:</span>
-                        <span class="audit-val" id="auditTime">--/--/---- --:--:--</span>
-                    </div>
-                    <div class="audit-row">
-                        <span class="audit-label">ACTION:</span>
-                        <span class="audit-val" style="color: #ef4444;">UPDATE_RULESET</span>
-                    </div>
-                </div>
-
-                <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">
-                    Esta operação será registrada nos logs do sistema.
-                </p>
-            </div>
-
-            <div class="modal-footer" style="justify-content: space-between; background: #f8fafc;">
-                <button class="btn-ghost" onclick="fecharModalConfirmacao()">Cancelar</button>
-                <button class="btn-primary" onclick="confirmarAcaoSegura()" style="background-color: #d97706; border-color: #d97706;">Confirmar Alteração</button>
-            </div>
-        </div>
-    </div>
-
-<div id="modalCargo" class="modal-overlay hidden">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 id="modalTitleCargo">Novo Cargo</h3>
-            <button class="btn-close-modal" onclick="fecharModalCargo()">✕</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="inputHiddenIdCargo">
-
-            <div class="form-group">
-                <label>Nome do Cargo</label>
-                <input type="text" id="inputNomeCargo" class="form-input" placeholder="Ex: Desenvolvedor Senior">
-            </div>
-
-            <div class="form-row">
-                <div class="form-group half">
-                    <label>Cor da Coluna</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="inputCorCargo" value="#334155">
-                        <span id="hexColorDisplayCargo">#334155</span>
-                    </div>
-                </div>
-                <div class="form-group half">
-                    <label>Link de Referência (Opcional)</label>
-                    <input type="text" id="inputLinkCargo" class="form-input" placeholder="http://...">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Ordem de Exibição (Opcional)</label>
-                <input type="number" id="inputOrdemCargo" class="form-input" placeholder="Ex: 10">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-ghost" onclick="fecharModalCargo()">Cancelar</button>
-            <button class="btn-primary" onclick="salvarNovoCargo()" style="background-color: #334155; border-color: #334155;">Salvar Cargo</button>
-        </div>
-    </div>
-</div>
-
-    <div id="contextMenuHeader" class="context-menu hidden">
-        <div class="context-menu-item" onclick="editarCargoContexto()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            <span>Editar Cargo</span>
-        </div>
-        <div class="context-menu-item" style="color: #ef4444;" onclick="excluirCargoContexto()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            <span>Excluir Cargo</span>
-        </div>
-    </div>
-
-    <script type="module" src="../scripts-treinamentos/script.js"></script>
-
-    <script>
-        // Define a variável global que o script.js usa
-        window.isAdminMode = false;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const sessionRaw = localStorage.getItem('rh_session');
-            
-            // 1. SEM LOGIN? CHUTA PRA FORA
-            if (!sessionRaw) {
-                console.warn("⛔ Acesso negado. Redirecionando...");
-                // Ajuste se o login estiver na mesma pasta ou outra
-                window.top.location.href = '../login.html'; 
-                return;
-            }
-
-            const session = JSON.parse(sessionRaw);
-
-            // 2. É ADMIN?
-            if (session.role === 'ADMIN') {
-                document.body.classList.add('is-admin');
-                window.isAdminMode = true; // Habilita edição no script.js
-            } else {
-                // É VISITANTE? Mostra badge (Flex para alinhar ícone e texto)
-                const badge = document.getElementById('viewerWarning');
-                if(badge) badge.style.display = 'flex';
-            }
-        });
-    </script>
-
-</body>
-</html>
-
-
-
-
-
+}; // Fim do objeto DBHandler
 
 
 
