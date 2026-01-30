@@ -58,6 +58,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     showView(true);
     renderizarTabela();
+
+    // ✅ garante a primeira aba ativa quando abrir formulário
+    const firstTabBtn = document.querySelector(".tab-link");
+    if (firstTabBtn) firstTabBtn.click();
+    
   } catch (e) {
     console.error(e);
     alert("Erro ao inicializar tela de colaboradores:\n" + (e.message || e));
@@ -223,12 +228,32 @@ window.ordenar = function ordenar(key) {
 };
 
 // ---------- Tabs ----------
+// ---------- Tabs (FIX) ----------
 window.openTab = function openTab(tabId, btn) {
-  document.querySelectorAll(".tab-content").forEach((t) => t.classList.remove("active"));
-  document.querySelectorAll(".tab-link").forEach((b) => b.classList.remove("active"));
-  $(tabId).classList.add("active");
+  // 1) esconde todos os conteúdos
+  document.querySelectorAll(".tab-content").forEach((t) => {
+    t.classList.remove("active");
+    t.style.display = "none";
+  });
+
+  // 2) desativa todos os botões
+  document.querySelectorAll(".tab-link").forEach((b) => {
+    b.classList.remove("active");
+  });
+
+  // 3) ativa o conteúdo alvo
+  const target = document.getElementById(tabId);
+  if (!target) {
+    console.warn("Tab não encontrada:", tabId);
+    return;
+  }
+  target.classList.add("active");
+  target.style.display = "block";
+
+  // 4) ativa o botão clicado
   if (btn) btn.classList.add("active");
 };
+
 
 // ---------- Navegação / Form ----------
 function limparForm() {
@@ -520,3 +545,4 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
