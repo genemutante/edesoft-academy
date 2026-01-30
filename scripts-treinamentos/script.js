@@ -744,14 +744,7 @@ window.confirmarAcaoSegura = async function() {
         alert("Erro ao salvar alteração: " + e.message);
     }
 };
-        window.fecharModalConfirmacao();
-        alert("✅ Alteração salva e registrada no log!");
 
-    } catch (e) {
-        console.error("Erro na operação:", e);
-        alert("Erro ao salvar alteração: " + e.message);
-    }
-};
 
 
 
