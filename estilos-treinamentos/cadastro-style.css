@@ -661,5 +661,75 @@ tbody tr:hover { background: #f8fbff; }
   background: #b91c1c;
 }
 
+<div id="viewForm" style="display: none; flex-direction: column;">
+    
+    <div class="entity-header">
+        <div class="entity-info">
+            <h1 id="headerNome">Nome do Colaborador</h1>
+            <span id="headerStatusBadge" class="badge">Status</span>
+        </div>
+        <div class="entity-actions">
+            <button class="btn-outline" onclick="showView(true)">Voltar</button>
+            <button class="btn-primary" id="btnSalvarTopo" onclick="salvarDados()">Salvar</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        ```
+
+### 2. CSS: Estilização do Badge e Layout
+Abra o arquivo **`cadastro-style.css`** e cole estas regras ao final do arquivo. Note que usei as variáveis que já existem no seu projeto (`--border`, `--ok`, etc):
+
+```css
+/* Cabeçalho de Destaque */
+.entity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+}
+
+.entity-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.entity-info h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Badge de Status */
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-ativo {
+    background-color: #dcfce7;
+    color: var(--ok);
+    border: 1px solid #bbf7d0;
+}
+
+.badge-inativo {
+    background-color: #fee2e2;
+    color: var(--danger);
+    border: 1px solid #fecaca;
+}
+
+.entity-actions {
+    display: flex;
+    gap: 10px;
+}
 
 
