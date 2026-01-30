@@ -278,9 +278,6 @@ if (!["view", "edit", "new"].includes(mode)) {
   mode = "view";
 }
 
-console.log("🔎 isAdmin:", isAdmin);
-console.log("🔎 currentId:", currentId);
-console.log("🔎 Deve mostrar botão editar?", isAdmin && mode === "view" && currentId);
 
   console.log("⚙️ Modo atual:", mode);
 
@@ -297,6 +294,12 @@ console.log("🔎 Deve mostrar botão editar?", isAdmin && mode === "view" && cu
   $("btnExcluir").style.display = "none";
 
   setFormEnabled(podeEditar);
+
+
+console.log("🔎 isAdmin:", isAdmin);
+console.log("🔎 currentId:", currentId);
+console.log("🔎 Deve mostrar botão editar?", isAdmin && mode === "view" && currentId);
+  
 
   // badge status
   const badge = $("formStatusBadge");
@@ -556,6 +559,7 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
 
 
