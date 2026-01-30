@@ -702,30 +702,41 @@ window.fecharModalConfirmacao = function() {
 window.confirmarAcaoSegura = async function() {
     if (!pendingChange) return;
 
+    // Pega o usuário da sessão (ou define 'Admin' se não tiver)
+    const usuarioLogado = currentUser ? currentUser.user : 'Admin';
+
     try {
+        // --- CENÁRIO A: MUDANÇA DE REGRA ---
         if (pendingChange.TIPO === 'RELACAO') {
             const { cargoIndex, treinoId, novoStatus } = pendingChange;
-            const cargoId = config.cargos[cargoIndex].id;
+            const cargo = config.cargos[cargoIndex];
+            const cargoId = cargo.id;
+
+            // 1. Executa a Ação Real
             await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
+
+            // 2. Grava o Log (Auditoria)
+            const msgLog = `Alterou regra do cargo '${cargo.nome}' (ID ${cargoId}) para o treino ID ${treinoId}. Novo status: ${novoStatus}`;
+            await DBHandler.registrarLog(usuarioLogado, 'ALTERAR_REGRA', msgLog);
         }
         
+        // --- CENÁRIO B: EDIÇÃO DE TREINAMENTO ---
+        // (Caso implemente edição via auditoria futuramente)
+        
+        // 3. Refresh na Tela
         const dadosFrescos = await DBHandler.carregarDadosIniciais();
         config = dadosFrescos;
-        db.dados = config;
+        if (typeof db !== 'undefined') db.dados = config;
 
-        const roleFilter = document.getElementById('roleFilter').value;
-        const catFilter = document.getElementById('categoryFilter').value || 'all';
-        const textFilter = document.getElementById('textSearch').value;
-        const statusFilter = document.getElementById('statusFilter').value;
-        const cargoObj = config.cargos.find(c => c.nome === roleFilter);
-        const cargoIdFilter = cargoObj ? cargoObj.id.toString() : 'all';
-
-        renderizarMatriz(cargoIdFilter, catFilter, textFilter, statusFilter);
+        window.atualizarFiltros(); 
         fecharModalConfirmacao();
+        
+        // Feedback
+        alert("✅ Alteração salva e registrada no log!");
 
     } catch (e) {
         console.error("Erro na operação:", e);
-        alert("Erro ao salvar alteração: " + e.message);
+        alert("Erro ao salvar: " + e.message);
     }
 };
 
@@ -788,3 +799,4 @@ function fazerLogout() {
     }
     window.location.href = 'index.html'; 
 }
+
