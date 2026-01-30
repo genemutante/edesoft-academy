@@ -273,50 +273,65 @@ function limparForm() {
 }
 
 function setModoForm(mode) {
-if (!["view", "edit", "new"].includes(mode)) {
-  console.warn("❗Modo inválido passado para setModoForm:", mode);
-  mode = "view";
-}
-
+  // Validação de modo
+  if (!["view", "edit", "new"].includes(mode)) {
+    console.warn("❗Modo inválido passado para setModoForm:", mode);
+    mode = "view";
+  }
 
   console.log("⚙️ Modo atual:", mode);
 
-  
   const isAdmin = document.body.classList.contains("is-admin");
   const podeEditar = isAdmin && (mode === "edit" || mode === "new");
 
-  // botões
-  $("btnSalvar").style.display = podeEditar ? "inline-flex" : "none";
-  $("btnIrParaEdicao").style.display =
-    isAdmin && mode === "view" && currentId ? "inline-flex" : "none";
+  // --- Botões principais ---
+  const btnSalvar = $("btnSalvar");
+  const btnEditar = $("btnIrParaEdicao");
+  const btnExcluir = $("btnExcluir");
 
-  // excluir/desligar/reativar (via modal/botão)
-  $("btnExcluir").style.display = "none";
+  if (btnSalvar) {
+    btnSalvar.style.display = podeEditar ? "inline-flex" : "none";
+  }
 
+  // Corrige conflito com CSS !important
+  if (btnEditar) {
+    const deveMostrarEditar = isAdmin && mode === "view" && !!currentId;
+
+    btnEditar.style.setProperty(
+      "display",
+      deveMostrarEditar ? "inline-flex" : "none",
+      "important"
+    );
+
+    // Logs detalhados
+    console.log("🔎 isAdmin:", isAdmin);
+    console.log("🔎 currentId:", currentId);
+    console.log("🔎 Deve mostrar botão editar?", deveMostrarEditar);
+    console.log("🔧 btnEditar.style.display:", btnEditar.style.display);
+  }
+
+  if (btnExcluir) {
+    btnExcluir.style.display = "none";
+  }
+
+  // --- Habilitar/desabilitar campos ---
   setFormEnabled(podeEditar);
 
-
-console.log("🔎 isAdmin:", isAdmin);
-console.log("🔎 currentId:", currentId);
-console.log("🔎 Deve mostrar botão editar?", isAdmin && mode === "view" && currentId);
-const btnEditar = $("btnIrParaEdicao");
-  
-console.log("🔧 btn.style BEFORE:", btnEditar?.style.display);
-btnEditar.style.display = "none";
-console.log("🔧 btn.style AFTER:", btnEditar?.style.display);
-
-  
-  // badge status
+  // --- Badge de status ---
   const badge = $("formStatusBadge");
-  if (!currentId) {
-    badge.style.display = "none";
-  } else {
-    const col = COLABS.find((x) => x.id === currentId);
-    const ativo = col ? isAtivo(col) : true;
-    badge.style.display = "inline-flex";
-    badge.textContent = ativo ? "ATIVO" : "DESLIGADO";
+  if (badge) {
+    if (!currentId) {
+      badge.style.display = "none";
+    } else {
+      const col = COLABS.find((x) => x.id === currentId);
+      const ativo = col ? isAtivo(col) : true;
+      badge.style.display = "inline-flex";
+      badge.textContent = ativo ? "ATIVO" : "DESLIGADO";
+    }
   }
 }
+
+
 
 window.novoColaborador = function novoColaborador() {
   limparForm();
@@ -564,6 +579,7 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
 
 
