@@ -128,4 +128,17 @@ export const DBHandler = {
     }
 };
 
+// --- 6. AUDITORIA (NOVO) ---
+    async registrarLog(usuario, acao, detalhes) {
+        const { error } = await supabase
+            .from('logs_sistema')
+            .insert({
+                usuario: usuario,
+                acao: acao,
+                detalhes: detalhes,
+                ip: '192.168.1.10' // IP Simulado (ou real se tiver backend)
+            });
+
+        if (error) console.error("Erro ao gravar log:", error);
+    }
 
