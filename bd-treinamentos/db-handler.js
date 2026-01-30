@@ -131,20 +131,20 @@ export const DBHandler = {
     }, // <--- A VÍRGULA QUE FALTAVA ESTAVA AQUI!
 
     // --- 6. GERENCIAR CARGOS (NOVO) ---
+   // No seu db-handler.js
     async salvarCargo(cargo) {
         const payload = {
             nome: cargo.nome,
-            cor_class: cargo.corClass, // Mapeia JS -> Banco
-            ordem: cargo.ordem || 99   // Se não tiver ordem, joga pro final
+            cor_class: cargo.corClass, // O banco espera 'cor_class'
+            ordem: cargo.ordem || 99
         };
 
         if (cargo.id) {
             payload.id = cargo.id;
         }
 
-        // Ajuste 'cargos' para o nome real da sua tabela, se for diferente
         const { data, error } = await supabase
-            .from('cargos') 
+            .from('cargos') // Certifique-se de que o nome é 'cargos'
             .upsert(payload)
             .select()
             .single();
@@ -166,3 +166,4 @@ export const DBHandler = {
         return data;
     }
 };
+
