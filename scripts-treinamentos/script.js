@@ -13,18 +13,24 @@ const icons = {
     filterClear: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" /></svg>`
 };
 
+// Mapa de Tradução para Logs
+const STATUS_MAP = {
+    'mandatory': 'OBRIGATÓRIO',
+    'recommended': 'RECOMENDÁVEL',
+    'none': 'NÃO OBRIGATÓRIO'
+};
+
 let config = { treinamentos: [], cargos: [] };
 let db = { dados: config };
 let colCache = {}; 
 let lastHighlightedCol = null;
 
-// Variáveis de Controle
+// Controle Admin
 let contextoAdmin = { cargoId: null, treinoId: null, acaoPendente: null };
 let pendingChange = null; 
 let tempCargoIndex = null;
 let tempTreinoId = null;
 
-// Exposição Global
 window.isAdminMode = false;
 let currentUser = null;
 
@@ -34,28 +40,23 @@ let currentUser = null;
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         console.log("🔄 Iniciando sistema...");
-
-        // 1. Carrega dados
         const dados = await DBHandler.carregarDadosIniciais();
         config = dados; 
         db = { dados: config };
-
-        console.log("✅ Dados carregados!", config);
         
-        // 2. Inicializa a tela e Sessão
         init();
         verificarSessaoInicial();
-        
+        console.log("✅ Dados carregados!", config);
     } catch (e) {
-        console.error("⛔ Erro fatal na inicialização:", e);
-        alert("Erro ao conectar com o banco de dados.");
+        console.error("⛔ Erro fatal:", e);
+        alert("Erro ao conectar com o banco.");
     }
 });
 
 function init() {
     if (typeof config === 'undefined') return;
 
-    // Popular Cargos
+    // Popula Cargos
     const roleList = document.getElementById('roleList');
     if (roleList) {
         roleList.innerHTML = '';
@@ -66,7 +67,7 @@ function init() {
         });
     }
 
-    // Popular Categorias
+    // Popula Categorias
     const catList = document.getElementById('catList');
     const catListModal = document.getElementById('catListModal');
     if (catList) {
@@ -76,7 +77,7 @@ function init() {
         if(catListModal) catListModal.innerHTML = optionsHTML;
     }
 
-    // Popular Status
+    // Popula Status
     const statusSelect = document.getElementById('statusFilter'); 
     if (statusSelect) {
         statusSelect.innerHTML = `<option value="all">Todas</option><option value="mandatory">Obrigatório</option><option value="recommended">Recomendável</option><option value="none">Não Obrigatório</option>`;
@@ -100,7 +101,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     colCache = {}; 
     lastHighlightedCol = null;
 
-    // --- A. Cabeçalho ---
+    // Cabeçalho
     let headerHTML = '<tr><th class="top-left-corner"><div class="hud-card">' +
     '<div class="hud-top-label">' + icons.lupa + ' INSPEÇÃO</div>' +
     '<div id="hudScan" class="hud-scan"><div class="scan-icon-large">' + icons.lupa + '</div><div class="scan-msg">Explore a matriz<br>para ver detalhes</div></div>' +
@@ -110,22 +111,16 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     
     config.cargos.forEach((cargo, index) => {
         if (filtroCargo !== 'all' && cargo.id.toString() !== filtroCargo) return;
-        const isSelected = (filtroCargo === cargo.id.toString());
-        const activeClass = isSelected ? 'selected-col-header' : '';
+        const activeClass = (filtroCargo === cargo.id.toString()) ? 'selected-col-header' : '';
         headerHTML += `<th class="${activeClass}" data-col="${index}" onclick="document.getElementById('roleFilter').value='${cargo.nome}'; atualizarFiltros();"><div class="role-wrapper ${cargo.corClass}"><div class="vertical-text">${cargo.nome}</div></div></th>`;
     });
     headerHTML += '</tr>';
     thead.innerHTML = headerHTML;
 
-    // --- B. Corpo ---
+    // Corpo
     let bodyHTML = '';
-    const treinamentosSorted = config.treinamentos;
-
-    treinamentosSorted.forEach((treino, treinoIndex) => {
-        if (filtroCategoria && filtroCategoria !== 'all' && filtroCategoria !== '') {
-            const catAtual = (treino.categoria || "").trim();
-            if (catAtual !== filtroCategoria.trim()) return;
-        }
+    config.treinamentos.forEach((treino, treinoIndex) => {
+        if (filtroCategoria && filtroCategoria !== 'all' && filtroCategoria !== '' && treino.categoria.trim() !== filtroCategoria.trim()) return;
         if (filtroTexto && !treino.nome.toLowerCase().includes(filtroTexto.toLowerCase())) return;
 
         let rowCellsHTML = '';
@@ -140,25 +135,20 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
             
             if (filtroObrigatoriedade !== 'all' && tipoReq === filtroObrigatoriedade) linhaPassa = true;
             
-            const isSelected = (filtroCargo === cargo.id.toString());
-            const activeClassCell = isSelected ? 'selected-col' : '';
-            
+            const activeClassCell = (filtroCargo === cargo.id.toString()) ? 'selected-col' : '';
             rowCellsHTML += `<td class="${activeClassCell}" data-col="${index}" data-status="${tipoReq}" onclick="abrirMenuContexto(event, ${index}, ${treino.id})">
                                  <div class="cell-content">${ehO ? '<span class="status-dot O"></span>' : (ehR ? '<span class="status-dot R"></span>' : '')}</div>
                              </td>`;
         });
 
         if (linhaPassa) {
-            const tooltipText = treino.desc ? treino.desc : "Sem descrição disponível.";
             const badgeColor = treino.color || "#64748b";
-            const categoriaDisplay = treino.categoria || "GERAL";
-            
             bodyHTML += `
             <tr data-row="${treinoIndex}">
-                <th style="--cat-color: ${badgeColor}; background-color: ${badgeColor}15; cursor: pointer;" data-tooltip="${tooltipText}" onclick="editarTreinamento(${treino.id})">
-                    <div class="row-header-content" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 6px; height: 100%; padding: 0 8px; width: 100%;">
-                        <div style="background: #ffffff; border: 1px solid ${badgeColor}; color: ${badgeColor}; font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); line-height: 1.2;">${categoriaDisplay}</div>
-                        <div style="background: #ffffff; color: #1e293b; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 100px; border: 1px solid #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; min-width: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); line-height: 1.2;">${treino.nome}</div>
+                <th style="--cat-color: ${badgeColor}; background-color: ${badgeColor}15; cursor: pointer;" onclick="editarTreinamento(${treino.id})">
+                    <div class="row-header-content" style="display: flex; gap: 6px; align-items: center; padding: 0 8px;">
+                        <div style="background: #fff; border: 1px solid ${badgeColor}; color: ${badgeColor}; font-size: 8px; font-weight: 800; padding: 3px 8px; border-radius: 100px;">${treino.categoria || "GERAL"}</div>
+                        <div style="background: #fff; color: #1e293b; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 100px; border: 1px solid #cbd5e1; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${treino.nome}</div>
                     </div>
                 </th>
                 ${rowCellsHTML}
@@ -167,7 +157,7 @@ function renderizarMatriz(filtroCargo, filtroCategoria, filtroTexto, filtroObrig
     });
     tbody.innerHTML = bodyHTML;
     
-    // Cache para Hover
+    // Cache
     const allCells = table.querySelectorAll('[data-col]');
     allCells.forEach(cell => {
         const cIndex = cell.dataset.col;
@@ -192,31 +182,27 @@ window.atualizarFiltros = function(valorCargoClick) {
     if (valorCargoClick !== undefined) {
         const cargoObj = config.cargos.find(c => c.id.toString() === valorCargoClick);
         const inputRole = document.getElementById('roleFilter');
-        if (cargoObj) {
-            inputRole.value = (inputRole.value === cargoObj.nome) ? '' : cargoObj.nome;
-        }
+        if (cargoObj) inputRole.value = (inputRole.value === cargoObj.nome) ? '' : cargoObj.nome;
     }
 
     const roleName = document.getElementById('roleFilter').value;
     const roleVal = getCargoIdByName(roleName); 
-    let catVal = document.getElementById('categoryFilter').value;
-    if (catVal === '') catVal = 'all'; 
-
-    const obrigSelect = document.getElementById('statusFilter');
-    const statusWrapper = document.getElementById('statusWrapper'); 
+    let catVal = document.getElementById('categoryFilter').value || 'all'; 
+    const statusSelect = document.getElementById('statusFilter');
+    const statusWrapper = document.getElementById('statusWrapper');
     const textVal = document.getElementById('textSearch').value.toLowerCase();
 
     if (roleVal === 'all') {
         if (statusWrapper) statusWrapper.style.display = 'none';
-        obrigSelect.value = 'all';
-        obrigSelect.disabled = true;
+        statusSelect.value = 'all';
+        statusSelect.disabled = true;
     } else {
         if (statusWrapper) statusWrapper.style.display = 'flex';
-        obrigSelect.disabled = false;
+        statusSelect.disabled = false;
     }
 
-    atualizarFiltroHUD(roleVal, catVal, obrigSelect.value);
-    renderizarMatriz(roleVal, catVal, textVal, obrigSelect.value);
+    atualizarFiltroHUD(roleVal, catVal, statusSelect.value);
+    renderizarMatriz(roleVal, catVal, textVal, statusSelect.value);
 }
 
 function atualizarFiltroHUD(cargoId, categoria, obrigatoriedade) {
@@ -238,8 +224,7 @@ function atualizarFiltroHUD(cargoId, categoria, obrigatoriedade) {
     tagCat.textContent = categoria === '' || categoria === 'all' ? "Todas" : categoria;
     tagCat.style.color = "#3b82f6"; 
 
-    const obrigatoriedadeMap = { mandatory: 'Obrigatório', recommended: 'Recomendável', none: 'Não Obrigatório', all: 'Todas' };
-    tagStatus.textContent = obrigatoriedadeMap[obrigatoriedade] || "Todas";
+    tagStatus.textContent = STATUS_MAP[obrigatoriedade] || "Todas";
     tagStatus.style.color = "#3b82f6"; 
     
     if (tagStatusContainer && hudDividerStatus) {
@@ -262,7 +247,7 @@ window.limparFiltros = function() {
 }
 
 // =============================================================================
-// 5. GESTÃO DE MODAIS E TREINAMENTOS
+// 5. GESTÃO DE TREINAMENTOS (MODAL)
 // =============================================================================
 window.abrirModalTreinamento = function() {
     const modal = document.getElementById('modalTreino');
@@ -278,10 +263,7 @@ window.abrirModalTreinamento = function() {
                 datalist.appendChild(opt);
             });
         }
-        setTimeout(() => {
-            const input = document.getElementById('inputNomeTreino');
-            if(input) input.focus();
-        }, 100);
+        setTimeout(() => document.getElementById('inputNomeTreino')?.focus(), 100);
     }
 };
 
@@ -289,8 +271,7 @@ window.fecharModalTreinamento = function() {
     const modal = document.getElementById('modalTreino');
     if (modal) modal.classList.add('hidden');
     
-    const fields = ['inputHiddenId', 'inputNomeTreino', 'inputCatTreino', 'inputDescTreino', 'inputLinkTreino'];
-    fields.forEach(id => {
+    ['inputHiddenId', 'inputNomeTreino', 'inputCatTreino', 'inputDescTreino', 'inputLinkTreino'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.value = '';
     });
@@ -300,11 +281,8 @@ window.fecharModalTreinamento = function() {
     const hexDisplay = document.getElementById('hexColorDisplay');
     if(hexDisplay) hexDisplay.textContent = '#3B82F6';
     
-    const title = document.getElementById('modalTitle');
-    if(title) title.textContent = "Novo Treinamento";
-    
-    const btnDel = document.getElementById('btnExcluirTreino');
-    if(btnDel) btnDel.style.display = 'none';
+    document.getElementById('modalTitle').textContent = "Novo Treinamento";
+    document.getElementById('btnExcluirTreino').style.display = 'none';
 };
 
 window.salvarNovoTreinamento = async function() {
@@ -322,25 +300,21 @@ window.salvarNovoTreinamento = async function() {
 
     try {
         await DBHandler.salvarTreinamento(dadosFormulario);
-        
         const dadosAtualizados = await DBHandler.carregarDadosIniciais();
         config = dadosAtualizados;
         db.dados = config; 
-        
         init(); 
         window.atualizarFiltros();
         window.fecharModalTreinamento();
         alert("Salvo com sucesso!");
-
     } catch (e) {
         console.error(e);
-        alert("Erro ao salvar no banco.");
+        alert("Erro ao salvar.");
     }
 };
 
 window.editarTreinamento = function(id) {
     if (!window.isAdminMode) return; 
-
     const treino = config.treinamentos.find(t => t.id === id);
     if (!treino) return;
 
@@ -352,84 +326,60 @@ window.editarTreinamento = function(id) {
     
     const cor = treino.color || '#3b82f6';
     document.getElementById('inputCorTreino').value = cor;
-    
-    const hexDisplay = document.getElementById('hexColorDisplay');
-    if(hexDisplay) {
-        hexDisplay.textContent = cor.toUpperCase();
-        hexDisplay.style.display = 'inline';
-    }
+    document.getElementById('hexColorDisplay').textContent = cor.toUpperCase();
     
     document.getElementById('modalTitle').textContent = "Editar Treinamento";
     document.getElementById('btnExcluirTreino').style.display = 'block';
-
     window.abrirModalTreinamento();
 };
 
 window.excluirTreinamento = async function() {
     const id = document.getElementById('inputHiddenId').value;
     if (!id) return;
-
     if (confirm("Tem certeza que deseja EXCLUIR este treinamento?")) {
         try {
             await DBHandler.excluirTreinamento(parseInt(id));
             const dadosAtualizados = await DBHandler.carregarDadosIniciais();
             config = dadosAtualizados;
             db.dados = config;
-
             window.fecharModalTreinamento();
             init();
             window.atualizarFiltros();
             alert("Excluído com sucesso!");
         } catch (e) {
-            console.error("Erro ao excluir:", e);
+            console.error("Erro:", e);
             alert("Erro ao excluir.");
         }
     }
 };
 
-// Automação de Cor por Categoria
 const inputCat = document.getElementById('inputCatTreino');
 const inputCor = document.getElementById('inputCorTreino');
 if (inputCat && inputCor) {
-    inputCor.addEventListener('input', (e) => {
-        const hexDisplay = document.getElementById('hexColorDisplay');
-        if(hexDisplay) hexDisplay.textContent = e.target.value.toUpperCase();
-    });
-
+    inputCor.addEventListener('input', (e) => document.getElementById('hexColorDisplay').textContent = e.target.value.toUpperCase());
     inputCat.addEventListener('input', function() {
         const valorDigitado = this.value.trim();
-        if (!valorDigitado || typeof config === 'undefined') return;
-
-        const match = config.treinamentos.find(t => 
-            t.categoria.toUpperCase() === valorDigitado.toUpperCase()
-        );
-
+        if (!valorDigitado) return;
+        const match = config.treinamentos.find(t => t.categoria.toUpperCase() === valorDigitado.toUpperCase());
         if (match && match.color) {
             inputCor.value = match.color;
-            const hexDisplay = document.getElementById('hexColorDisplay');
-            if (hexDisplay) hexDisplay.textContent = match.color.toUpperCase();
+            document.getElementById('hexColorDisplay').textContent = match.color.toUpperCase();
         }
     });
 }
 
 // =============================================================================
-// 6. EVENTOS DE UI (HUD Hover e Destaques)
+// 6. EVENTOS DE UI (HOVER E DESTAQUE)
 // =============================================================================
-
 function vincularEventosLupa() {
     const table = document.getElementById('matrixTable');
     if (!table) return;
-
-    table.onmouseover = null;
-    table.onmouseleave = null;
 
     table.onmouseover = (e) => {
         const target = e.target;
         const td = target.closest('td');
         const thRow = target.closest('tbody th');
         const thCol = target.closest('thead th');
-
-        if (!td && !thRow && !thCol) return;
 
         const hudScan = document.getElementById('hudScan');
         const hudData = document.getElementById('hudData');
@@ -446,9 +396,7 @@ function vincularEventosLupa() {
             return fullName.includes(':') ? fullName.substring(fullName.indexOf(':') + 1).trim() : fullName;
         };
 
-        const resetBackgroundClasses = () => {
-            hudBody.classList.remove('bg-mandatory', 'bg-recommended', 'bg-none');
-        };
+        const resetBackgroundClasses = () => hudBody.classList.remove('bg-mandatory', 'bg-recommended', 'bg-none');
 
         if (td && td.dataset.col) {
             const colIndex = parseInt(td.dataset.col);
@@ -462,14 +410,10 @@ function vincularEventosLupa() {
             hudCourse.textContent = getCleanCourseName(rowIndex);
 
             resetBackgroundClasses();
-            if (tipoReq === 'mandatory') hudBody.classList.add('bg-mandatory');
-            else if (tipoReq === 'recommended') hudBody.classList.add('bg-recommended');
-            else hudBody.classList.add('bg-none');
+            hudBody.classList.add(tipoReq === 'mandatory' ? 'bg-mandatory' : (tipoReq === 'recommended' ? 'bg-recommended' : 'bg-none'));
 
             hudStatus.className = 'hud-footer status-bg-' + tipoReq;
-            if (tipoReq === 'mandatory') hudStatus.innerHTML = `${icons.check} Obrigatório`;
-            else if (tipoReq === 'recommended') hudStatus.innerHTML = `${icons.star} Recomendável`;
-            else hudStatus.innerHTML = `${icons.ban} Não Obrigatório`;
+            hudStatus.innerHTML = tipoReq === 'mandatory' ? `${icons.check} Obrigatório` : (tipoReq === 'recommended' ? `${icons.star} Recomendável` : `${icons.ban} Não Obrigatório`);
         } 
         else if (thRow && thRow.parentElement.dataset.row) {
             const rowIndex = parseInt(thRow.parentElement.dataset.row);
@@ -492,21 +436,11 @@ function vincularEventosLupa() {
             hudBody.classList.add('bg-none');
             hudStatus.className = 'hud-footer status-bg-none';
             hudStatus.innerHTML = `${icons.user} Visualizando Cargo`;
-        }
-    };
-    
-    table.onmouseleave = () => {
-        const hudScan = document.getElementById('hudScan');
-        const hudData = document.getElementById('hudData');
-        const hudStatus = document.getElementById('hudStatus');
-        
-        if (hudScan && hudData) {
+        } else {
             hudScan.style.display = 'flex';
             hudData.style.display = 'none';
-            if (hudStatus) {
-                hudStatus.className = 'hud-footer status-bg-none';
-                hudStatus.innerHTML = `${icons.ban} Selecione`;
-            }
+            hudStatus.className = 'hud-footer status-bg-none';
+            hudStatus.innerHTML = `${icons.ban} Selecione`;
         }
     };
 }
@@ -515,65 +449,42 @@ function vincularEventosDestaque() {
     const table = document.getElementById('matrixTable');
     if (!table) return;
     
-    table.removeEventListener('mouseover', handleMouseOverOpt);
-    table.removeEventListener('mouseleave', limparDestaqueOpt);
-    table.addEventListener('mouseover', handleMouseOverOpt);
+    table.addEventListener('mouseover', (e) => {
+        const el = e.target.closest('[data-col]');
+        if (!el) {
+            if (lastHighlightedCol !== null) limparDestaqueOpt();
+            return;
+        }
+        const newColIndex = el.dataset.col;
+        if (lastHighlightedCol === newColIndex) return;
+        limparDestaqueOpt();
+        destacarColunaOpt(newColIndex);
+    });
+    
     table.addEventListener('mouseleave', limparDestaqueOpt);
-}
-
-function handleMouseOverOpt(e) {
-    const target = e.target;
-    const el = target.closest('[data-col]');
-    
-    if (!el) {
-        if (lastHighlightedCol !== null) limparDestaqueOpt();
-        return;
-    }
-    
-    const newColIndex = el.dataset.col;
-    if (lastHighlightedCol === newColIndex) return;
-    
-    limparDestaqueOpt();
-    destacarColunaOpt(newColIndex);
 }
 
 function destacarColunaOpt(index) {
     lastHighlightedCol = index;
-    const cellsToHighlight = colCache[index];
-    if (cellsToHighlight) {
-        for (let i = 0; i < cellsToHighlight.length; i++) {
-            const cell = cellsToHighlight[i];
-            if (cell.tagName === 'TH') {
-                cell.classList.add('hover-col-header');
-            } else {
-                cell.classList.add('hover-col');
-            }
-        }
-    }
+    const cells = colCache[index];
+    if (cells) cells.forEach(c => c.classList.add(c.tagName === 'TH' ? 'hover-col-header' : 'hover-col'));
 }
 
 function limparDestaqueOpt() {
     if (lastHighlightedCol !== null) {
-        const cellsToClear = colCache[lastHighlightedCol];
-        if (cellsToClear) {
-            for (let i = 0; i < cellsToClear.length; i++) {
-                const cell = cellsToClear[i];
-                cell.classList.remove('hover-col', 'hover-col-header');
-            }
-        }
+        const cells = colCache[lastHighlightedCol];
+        if (cells) cells.forEach(c => c.classList.remove('hover-col', 'hover-col-header'));
         lastHighlightedCol = null;
     }
 }
 
 // =============================================================================
-// 7. CONTROLE DE ACESSO E ADMIN (MENU CONTEXTO & AUDITORIA)
+// 7. MENU DE CONTEXTO & AUDITORIA (LOG CORRIGIDO)
 // =============================================================================
 
 window.abrirMenuContexto = function(e, cargoIndex, treinoId) {
     if (!window.isAdminMode) return;
-
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
 
     tempCargoIndex = parseInt(cargoIndex);
     tempTreinoId = parseInt(treinoId);
@@ -592,10 +503,8 @@ window.abrirMenuContexto = function(e, cargoIndex, treinoId) {
 };
 
 window.fecharMenuContexto = function() {
-    const menu = document.getElementById('contextMenuCell');
-    const overlay = document.getElementById('contextMenuOverlay');
-    if (menu) menu.classList.add('hidden');
-    if (overlay) overlay.classList.add('hidden');
+    document.getElementById('contextMenuCell').classList.add('hidden');
+    document.getElementById('contextMenuOverlay').classList.add('hidden');
 };
 
 window.selecionarOpcaoRelacao = function(novoStatus) {
@@ -604,19 +513,30 @@ window.selecionarOpcaoRelacao = function(novoStatus) {
     const cargo = config.cargos[tempCargoIndex];
     if (!cargo) return;
 
-    const mapa = { 
+    // 1. Identifica o status ANTERIOR
+    let statusAnterior = 'none';
+    if (cargo.obrigatorios && cargo.obrigatorios.includes(tempTreinoId)) statusAnterior = 'mandatory';
+    else if (cargo.recomendados && cargo.recomendados.includes(tempTreinoId)) statusAnterior = 'recommended';
+
+    if (statusAnterior === novoStatus) {
+        window.fecharMenuContexto();
+        return;
+    }
+
+    const mapaHTML = { 
         'mandatory': '<span style="color:#ef4444; font-weight:800;">OBRIGATÓRIO</span>', 
         'recommended': '<span style="color:#eab308; font-weight:800;">RECOMENDÁVEL</span>', 
         'none': '<span style="color:#94a3b8; font-weight:800;">NÃO OBRIGATÓRIO</span>' 
     };
     
-    const msg = `Alterar regra para: ${mapa[novoStatus]}`;
-    fecharMenuContexto();
+    const msg = `Alterar regra para: ${mapaHTML[novoStatus]}`;
+    window.fecharMenuContexto();
     
     exibirModalAuditoria(msg, {
         TIPO: 'RELACAO',
         cargoIndex: tempCargoIndex,
         treinoId: tempTreinoId,
+        statusAnterior: statusAnterior, // <--- Importante para o Log
         novoStatus: novoStatus
     });
 };
@@ -640,48 +560,48 @@ function exibirModalAuditoria(mensagemHTML, changeObject) {
 }
 
 window.fecharModalConfirmacao = function() {
-    const modal = document.getElementById('modalConfirmacao');
-    if(modal) modal.classList.add('hidden');
+    document.getElementById('modalConfirmacao').classList.add('hidden');
     pendingChange = null;
 };
 
 window.confirmarAcaoSegura = async function() {
     if (!pendingChange) return;
 
-    // Obtém o nome do usuário logado ou usa um padrão
     const nomeUsuario = currentUser && currentUser.user ? currentUser.user : 'Admin';
 
     try {
         if (pendingChange.TIPO === 'RELACAO') {
-            const { cargoIndex, treinoId, novoStatus } = pendingChange;
+            const { cargoIndex, treinoId, statusAnterior, novoStatus } = pendingChange;
             const cargo = config.cargos[cargoIndex];
             const cargoId = cargo.id;
 
-            // 1. Executa a Ação
+            // 1. Atualiza Banco
             await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
 
-            // 2. Grava o Log (Auditoria)
-            const msgLog = `Alterou regra do cargo '${cargo.nome}' (ID ${cargoId}) para o treino ID ${treinoId}. Novo status: ${novoStatus}`;
+            // 2. Grava Log (Usando o Mapa Traduzido)
+            const txtAntes = STATUS_MAP[statusAnterior] || statusAnterior;
+            const txtDepois = STATUS_MAP[novoStatus] || novoStatus;
+            
+            const msgLog = `Alterou regra do cargo '${cargo.nome}' (Curso ID ${treinoId}). De: ${txtAntes} -> Para: ${txtDepois}`;
             await DBHandler.registrarLog(nomeUsuario, 'ALTERAR_REGRA', msgLog);
         }
         
-        // Recarrega Dados
+        // Refresh
         const dadosFrescos = await DBHandler.carregarDadosIniciais();
         config = dadosFrescos;
         db.dados = config;
 
-        // Atualiza UI
-        const roleFilter = document.getElementById('roleFilter').value;
-        const catFilter = document.getElementById('categoryFilter').value || 'all';
-        const textFilter = document.getElementById('textSearch').value;
-        const statusFilter = document.getElementById('statusFilter').value;
-        const cargoObj = config.cargos.find(c => c.nome === roleFilter);
-        const cargoIdFilter = cargoObj ? cargoObj.id.toString() : 'all';
+        // Redesenha mantendo filtros
+        const roleName = document.getElementById('roleFilter').value;
+        const cargoId = getCargoIdByName(roleName);
+        renderizarMatriz(
+            cargoId, 
+            document.getElementById('categoryFilter').value || 'all', 
+            document.getElementById('textSearch').value, 
+            document.getElementById('statusFilter').value
+        );
 
-        renderizarMatriz(cargoIdFilter, catFilter, textFilter, statusFilter);
-        fecharModalConfirmacao();
-        
-        // Feedback Visual
+        window.fecharModalConfirmacao();
         alert("✅ Alteração salva e registrada no log!");
 
     } catch (e) {
@@ -693,7 +613,6 @@ window.confirmarAcaoSegura = async function() {
 // =============================================================================
 // 8. CONTROLE DE SESSÃO
 // =============================================================================
-
 function verificarSessaoInicial() {
     const sessionRaw = localStorage.getItem('rh_session');
     if (sessionRaw) {
@@ -718,7 +637,6 @@ window.toggleAdminMode = function() {
 function ativarModoAdmin(silencioso = false) {
     window.isAdminMode = true;
     document.body.classList.add('is-admin');
-    
     const btn = document.getElementById('btnAdminToggle');
     const iconClosed = document.getElementById('iconLockClosed');
     const iconOpen = document.getElementById('iconLockOpen');
@@ -736,234 +654,5 @@ function fazerLogout() {
     currentUser = null;
     localStorage.removeItem('rh_session');
     document.body.classList.remove('is-admin');
-    
-    const btn = document.getElementById('btnAdminToggle');
-    const iconClosed = document.getElementById('iconLockClosed');
-    const iconOpen = document.getElementById('iconLockOpen');
-
-    if (btn) {
-        btn.classList.remove('unlocked');
-        btn.title = "Acesso Restrito";
-        if(iconClosed) iconClosed.style.display = 'block';
-        if(iconOpen) iconOpen.style.display = 'none';
-    }
     window.location.href = 'index.html'; 
 }
-
-// =============================================================================
-// HELPER: TRADUÇÃO DE STATUS (PARA O LOG)
-// =============================================================================
-const STATUS_MAP = {
-    'mandatory': 'OBRIGATÓRIO',
-    'recommended': 'RECOMENDÁVEL',
-    'none': 'NÃO OBRIGATÓRIO' 
-};
-
-// =============================================================================
-// 9. EDIÇÃO DE RELACIONAMENTO (LÓGICA DE NEGÓCIO)
-// =============================================================================
-
-async function alternarRelacao(cargoIndex, treinoId) {
-    if (!window.isAdminMode) return;
-
-    const cargo = config.cargos[cargoIndex];
-    if (!cargo) return;
-
-    // 1. Identifica o estado ATUAL (ANTES)
-    const isObrig = cargo.obrigatorios && cargo.obrigatorios.includes(treinoId);
-    const isRecom = cargo.recomendados && cargo.recomendados.includes(treinoId);
-    
-    let statusAnterior = 'none';
-    if (isObrig) statusAnterior = 'mandatory';
-    else if (isRecom) statusAnterior = 'recommended';
-
-    // 2. Determina o PRÓXIMO estado (Ciclo: Nada -> Obrigatório -> Recomendado -> Nada)
-    let novoStatus = '';
-    let msgConfirmacao = '';
-
-    if (statusAnterior === 'none') {
-        novoStatus = 'mandatory';
-        msgConfirmacao = `Definir como <strong style="color:#ef4444">OBRIGATÓRIO</strong>?`;
-    } 
-    else if (statusAnterior === 'mandatory') {
-        novoStatus = 'recommended';
-        msgConfirmacao = `Mudar para <strong style="color:#eab308">RECOMENDÁVEL</strong>?`;
-    } 
-    else if (statusAnterior === 'recommended') {
-        novoStatus = 'none';
-        msgConfirmacao = `<strong>REMOVER</strong> a regra deste curso?`;
-    }
-
-    // 3. Dispara Modal enviando o "Antes" e o "Depois"
-    exibirModalAuditoria(msgConfirmacao, {
-        TIPO: 'RELACAO',
-        cargoIndex: cargoIndex,
-        treinoId: treinoId,
-        statusAnterior: statusAnterior, // <--- Guardamos o estado antigo aqui
-        novoStatus: novoStatus
-    });
-}
-
-// =============================================================================
-// 10. LÓGICA DO MENU DE CONTEXTO (CLIQUE DIREITO / ESQUERDO)
-// =============================================================================
-
-// Variáveis temporárias globais para o contexto
-/* Já declaradas no início do arquivo, mas reforçando uso */
-// let tempCargoIndex = null;
-// let tempTreinoId = null;
-
-window.abrirMenuContexto = function(e, cargoIndex, treinoId) {
-    if (!window.isAdminMode) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    tempCargoIndex = parseInt(cargoIndex);
-    tempTreinoId = parseInt(treinoId);
-
-    const menu = document.getElementById('contextMenuCell');
-    const overlay = document.getElementById('contextMenuOverlay');
-    
-    // Posicionamento inteligente
-    let x = e.pageX;
-    let y = e.pageY;
-    if (x + 160 > window.innerWidth) x -= 160; 
-    
-    menu.style.left = `${x}px`;
-    menu.style.top = `${y}px`;
-    
-    menu.classList.remove('hidden');
-    overlay.classList.remove('hidden');
-};
-
-window.fecharMenuContexto = function() {
-    const menu = document.getElementById('contextMenuCell');
-    const overlay = document.getElementById('contextMenuOverlay');
-    if (menu) menu.classList.add('hidden');
-    if (overlay) overlay.classList.add('hidden');
-};
-
-window.selecionarOpcaoRelacao = function(novoStatus) {
-    if (tempCargoIndex === null || tempTreinoId === null) return;
-    
-    const cargo = config.cargos[tempCargoIndex];
-    if (!cargo) return;
-
-    // 1. Descobre o Status ATUAL (ANTES) para comparar
-    let statusAnterior = 'none';
-    if (cargo.obrigatorios && cargo.obrigatorios.includes(tempTreinoId)) statusAnterior = 'mandatory';
-    else if (cargo.recomendados && cargo.recomendados.includes(tempTreinoId)) statusAnterior = 'recommended';
-
-    // Se for igual, não faz nada
-    if (statusAnterior === novoStatus) {
-        fecharMenuContexto();
-        return;
-    }
-
-    // 2. Monta mensagem visual
-    const mapaHTML = { 
-        'mandatory': '<span style="color:#ef4444; font-weight:800;">OBRIGATÓRIO</span>', 
-        'recommended': '<span style="color:#eab308; font-weight:800;">RECOMENDÁVEL</span>', 
-        'none': '<span style="color:#94a3b8; font-weight:800;">NÃO OBRIGATÓRIO</span>' 
-    };
-    const msg = `Alterar regra para: ${mapaHTML[novoStatus]}`;
-
-    fecharMenuContexto();
-    
-    // 3. Abre Modal passando Antes e Depois
-    exibirModalAuditoria(msg, {
-        TIPO: 'RELACAO',
-        cargoIndex: tempCargoIndex,
-        treinoId: tempTreinoId,
-        statusAnterior: statusAnterior, // <--- Guardamos o estado antigo
-        novoStatus: novoStatus
-    });
-};
-
-// =============================================================================
-// 11. CENTRAL DE SEGURANÇA E AUDITORIA (LOG AVANÇADO)
-// =============================================================================
-
-/* Variável 'pendingChange' já declarada no início */
-
-function exibirModalAuditoria(mensagemHTML, changeObject) {
-    pendingChange = changeObject;
-
-    const lbl = document.getElementById('lblChangeDetail');
-    if(lbl) lbl.innerHTML = mensagemHTML;
-    
-    const timeEl = document.getElementById('auditTime');
-    if(timeEl) timeEl.textContent = new Date().toLocaleString('pt-BR');
-
-    const elIP = document.getElementById('auditIP');
-    if(elIP) {
-        elIP.textContent = "Verificando...";
-        setTimeout(() => elIP.textContent = "192.168.1." + Math.floor(Math.random() * 255), 300);
-    }
-
-    const modal = document.getElementById('modalConfirmacao');
-    if(modal) modal.classList.remove('hidden');
-}
-
-window.fecharModalConfirmacao = function() {
-    const modal = document.getElementById('modalConfirmacao');
-    if(modal) modal.classList.add('hidden');
-    pendingChange = null;
-};
-
-window.confirmarAcaoSegura = async function() {
-    if (!pendingChange) return;
-
-    // Pega usuário logado
-    const nomeUsuario = currentUser && currentUser.user ? currentUser.user : 'Admin';
-
-    try {
-        if (pendingChange.TIPO === 'RELACAO') {
-            const { cargoIndex, treinoId, statusAnterior, novoStatus } = pendingChange;
-            const cargo = config.cargos[cargoIndex];
-            const cargoId = cargo.id;
-
-            // 1. Executa a Ação no Banco
-            await DBHandler.atualizarRegra(cargoId, treinoId, novoStatus);
-
-            // 2. Prepara o Log detalhado (EM PORTUGUÊS)
-            // Usa o MAPA criado no início para traduzir mandatory -> OBRIGATÓRIO
-            const txtAntes = STATUS_MAP[statusAnterior] || statusAnterior;
-            const txtDepois = STATUS_MAP[novoStatus] || novoStatus;
-            
-            // Monta a frase final: "De: NÃO OBRIGATÓRIO -> Para: OBRIGATÓRIO"
-            const msgLog = `Alteração de Regra no cargo '${cargo.nome}' (Curso ID ${treinoId}). De: ${txtAntes} -> Para: ${txtDepois}`;
-            
-            // 3. Grava Log
-            await DBHandler.registrarLog(nomeUsuario, 'ALTERAR_REGRA', msgLog);
-        }
-        
-        // Recarrega Dados
-        const dadosFrescos = await DBHandler.carregarDadosIniciais();
-        config = dadosFrescos;
-        if (typeof db !== 'undefined') db.dados = config;
-
-        // Atualiza UI mantendo filtros
-        const roleFilter = document.getElementById('roleFilter').value;
-        const catFilter = document.getElementById('categoryFilter').value || 'all';
-        const textFilter = document.getElementById('textSearch').value;
-        const statusFilter = document.getElementById('statusFilter').value;
-        
-        // Recupera ID do cargo filtrado (se houver)
-        let cargoIdFilter = 'all';
-        if (roleFilter) {
-             const cObj = config.cargos.find(c => c.nome === roleFilter);
-             if(cObj) cargoIdFilter = cObj.id.toString();
-        }
-
-        renderizarMatriz(cargoIdFilter, catFilter, textFilter, statusFilter);
-        fecharModalConfirmacao();
-        
-        alert("✅ Alteração salva e registrada no log!");
-
-    } catch (e) {
-        console.error("Erro na operação:", e);
-        alert("Erro ao salvar alteração: " + e.message);
-    }
-};
