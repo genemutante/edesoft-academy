@@ -281,7 +281,8 @@
             </form>
 
             <div class="form-actions">
-                <button type="button" class="btn-danger-text admin-only" id="btnExcluir" style="display:none;">Excluir</button>
+                <button type="button" class="btn-danger-text admin-only" id="btnExcluir" style="display:none;" onclick="abrirModalDesligamento(currentId)">Desligar</button>
+
                 <div style="flex:1"></div>
                 <button type="button" class="btn-secondary" id="btnCancelarVoltar" onclick="acaoVoltar()">Voltar</button>
                 <button type="button" class="btn-primary admin-only" id="btnSalvar" onclick="salvarColaborador()">Salvar Dados</button>
@@ -419,6 +420,7 @@
 </body>
 
 </html>
+
 
 
 
