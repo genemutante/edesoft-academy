@@ -551,9 +551,15 @@ let modalTargetId = null;
 
 window.abrirModalDesligamento = function abrirModalDesligamento(id) {
   modalTargetId = id;
-  $("modalDataDemissao").value = new Date().toISOString().slice(0, 10);
-  $("modalMotivo").value = "";
-  $("modalDesligamento").style.display = "flex";
+
+  const colab = COLABS.find(c => c.id === id);
+  if (!colab) return alert("Colaborador não encontrado.");
+
+  // Preencher detalhes no modal de log
+  $("lblChangeDetail").innerText = `Colaborador: ${colab.nome}`;
+  $("auditAction").innerText = "DESLIGAR_COLAB";
+
+  abrirModalConfirmacao(() => confirmarDesligamentoComLog(id));
 };
 
 async function confirmarDesligamentoComLog(id) {
@@ -574,12 +580,13 @@ async function confirmarDesligamentoComLog(id) {
   }
 }
 
-
+// OBSOLETO — mantido apenas se ainda existir o modal antigo no HTML
 window.fecharModalDesligamento = function fecharModalDesligamento() {
   $("modalDesligamento").style.display = "none";
   modalTargetId = null;
 };
 
+// OBSOLETO — mantido apenas se ainda for chamado por HTML antigo
 window.confirmarDesligamento = async function confirmarDesligamento() {
   try {
     if (!modalTargetId) return;
@@ -609,6 +616,7 @@ window.reativar = async function reativar(id) {
   }
 };
 
+
 // ---------- ViaCEP ----------
 window.buscarCep = async function buscarCep(cep) {
   try {
@@ -627,4 +635,5 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
