@@ -732,4 +732,9 @@ Abra o arquivo **`cadastro-style.css`** e cole estas regras ao final do arquivo.
     gap: 10px;
 }
 
+/* Garante que qualquer elemento com "hidden" fique oculto */
+.hidden {
+  display: none !important;
+}
+
 
