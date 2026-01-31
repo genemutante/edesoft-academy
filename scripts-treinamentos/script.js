@@ -242,36 +242,67 @@ function getCargoIdByName(nome) {
     return cargo ? cargo.id.toString() : 'all';
 }
 
-window.atualizarFiltros = function(valorCargoClick) {
+window.atualizarFiltros = function (valorCargoClick) {
 
-    const filtroStatusEl = document.getElementById("filtroStatus");
-    const status = filtroStatusEl ? filtroStatusEl.value : "todos";
+  // Proteção global: se não existir filtro principal, aborta
+  const filtroStatusEl = document.getElementById("filtroStatus");
+  if (!filtroStatusEl) {
+    console.warn("⚠️ atualizarFiltros chamado fora da tela da matriz. Abortando.");
+    return;
+  }
 
-    if (valorCargoClick !== undefined) {
-        const cargoObj = config.cargos.find(c => c.id.toString() === valorCargoClick);
-        const inputRole = document.getElementById('roleFilter');
-        if (cargoObj) inputRole.value = (inputRole.value === cargoObj.nome) ? '' : cargoObj.nome;
+  const status = filtroStatusEl.value || "todos";
+
+  // ---- Cargo clicado (HUD) ----
+  if (valorCargoClick !== undefined && window.config?.cargos) {
+    const cargoObj = config.cargos.find(c => c.id.toString() === valorCargoClick);
+    const inputRole = document.getElementById("roleFilter");
+
+    if (cargoObj && inputRole) {
+      inputRole.value = (inputRole.value === cargoObj.nome) ? "" : cargoObj.nome;
     }
+  }
 
-    const roleName = document.getElementById('roleFilter').value;
-    const roleVal = getCargoIdByName(roleName); 
-    let catVal = document.getElementById('categoryFilter').value || 'all'; 
-    const statusSelect = document.getElementById('statusFilter');
-    const statusWrapper = document.getElementById('statusWrapper');
-    const textVal = document.getElementById('textSearch').value.toLowerCase();
+  // ---- Elementos (todos protegidos) ----
+  const roleFilter = document.getElementById("roleFilter");
+  const categoryFilter = document.getElementById("categoryFilter");
+  const statusSelect = document.getElementById("statusFilter");
+  const statusWrapper = document.getElementById("statusWrapper");
+  const textSearch = document.getElementById("textSearch");
 
-    if (roleVal === 'all') {
-        if (statusWrapper) statusWrapper.style.display = 'none';
-        statusSelect.value = 'all';
-        statusSelect.disabled = true;
-    } else {
-        if (statusWrapper) statusWrapper.style.display = 'flex';
-        statusSelect.disabled = false;
-    }
+  if (!roleFilter || !categoryFilter || !statusSelect || !textSearch) {
+    console.warn("⚠️ atualizarFiltros abortado: elementos de filtro incompletos.");
+    return;
+  }
 
+  const roleName = roleFilter.value || "";
+  const roleVal = typeof getCargoIdByName === "function"
+    ? getCargoIdByName(roleName)
+    : "all";
+
+  let catVal = categoryFilter.value || "all";
+  const textVal = (textSearch.value || "").toLowerCase();
+
+  // ---- Controle Status ----
+  if (roleVal === "all") {
+    if (statusWrapper) statusWrapper.style.display = "none";
+    statusSelect.value = "all";
+    statusSelect.disabled = true;
+  } else {
+    if (statusWrapper) statusWrapper.style.display = "flex";
+    statusSelect.disabled = false;
+  }
+
+  // ---- Chamadas finais (protegidas) ----
+  if (typeof atualizarFiltroHUD === "function") {
     atualizarFiltroHUD(roleVal, catVal, statusSelect.value);
+  }
+
+  if (typeof renderizarMatriz === "function") {
     renderizarMatriz(roleVal, catVal, textVal, statusSelect.value);
-}
+  }
+};
+
 
 function atualizarFiltroHUD(cargoId, categoria, obrigatoriedade) {
     const tagRole = document.getElementById('tagRole');
@@ -1090,6 +1121,7 @@ window.fecharMenus = function() {
 
     tempCargoIndexParaMenu = null;
 };
+
 
 
 
