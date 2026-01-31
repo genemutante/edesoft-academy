@@ -49,6 +49,8 @@ function setFormEnabled(enabled) {
 // ---------- Boot ----------
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+
+    document.getElementById("modalConfirmacao")?.classList.add("hidden");
     // sessão já é verificada pelo HTML, mas deixo “safe”
     const sessionRaw = localStorage.getItem("rh_session");
     if (!sessionRaw) return;
@@ -635,5 +637,6 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
 
 
