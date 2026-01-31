@@ -49,8 +49,6 @@ function setFormEnabled(enabled) {
 // ---------- Boot ----------
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-
-    document.getElementById("modalConfirmacao")?.classList.add("hidden");
     // sessão já é verificada pelo HTML, mas deixo “safe”
     const sessionRaw = localStorage.getItem("rh_session");
     if (!sessionRaw) return;
@@ -553,42 +551,16 @@ let modalTargetId = null;
 
 window.abrirModalDesligamento = function abrirModalDesligamento(id) {
   modalTargetId = id;
-
-  const colab = COLABS.find(c => c.id === id);
-  if (!colab) return alert("Colaborador não encontrado.");
-
-  // Preencher detalhes no modal de log
-  $("lblChangeDetail").innerText = `Colaborador: ${colab.nome}`;
-  $("auditAction").innerText = "DESLIGAR_COLAB";
-
-  abrirModalConfirmacao(() => confirmarDesligamentoComLog(id));
+  $("modalDataDemissao").value = new Date().toISOString().slice(0, 10);
+  $("modalMotivo").value = "";
+  $("modalDesligamento").style.display = "flex";
 };
 
-async function confirmarDesligamentoComLog(id) {
-  try {
-    const data = new Date().toISOString().slice(0, 10);
-    const motivo = prompt("Motivo do desligamento:", "");
-
-    await DBHandler.desativarColaborador(id, {
-      dataDemissao: data,
-      motivoDemissao: motivo || null,
-    });
-
-    await carregarLista();
-    renderizarTabela();
-  } catch (e) {
-    console.error(e);
-    alert("Erro ao desligar:\n" + (e.message || e));
-  }
-}
-
-// OBSOLETO — mantido apenas se ainda existir o modal antigo no HTML
 window.fecharModalDesligamento = function fecharModalDesligamento() {
   $("modalDesligamento").style.display = "none";
   modalTargetId = null;
 };
 
-// OBSOLETO — mantido apenas se ainda for chamado por HTML antigo
 window.confirmarDesligamento = async function confirmarDesligamento() {
   try {
     if (!modalTargetId) return;
@@ -618,7 +590,6 @@ window.reativar = async function reativar(id) {
   }
 };
 
-
 // ---------- ViaCEP ----------
 window.buscarCep = async function buscarCep(cep) {
   try {
@@ -637,6 +608,10 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
+
+
+
+
 
 
 
