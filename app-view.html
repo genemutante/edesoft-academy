@@ -273,41 +273,34 @@ formSenha.onsubmit = async (e) => {
     const nova = inputNova.value.trim();
     const session = JSON.parse(localStorage.getItem('rh_session'));
 
-    // 1. Validação de Campo Vazio (Apenas se está preenchido)
-    if (!atual) {
-        return aplicarErro(inputAtual, "Por favor, digite sua senha atual.");
-    }
+    // 1. Pega o login real (testeadmin). 
+    // Se a sessão for antiga e não tiver .login, ele tentará o .user, 
+    // mas o ideal é relogar para ter o .login preenchido.
+    const loginReal = session.login || session.user;
 
-    // 2. Validação da NOVA SENHA (Aqui sim checamos os 6 dígitos)
-    if (nova.length < 6) {
-        return aplicarErro(inputNova, "A nova senha deve ter no mínimo 6 dígitos.");
-    }
+    console.log("Tentando alterar senha para o login:", loginReal);
 
-    if (atual === nova) {
-        return aplicarErro(inputNova, "A nova senha não pode ser igual à atual.");
-    }
+    // Validação Visual
+    if (!atual) return aplicarErro(inputAtual, "Digite a senha atual.");
+    if (nova.length < 6) return aplicarErro(inputNova, "A nova senha deve ter no mínimo 6 dígitos.");
+    if (atual === nova) return aplicarErro(inputNova, "A nova senha não pode ser igual à atual.");
 
-try {
-    const btn = document.getElementById('btnSalvarSenha');
-    btn.disabled = true;
-    btn.textContent = "Verificando...";
+    try {
+        const btn = document.getElementById('btnSalvarSenha');
+        btn.disabled = true;
+        btn.textContent = "Validando...";
 
-    // AGORA USAMOS O LOGIN CORRETO
-    const loginReal = session.login || session.user; 
-    
-    console.log("Tentando alterar senha para o login:", loginReal); // Para você testar no console
+        // CHAMADA AO BANCO
+        await DBHandler.alterarSenha(loginReal, atual, nova);
 
-    await DBHandler.alterarSenha(loginReal, atual, nova);
-
-    alert("Senha alterada com sucesso!");
-    document.getElementById('btnFecharModal').click();
-} catch (err) {
-        // Se o erro vier do banco de dados sobre a senha atual
-        if (err.message.includes("atual") || err.message.includes("incorreta")) {
-            aplicarErro(inputAtual, "A senha atual digitada não confere com o banco.");
+        alert("Senha alterada com sucesso!");
+        document.getElementById('btnFecharModal').click();
+    } catch (err) {
+        // Se o erro for 406 ou "não encontrado", é porque o login enviado está errado
+        if (err.message.includes("406") || err.message.toLowerCase().includes("atual")) {
+            aplicarErro(inputAtual, "A senha atual não confere ou usuário não identificado.");
         } else {
-            msgDiv.textContent = err.message;
-            msgDiv.className = 'msg-error';
+            msgDiv.textContent = "Erro: " + err.message;
             msgDiv.style.display = 'block';
         }
     } finally {
@@ -315,7 +308,7 @@ try {
         btn.disabled = false;
         btn.textContent = "Atualizar Senha";
     }
-};;
+};
 
         // 3. FUNÇÕES GLOBAIS
         window.trocarModulo = (url) => {
@@ -333,6 +326,7 @@ try {
     </script>
 </body>
 </html>
+
 
 
 
