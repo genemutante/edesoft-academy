@@ -256,24 +256,31 @@ export const DBHandler = {
     return data;
   }, // <--- CERTIFIQUE-SE DE QUE EXISTE ESTA VÍRGULA AQUI
 
-  async alterarSenha(username, senhaAtual, novaSenha) {
-    const { data: usuario, error: errorBusca } = await supabaseClient
-        .from("usuarios_sistema")
-        .select("*")
-        .eq("username", username)
-        .eq("password", senhaAtual)
-        .single();
+// No db-handler.js
+async alterarSenha(username, senhaAtual, novaSenha) {
+    console.log(`[DB] Validando acesso para: ${username}`);
 
-    if (errorBusca || !usuario) {
-        throw new Error("A senha atual está incorreta.");
+    // Procuramos o utilizador sem usar .single() para evitar erro 406
+    const { data, error } = await supabaseClient
+      .from("usuarios_sistema")
+      .select("id, password")
+      .eq("username", username);
+
+    if (error) throw new Error("Erro na base de dados.");
+
+    // Validação manual da senha atual
+    if (!data || data.length === 0 || data[0].password !== senhaAtual) {
+      throw new Error("A senha atual está incorreta.");
     }
 
-    const { error: errorUpdate } = await supabaseClient
-        .from("usuarios_sistema")
-        .update({ password: novaSenha })
-        .eq("username", username);
+    // Atualização
+    const { error: updateError } = await supabaseClient
+      .from("usuarios_sistema")
+      .update({ password: novaSenha })
+      .eq("id", data[0].id);
 
-    if (errorUpdate) throw new Error("Erro ao atualizar a senha.");
+    if (updateError) throw new Error("Não foi possível atualizar a senha.");
     return true;
-  } // <--- SEM VÍRGULA SE FOR A ÚLTIMA FUNÇÃO
+} // <--- SEM VÍRGULA SE FOR A ÚLTIMA FUNÇÃO
 }; // <--- FECHAMENTO DO OBJETO DBHandler
+
