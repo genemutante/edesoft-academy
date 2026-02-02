@@ -103,16 +103,20 @@
             }
         };
 
-function salvarSessao(usuario) {
+// Altere para receber três parâmetros: nome, login e role
+function salvarSessao(nome, login, role) {
     const sessao = {
-        user: usuario.nome,      // Para exibir na tela (Manoel Edesio)
-        login: usuario.username,  // O identificador real (manoel.edesio) <-- ADICIONE ISSO
-        role: usuario.role,
+        user: nome,        
+        login: login,    
+        role: role,
         token: 'session-' + Date.now()
     };
     localStorage.setItem('rh_session', JSON.stringify(sessao));
     window.location.href = 'rh-system-edesoft.html';
 }
+
+// E onde você CHAMA a função (dentro do login), altere para:
+// salvarSessao(usuario.nome, usuario.username, usuario.role);
 
         // Verifica se já está logado ao abrir
         const sessaoAtual = localStorage.getItem('rh_session');
@@ -124,6 +128,7 @@ function salvarSessao(usuario) {
 
 </body>
 </html>
+
 
 
 
