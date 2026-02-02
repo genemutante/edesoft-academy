@@ -1,36 +1,76 @@
-// module-guard.js
+/**
+ * module-guard.js
+ * Proteção de Interface Granular para Módulos Academy
+ * Aplica regras de 'Somente Leitura' e 'Privacidade LGPD' via URL Params
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
-    
-    // Verifica se a URL tem ?readonly=true
-    if (params.get('readonly') === 'true') {
-        console.log("⚠️ Modo de Leitura Ativado: Desativando controlos de edição.");
+    const isReadonly = params.get('readonly') === 'true';
+    const hideDetails = params.get('hide_details') === 'true';
 
-        // 1. Esconde todos os botões que servem para salvar ou excluir
-        const selectors = [
+    // --- 1. LÓGICA DE MODO LEITURA (READ-ONLY) ---
+    if (isReadonly) {
+        console.log("⚠️ [Guard] Modo de Leitura Ativado.");
+
+        // Seletores de botões que alteram dados (gravar, excluir, novo)
+        const actionSelectors = [
             'button[type="submit"]',
             '.btn-save',
             '.btn-delete',
             '.btn-danger',
-            'button:contains("Salvar")', // Alguns browsers/bibliotecas podem precisar de ajuste aqui
-            'button:contains("Excluir")'
+            '.btn-success',
+            '.btn-primary:not(.btn-filter)', // Mantém botões de filtro se existirem
+            '#btnSalvar',
+            '#btnExcluir'
         ];
 
-        document.querySelectorAll(selectors.join(',')).forEach(el => {
-            el.style.display = 'none';
+        // Remove os botões de ação (remove() é mais seguro que display:none)
+        document.querySelectorAll(actionSelectors.join(',')).forEach(el => {
+            el.remove();
         });
 
-        // 2. Desativa todos os campos de entrada para que ninguém digite nada
+        // Desativa todos os campos de entrada de dados
         document.querySelectorAll('input, select, textarea').forEach(el => {
             el.disabled = true;
-            el.style.backgroundColor = '#f1f5f9'; // Dá um aspeto de "bloqueado"
+            el.style.backgroundColor = '#f8fafc';
             el.style.cursor = 'not-allowed';
+            el.title = "Acesso em modo de leitura";
         });
 
-        // 3. Adiciona um aviso visual discreto no topo (opcional)
+        // Adiciona um banner informativo no topo da página
         const banner = document.createElement('div');
+        banner.style = 'background: #fff7ed; color: #c2410c; padding: 10px; text-align: center; font-size: 12px; border-bottom: 1px solid #ffedd5; font-family: "Inter", sans-serif; font-weight: 500;';
         banner.innerHTML = '👁️ <b>Modo de Visualização:</b> Você não tem permissão para alterar dados neste módulo.';
-        banner.style = 'background: #fff7ed; color: #c2410c; padding: 8px; text-align: center; font-size: 12px; border-bottom: 1px solid #ffedd5; font-family: sans-serif;';
         document.body.prepend(banner);
+    }
+
+    // --- 2. LÓGICA DE PRIVACIDADE (HIDE DETAILS / LGPD) ---
+    if (hideDetails) {
+        console.log("🔒 [Guard] Restrição de detalhes ativada (LGPD).");
+
+        // Seletores de botões que abrem fichas individuais ou dados sensíveis
+        const detailSelectors = [
+            '.btn-visualizar',
+            '.btn-detalhes',
+            '.action-view',
+            '.lupa-detalhe',
+            'button[title*="Visualizar"]',
+            'button[title*="Detalhes"]',
+            '.btn-eye'
+        ];
+
+        // Remove os botões que dão acesso à ficha completa do colaborador
+        document.querySelectorAll(detailSelectors.join(',')).forEach(el => {
+            el.remove();
+        });
+
+        // Se houver uma tabela, podemos avisar na coluna de ações
+        const infoMsg = document.createElement('div');
+        infoMsg.style = 'background: #f0f9ff; color: #075985; padding: 6px; text-align: center; font-size: 11px; font-weight: 600;';
+        infoMsg.innerHTML = 'ℹ️ Detalhes individuais ocultos por regra de privacidade.';
+        
+        // Adiciona o aviso logo abaixo do banner de leitura (se houver) ou no topo
+        document.body.prepend(infoMsg);
     }
 });
