@@ -104,12 +104,12 @@
 
     <header class="app-header">
         <div class="header-left">
-            <a href="rh-system-edesoft.html" class="brand-minimal">
+            <a href="app-view.html" class="brand-minimal">
                 <div class="brand-logo">EA</div>
                 <span>Academy</span>
             </a>
             <div class="module-switcher">
-                <select id="moduleSelect" onchange="trocarModulo(this.value)"></select>
+                <select id="moduleSelect"></select>
             </div>
         </div>
 
@@ -132,11 +132,11 @@
             <h3>Segurança</h3>
             <p>Para sua proteção, a nova senha deve ter no mínimo <b>6 dígitos</b>.</p>
             <div id="msgSenha"></div>
-            <div class="input-group" id="groupAtual">
+            <div class="input-group">
                 <label for="txtSenhaAtual">Senha Atual</label>
                 <input type="password" id="txtSenhaAtual" placeholder="Digite sua senha atual" autocomplete="current-password">
             </div>
-            <div class="input-group" id="groupNova">
+            <div class="input-group">
                 <label for="txtNovaSenha">Nova Senha</label>
                 <input type="password" id="txtNovaSenha" placeholder="Mínimo 6 dígitos" autocomplete="new-password">
             </div>
@@ -155,164 +155,128 @@
         const inputAtual = document.getElementById('txtSenhaAtual');
         const inputNova = document.getElementById('txtNovaSenha');
         const msgDiv = document.getElementById('msgSenha');
-        const select = document.getElementById('moduleSelect');
-        const iframe = document.getElementById('contentFrame');
+        const elSelect = document.getElementById('moduleSelect');
+        const elIframe = document.getElementById('contentFrame');
 
- // 1. INICIALIZAÇÃO DINÂMICA (CARREGAMENTO DO BANCO)
-document.addEventListener('DOMContentLoaded', async () => {
-    // Captura os elementos necessários da DOM
-    const elSelect = document.getElementById('moduleSelect');
-    const elIframe = document.getElementById('contentFrame');
-    const elName = document.getElementById('userName');
-    const elAvatar = document.getElementById('userAvatar');
-    const elHiddenUser = document.getElementById('hiddenUsername');
+        // Armazena módulos permitidos para consulta global nesta página
+        let modulosCache = [];
 
-    // Validação de Sessão
-    const sessionRaw = localStorage.getItem('rh_session');
-    if (!sessionRaw) { 
-        window.location.href = 'index.html'; 
-        return; 
-    }
+        // 1. INICIALIZAÇÃO DINÂMICA
+        document.addEventListener('DOMContentLoaded', async () => {
+            const elName = document.getElementById('userName');
+            const elAvatar = document.getElementById('userAvatar');
+            const elHiddenUser = document.getElementById('hiddenUsername');
 
-    const session = JSON.parse(sessionRaw);
-    const loginReal = session.login || session.user;
+            const sessionRaw = localStorage.getItem('rh_session');
+            if (!sessionRaw) { window.location.href = 'index.html'; return; }
 
-    // Preenche dados básicos da interface
-    if (elName) elName.textContent = session.user;
-    if (elAvatar) elAvatar.textContent = session.user.substring(0, 2).toUpperCase();
-    if (elHiddenUser) elHiddenUser.value = loginReal;
-
-    try {
-        // BUSCA MÓDULOS PERMITIDOS NO BANCO (Baseado na Role da Sessão)
-        // O DBHandler agora deve retornar: [{ label, path, pode_editar }, ...]
-        const modulos = await DBHandler.buscarModulosPermitidos(session.role);
-        
-        if (!modulos || modulos.length === 0) {
-            alert("Atenção: Seu perfil não possui permissões de acesso configuradas no sistema.");
-            return;
-        }
-
-        // Limpa e Preenche o Seletor de Módulos dinamicamente
-        elSelect.innerHTML = '';
-        modulos.forEach(mod => {
-            const opt = document.createElement('option');
-            opt.value = mod.path;
-            opt.textContent = mod.label;
-            elSelect.appendChild(opt);
-        });
-
-        // Lógica de Direcionamento e Guarda de Segurança
-        const params = new URLSearchParams(window.location.search);
-        const requestedSrc = params.get('src');
-        
-        // Localiza o objeto do módulo solicitado para verificar permissões
-        const moduloAutorizado = modulos.find(m => m.path === requestedSrc);
-        
-        let moduloParaCarregar;
-
-        if (requestedSrc) {
-            if (moduloAutorizado) {
-                // Acesso Autorizado
-                moduloParaCarregar = moduloAutorizado;
-            } else {
-                // Tentativa de Acesso Indevido
-                console.warn("Bloqueio de Segurança: Acesso não autorizado ao módulo:", requestedSrc);
-                alert("Acesso Negado: Você não tem permissão para visualizar este módulo.");
-                
-                // Redireciona para o primeiro módulo da lista permitida
-                moduloParaCarregar = modulos[0];
-                
-                // Limpa o parâmetro inválido da URL sem recarregar
-                const newUrl = window.location.pathname;
-                window.history.replaceState({}, '', newUrl);
-            }
-        } else {
-            // Comportamento padrão: Carrega o primeiro disponível
-            moduloParaCarregar = modulos[0];
-        }
-
-        // --- AJUSTE PARA MODO LEITURA (READONLY) ---
-        // Se 'pode_editar' for falso, injetamos o parâmetro na URL do iframe
-        const urlFinal = moduloParaCarregar.pode_editar 
-            ? moduloParaCarregar.path 
-            : `${moduloParaCarregar.path}?readonly=true`;
-
-        elIframe.src = urlFinal;
-        elSelect.value = moduloParaCarregar.path;
-
-    } catch (err) {
-        console.error("Erro crítico na inicialização do sistema:", err);
-        alert("Ocorreu um erro ao carregar suas permissões. Por favor, tente fazer login novamente.");
-    }
-});
-        // 2. LÓGICA DO MODAL DE SENHA
-        function aplicarErro(inputEl, mensagem) {
-            document.querySelectorAll('.input-group').forEach(g => g.classList.remove('has-error'));
-            inputEl.closest('.input-group').classList.add('has-error');
-            msgDiv.textContent = mensagem;
-            msgDiv.className = 'msg-error';
-            msgDiv.style.display = 'block';
-            inputEl.focus();
-        }
-
-        [inputAtual, inputNova].forEach(input => {
-            input.oninput = () => {
-                input.closest('.input-group').classList.remove('has-error');
-                msgDiv.style.display = 'none';
-            };
-        });
-
-        document.getElementById('btnPerfil').onclick = () => modal.style.display = 'flex';
-        
-        document.getElementById('btnFecharModal').onclick = () => {
-            modal.style.display = 'none';
-            formSenha.reset();
-            msgDiv.style.display = 'none';
-        };
-
-        formSenha.onsubmit = async (e) => {
-            e.preventDefault();
-            const session = JSON.parse(localStorage.getItem('rh_session'));
+            const session = JSON.parse(sessionRaw);
             const loginReal = session.login || session.user;
-            const atual = inputAtual.value.trim();
-            const nova = inputNova.value.trim();
 
-            if (!atual) return aplicarErro(inputAtual, "Digite a senha atual.");
-            if (nova.length < 6) return aplicarErro(inputNova, "A nova senha deve ter no mínimo 6 dígitos.");
+            if (elName) elName.textContent = session.user;
+            if (elAvatar) elAvatar.textContent = session.user.substring(0, 2).toUpperCase();
+            if (elHiddenUser) elHiddenUser.value = loginReal;
 
             try {
-                const btn = document.getElementById('btnSalvarSenha');
-                btn.disabled = true;
-                btn.textContent = "Validando...";
+                // BUSCA MÓDULOS PERMITIDOS (Agora retornando pode_editar e ver_detalhes)
+                modulosCache = await DBHandler.buscarModulosPermitidos(session.role);
+                
+                if (!modulosCache || modulosCache.length === 0) {
+                    alert("Seu perfil não possui permissões configuradas.");
+                    return;
+                }
 
-                await DBHandler.alterarSenha(loginReal, atual, nova);
+                // Preenche o Select
+                elSelect.innerHTML = '';
+                modulosCache.forEach(mod => {
+                    const opt = document.createElement('option');
+                    opt.value = mod.path;
+                    opt.textContent = mod.label;
+                    elSelect.appendChild(opt);
+                });
 
-                alert("Senha alterada com sucesso!");
-                document.getElementById('btnFecharModal').click();
+                // Lógica de Direcionamento
+                const params = new URLSearchParams(window.location.search);
+                const requestedPath = params.get('src');
+                const moduloAutorizado = modulosCache.find(m => m.path === requestedPath);
+                
+                const moduloParaCarregar = requestedPath && moduloAutorizado 
+                    ? moduloAutorizado 
+                    : modulosCache[0];
+
+                if (requestedPath && !moduloAutorizado) {
+                    alert("Acesso Negado para este módulo.");
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+
+                // Carrega o módulo com as travas de segurança dinâmicas
+                carregarModuloIframe(moduloParaCarregar);
+
             } catch (err) {
-                aplicarErro(inputAtual, err.message);
-            } finally {
-                const btn = document.getElementById('btnSalvarSenha');
-                btn.disabled = false;
-                btn.textContent = "Atualizar Senha";
+                console.error("Erro na carga inicial:", err);
             }
+        });
+
+        // Função centralizada para carregar iframe com travas
+        function carregarModuloIframe(moduloObj) {
+            const queryParams = new URLSearchParams();
+            
+            // Se NÃO pode editar -> Modo Leitura
+            if (!moduloObj.pode_editar) queryParams.set('readonly', 'true');
+            
+            // Se NÃO pode ver detalhes -> Esconde botões de visualização (LGPD)
+            if (!moduloObj.ver_detalhes) queryParams.set('hide_details', 'true');
+
+            const finalUrl = queryParams.toString() 
+                ? `${moduloObj.path}?${queryParams.toString()}` 
+                : moduloObj.path;
+
+            elIframe.src = finalUrl;
+            elSelect.value = moduloObj.path;
+
+            // Atualiza URL do navegador sem recarregar para manter estado
+            const browserUrl = `${window.location.pathname}?src=${moduloObj.path}`;
+            window.history.pushState({}, '', browserUrl);
+        }
+
+        // Evento de troca no Select
+        elSelect.onchange = (e) => {
+            const selectedPath = e.target.value;
+            const mod = modulosCache.find(m => m.path === selectedPath);
+            if (mod) carregarModuloIframe(mod);
         };
 
-        // 3. NAVEGAÇÃO
-        window.trocarModulo = (url) => {
-            iframe.src = url;
-            const newUrl = `${window.location.pathname}?src=${url}`;
-            window.history.pushState({}, '', newUrl);
-        };
-
+        // --- LÓGICA DE INTERFACE ---
         window.logout = () => {
             if (confirm("Encerrar sessão?")) {
                 localStorage.removeItem('rh_session');
                 window.location.href = 'index.html';
             }
         };
+
+        document.getElementById('btnPerfil').onclick = () => modal.style.display = 'flex';
+        document.getElementById('btnFecharModal').onclick = () => {
+            modal.style.display = 'none';
+            formSenha.reset();
+        };
+
+        formSenha.onsubmit = async (e) => {
+            e.preventDefault();
+            const session = JSON.parse(localStorage.getItem('rh_session'));
+            const atual = inputAtual.value.trim();
+            const nova = inputNova.value.trim();
+
+            try {
+                document.getElementById('btnSalvarSenha').disabled = true;
+                await DBHandler.alterarSenha(session.login || session.user, atual, nova);
+                alert("Senha alterada com sucesso!");
+                document.getElementById('btnFecharModal').click();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                document.getElementById('btnSalvarSenha').disabled = false;
+            }
+        };
     </script>
 </body>
 </html>
-
-
