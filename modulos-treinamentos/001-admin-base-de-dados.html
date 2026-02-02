@@ -432,23 +432,33 @@ window.atualizarRoleUsuario = async (userId, novaRole) => {
 function verificarModoLeitura() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('readonly') === 'true') {
-        console.log("🛡️ Bloqueio de Segurança: Usuário em modo leitura.");
+        console.log("🛡️ Ajustando layout para modo leitura.");
         
         // 1. Esconde o botão de salvar matriz
         const btnSalvar = document.getElementById('btnSalvarPermissoes');
         if (btnSalvar) btnSalvar.remove();
 
-        // 2. Esconde o formulário de novo usuário
+        // 2. Ajusta a aba de Gestão de Usuários
         const formNovo = document.getElementById('formNovoUsuario');
-        if (formNovo) formNovo.closest('div').style.display = 'none';
+        if (formNovo) {
+            const formContainer = formNovo.closest('div');
+            const gridContainer = formContainer.parentElement; // O container que tem o display: grid
 
-        // 3. Desabilita todos os checkboxes da matriz (após carregarem)
+            // Esconde o container do formulário
+            formContainer.style.display = 'none'; 
+
+            // ESSA É A CHAVE: Muda o grid de "320px 1fr" para "1fr" (largura total)
+            gridContainer.style.gridTemplateColumns = '1fr';
+            gridContainer.style.gap = '0'; 
+        }
+
+        // 3. Bloqueio de interação (MutationObserver)
         const observer = new MutationObserver(() => {
             document.querySelectorAll('input[type="checkbox"], select').forEach(el => {
+                // No caso do Auditor, deixamos o select de cargo visível mas desativado
                 el.disabled = true;
                 el.style.cursor = 'not-allowed';
             });
-            // Remove botões de excluir da lista de usuários
             document.querySelectorAll('.btn-danger').forEach(el => el.remove());
         });
 
@@ -466,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </script>
 </body>
 </html>
+
 
 
 
