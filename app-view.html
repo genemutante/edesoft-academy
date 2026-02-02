@@ -234,6 +234,9 @@
                 btn.disabled = true;
                 btn.textContent = "Processando...";
 
+             
+                console.log("Enviando para o banco -> Login:", loginReal, "Nova Senha:", nova);
+
                 await DBHandler.alterarSenha(loginReal, atual, nova);
 
                 alert("Sucesso!");
@@ -263,3 +266,4 @@
     </script>
 </body>
 </html>
+
