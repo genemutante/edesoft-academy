@@ -290,25 +290,28 @@ async alterarSenha(username, senhaAtual, novaSenha) {
 },
 
 async buscarModulosPermitidos(role) {
-    // Busca os módulos através da tabela de relacionamento
     const { data, error } = await supabaseClient
       .from("acesso_modulos")
       .select(`
+        pode_editar,
         modulos_sistema (
           id, label, path, icon_svg, ordem
         )
       `)
-      .eq("role", role)
-      .order('modulos_sistema(ordem)', { ascending: true });
+      .eq("role", role);
 
-    if (error) throw new Error("Erro ao carregar permissões: " + error.message);
+    if (error) throw new Error("Erro ao carregar permissões.");
     
-    // Flatten do resultado (o Supabase retorna objetos aninhados)
-    return data.map(item => item.modulos_sistema);
+    // Retornamos um objeto que contém os dados do módulo + a permissão de edição
+    return data.map(item => ({
+        ...item.modulos_sistema,
+        pode_editar: item.pode_editar
+    }));
   }
 
   
 }; // <--- FECHAMENTO DO OBJETO DBHandler
+
 
 
 
