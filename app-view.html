@@ -191,6 +191,13 @@
 
         // 1. INICIALIZAÇÃO E CONTROLE DE ACESSO
         document.addEventListener('DOMContentLoaded', () => {
+
+// Adicione esta linha para preencher o campo oculto assim que a página carregar
+const session = JSON.parse(localStorage.getItem('rh_session'));
+if (session) {
+    document.getElementById('hiddenUsername').value = session.login || session.user;
+}
+            
             const sessionRaw = localStorage.getItem('rh_session');
             if (!sessionRaw) { window.location.href = 'index.html'; return; }
 
@@ -262,20 +269,21 @@ formSenha.onsubmit = async (e) => {
         return aplicarErro(inputNova, "A nova senha não pode ser igual à atual.");
     }
 
-    try {
-        const btn = document.getElementById('btnSalvarSenha');
-        btn.disabled = true;
-        btn.textContent = "Verificando...";
+try {
+    const btn = document.getElementById('btnSalvarSenha');
+    btn.disabled = true;
+    btn.textContent = "Verificando...";
 
-        // IMPORTANTE: Usamos 'session.login' que é o username (ex: manoel.edesio)
-        // Se ainda não atualizou o index.html, use session.user temporariamente
-        const identificador = session.login || session.user;
-        
-        await DBHandler.alterarSenha(identificador, atual, nova);
+    // AGORA USAMOS O LOGIN CORRETO
+    const loginReal = session.login || session.user; 
+    
+    console.log("Tentando alterar senha para o login:", loginReal); // Para você testar no console
 
-        alert("Senha atualizada com sucesso!");
-        document.getElementById('btnFecharModal').click();
-    } catch (err) {
+    await DBHandler.alterarSenha(loginReal, atual, nova);
+
+    alert("Senha alterada com sucesso!");
+    document.getElementById('btnFecharModal').click();
+} catch (err) {
         // Se o erro vier do banco de dados sobre a senha atual
         if (err.message.includes("atual") || err.message.includes("incorreta")) {
             aplicarErro(inputAtual, "A senha atual digitada não confere com o banco.");
@@ -307,5 +315,6 @@ formSenha.onsubmit = async (e) => {
     </script>
 </body>
 </html>
+
 
 
