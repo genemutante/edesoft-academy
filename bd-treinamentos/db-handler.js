@@ -287,7 +287,7 @@ async alterarSenha(username, senhaAtual, novaSenha) {
     if (updateError) throw new Error("Não foi possível atualizar a senha.");
     
     return true;
-} // <--- SEM VÍRGULA SE FOR A ÚLTIMA FUNÇÃO
+},
 
 async buscarModulosPermitidos(role) {
     // Busca os módulos através da tabela de relacionamento
@@ -309,6 +309,7 @@ async buscarModulosPermitidos(role) {
 
   
 }; // <--- FECHAMENTO DO OBJETO DBHandler
+
 
 
 
