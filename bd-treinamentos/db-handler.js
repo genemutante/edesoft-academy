@@ -288,6 +288,27 @@ async alterarSenha(username, senhaAtual, novaSenha) {
     
     return true;
 } // <--- SEM VÍRGULA SE FOR A ÚLTIMA FUNÇÃO
+
+async buscarModulosPermitidos(role) {
+    // Busca os módulos através da tabela de relacionamento
+    const { data, error } = await supabaseClient
+      .from("acesso_modulos")
+      .select(`
+        modulos_sistema (
+          id, label, path, icon_svg, ordem
+        )
+      `)
+      .eq("role", role)
+      .order('modulos_sistema(ordem)', { ascending: true });
+
+    if (error) throw new Error("Erro ao carregar permissões: " + error.message);
+    
+    // Flatten do resultado (o Supabase retorna objetos aninhados)
+    return data.map(item => item.modulos_sistema);
+  }
+
+  
 }; // <--- FECHAMENTO DO OBJETO DBHandler
+
 
 
