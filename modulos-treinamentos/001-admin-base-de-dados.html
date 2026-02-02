@@ -42,22 +42,19 @@
         .matrix-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
         .perm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
         .perm-table th { background: #f8fafc; padding: 10px; text-align: center; color: #475569; border-bottom: 2px solid #e2e8f0; }
-        .perm-table th:first-child { text-align: left; font-size: 12px; }
+        .perm-table th:first-child { text-align: left; font-size: 12px; padding-left: 15px; }
         .perm-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: center; vertical-align: middle; }
         .perm-table td:first-child { text-align: left; font-weight: 600; color: #1e293b; font-size: 12px; padding-left: 15px; }
         
-        .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #e0e7ff; color: #4338ca; text-transform: uppercase; }
-
-        /* --- FORMULÁRIOS --- */
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
-
         /* --- BOTÕES --- */
-        .btn-action { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
-        .btn-save-row { background: var(--success); color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; }
-        .btn-danger { background: none; border: none; color: var(--danger); font-size: 11px; font-weight: 700; cursor: pointer; }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .btn-action:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-action:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+
+        .btn-cancel { background: #fff; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: none; }
         
+        .btn-danger { background: none; border: none; color: var(--danger); font-size: 11px; font-weight: 700; cursor: pointer; }
+
         .info-box { background: #fff7ed; border: 1px solid #ffedd5; color: #9a3412; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 20px; line-height: 1.5; }
     </style>
 </head>
@@ -77,14 +74,10 @@
             </nav>
 
             <div id="tab-status" class="card-body active">
-                <div class="info-box">Monitoramento em tempo real da base de dados Academy integrada ao Supabase Cloud.</div>
                 <div id="metaInfo"></div>
             </div>
 
             <div id="tab-permissoes" class="card-body">
-                <div class="info-box">
-                    <strong>Matriz V|E|D:</strong> Configure se o cargo pode <b>Ver</b> o módulo, <b>Editar</b> dados ou visualizar <b>Detalhes</b> sensíveis (LGPD).
-                </div>
                 <div class="matrix-container">
                     <table class="perm-table">
                         <thead><tr id="headerRoles"><th>Módulo</th></tr></thead>
@@ -101,26 +94,19 @@
                     <div id="containerFormNovo" style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
                         <h3 style="font-size: 14px; margin-bottom: 15px;">Novo Acesso</h3>
                         <form id="formNovoUsuario">
-                            <div class="input-group"><label>Nome</label><input type="text" id="addNome" required></div>
-                            <div class="input-group"><label>Login</label><input type="text" id="addLogin" required></div>
-                            <div class="input-group"><label>Senha</label><input type="password" id="addSenha" required></div>
-                            <div class="input-group">
-                                <label>Cargo</label>
-                                <select id="addRole">
-                                    <option value="COLABORADOR">COLABORADOR</option>
-                                    <option value="GESTOR">GESTOR</option>
-                                    <option value="RH_OPERACIONAL">RH OPERACIONAL</option>
-                                    <option value="TD_COORD">COORDENADOR T&D</option>
-                                    <option value="AUDITOR">AUDITOR</option>
-                                    <option value="ADMIN">ADMINISTRADOR</option>
-                                </select>
-                            </div>
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 20px;">Use o formulário para adicionar novos colaboradores ao sistema.</div>
                             <button type="submit" class="btn-action" style="width: 100%;">Criar Usuário</button>
                         </form>
                     </div>
 
                     <div id="containerTabelaUsuarios">
-                        <h3 style="font-size: 14px; margin-bottom: 15px;">Usuários Registrados</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="font-size: 14px;">Usuários Registrados</h3>
+                            <div id="areaAcoesUsuarios" style="display: flex; gap: 10px;">
+                                <button id="btnCancelarUsuarios" class="btn-cancel" onclick="window.cancelarAlteracoesUsuarios()">Cancelar</button>
+                                <button id="btnSalvarUsuarios" class="btn-action" disabled onclick="window.salvarAlteracoesUsuarios()">Gravar Alterações de Cargos</button>
+                            </div>
+                        </div>
                         <div class="matrix-container">
                             <table class="perm-table">
                                 <thead>
@@ -152,119 +138,153 @@
             verificarModoLeitura();
         });
 
+        // 1. ABAS
         function configurarAbas() {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.onclick = () => {
                     document.querySelectorAll('.tab-btn, .card-body').forEach(el => el.classList.remove('active'));
                     btn.classList.add('active');
-                    const tabId = 'tab-' + btn.dataset.tab;
-                    document.getElementById(tabId).classList.add('active');
+                    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
                     if (btn.dataset.tab === 'usuarios') carregarUsuarios();
-                    if (btn.dataset.tab === 'permissoes') initMatrix();
                 };
             });
         }
 
+        // 2. STATUS
         async function carregarStatus() {
-            try {
-                const { count: users } = await supabaseClient.from('usuarios_sistema').select('*', { count: 'exact', head: true });
-                const { count: mods } = await supabaseClient.from('modulos_sistema').select('*', { count: 'exact', head: true });
-                document.getElementById('metaInfo').innerHTML = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"><div style="padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #dbeafe;"><span style="display:block; font-size:11px; color:#1d4ed8; font-weight:700;">USUÁRIOS ATIVOS</span><strong style="font-size:24px;">${users || 0}</strong></div><div style="padding: 15px; background: #f0fdf4; border-radius: 8px; border: 1px solid #dcfce7;"><span style="display:block; font-size:11px; color:#15803d; font-weight:700;">MÓDULOS NO SISTEMA</span><strong style="font-size:24px;">${mods || 0}</strong></div></div>`;
-            } catch (e) { console.error(e); }
+            const { count: users } = await supabaseClient.from('usuarios_sistema').select('*', { count: 'exact', head: true });
+            const { count: mods } = await supabaseClient.from('modulos_sistema').select('*', { count: 'exact', head: true });
+            document.getElementById('metaInfo').innerHTML = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"><div style="padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #dbeafe;"><span style="display:block; font-size:11px; color:#1d4ed8; font-weight:700;">USUÁRIOS ATIVOS</span><strong style="font-size:24px;">${users || 0}</strong></div><div style="padding: 15px; background: #f0fdf4; border-radius: 8px; border: 1px solid #dcfce7;"><span style="display:block; font-size:11px; color:#15803d; font-weight:700;">MÓDULOS NO SISTEMA</span><strong style="font-size:24px;">${mods || 0}</strong></div></div>`;
         }
 
+        // 3. MATRIZ PERMISSÕES (Mantém o código anterior V|E|D)
         async function initMatrix() {
             const header = document.getElementById('headerRoles');
             const body = document.getElementById('permTableBody');
             header.innerHTML = '<th>Módulo</th>';
             ROLES.forEach(r => { header.innerHTML += `<th colspan="3" style="border-left: 1px solid #e2e8f0; width: 180px;">${r}<br><span style="font-size:8px; color:#94a3b8">VER | EDITAR | DETALHES</span></th>`; });
-
-            try {
-                const { data: modulos } = await supabaseClient.from('modulos_sistema').select('*').order('ordem');
-                const { data: acessos } = await supabaseClient.from('acesso_modulos').select('*');
-                body.innerHTML = '';
-                modulos.forEach(mod => {
-                    const tr = document.createElement('tr');
-                    let html = `<td><strong>${mod.label}</strong></td>`;
-                    ROLES.forEach(role => {
-                        const ac = acessos.find(a => a.modulo_id === mod.id && a.role === role);
-                        html += `<td style="border-left: 1px solid #f1f5f9; width: 60px;"><input type="checkbox" class="check-ver" data-modulo="${mod.id}" data-role="${role}" ${ac ? 'checked' : ''}></td><td style="width: 60px;"><input type="checkbox" class="check-editar" data-modulo="${mod.id}" data-role="${role}" ${ac?.pode_editar ? 'checked' : ''}></td><td style="width: 60px;"><input type="checkbox" class="check-detalhes" data-modulo="${mod.id}" data-role="${role}" ${ac?.ver_detalhes ? 'checked' : ''}></td>`;
-                    });
-                    tr.innerHTML = html; body.appendChild(tr);
+            const { data: modulos } = await supabaseClient.from('modulos_sistema').select('*').order('ordem');
+            const { data: acessos } = await supabaseClient.from('acesso_modulos').select('*');
+            body.innerHTML = '';
+            modulos.forEach(mod => {
+                const tr = document.createElement('tr');
+                let html = `<td><strong>${mod.label}</strong></td>`;
+                ROLES.forEach(role => {
+                    const ac = acessos.find(a => a.modulo_id === mod.id && a.role === role);
+                    html += `<td style="border-left: 1px solid #f1f5f9;"><input type="checkbox" class="check-ver" data-modulo="${mod.id}" data-role="${role}" ${ac ? 'checked' : ''}></td><td><input type="checkbox" class="check-editar" data-modulo="${mod.id}" data-role="${role}" ${ac?.pode_editar ? 'checked' : ''}></td><td><input type="checkbox" class="check-detalhes" data-modulo="${mod.id}" data-role="${role}" ${ac?.ver_detalhes ? 'checked' : ''}></td>`;
                 });
-            } catch (err) { body.innerHTML = `<tr><td colspan="20">Erro ao carregar matriz.</td></tr>`; }
+                tr.innerHTML = html; body.appendChild(tr);
+            });
         }
 
-        document.getElementById('btnSalvarPermissoes').onclick = async () => {
-            if (!confirm("Salvar matriz de acesso?")) return;
-            const payload = [];
-            ROLES.forEach(role => {
-                document.querySelectorAll(`.check-ver[data-role="${role}"]:checked`).forEach(cb => {
-                    const modId = cb.dataset.modulo;
-                    payload.push({
-                        role, modulo_id: parseInt(modId),
-                        pode_editar: document.querySelector(`.check-editar[data-modulo="${modId}"][data-role="${role}"]`).checked,
-                        ver_detalhes: document.querySelector(`.check-detalhes[data-modulo="${modId}"][data-role="${role}"]`).checked
-                    });
-                });
-            });
-            try {
-                await supabaseClient.from('acesso_modulos').delete().neq('id', 0);
-                if (payload.length > 0) await supabaseClient.from('acesso_modulos').insert(payload);
-                alert("Permissões salvas!");
-            } catch (e) { alert("Erro ao salvar."); }
-        };
-
+        // 4. GESTÃO DE USUÁRIOS (Lógica de Botão Único)
         async function carregarUsuarios() {
             const body = document.getElementById('listaUsuariosBody');
             body.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
-            try {
-                const { data } = await supabaseClient.from('usuarios_sistema').select('*').order('nome');
-                body.innerHTML = '';
-                data.forEach(u => {
-                    const options = ROLES.map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('');
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td><strong>${u.nome}</strong></td><td><code>${u.username}</code></td><td><select id="sel-role-${u.id}" style="font-size:11px;">${options}</select></td><td style="display:flex; gap:8px; justify-content:center;"><button class="btn-save-row" onclick="window.salvarAlteracaoCargo('${u.id}', '${u.nome}')">Salvar</button><button class="btn-danger" onclick="window.removerUser('${u.id}', '${u.nome}')">Excluir</button></td>`;
-                    body.appendChild(tr);
-                });
-            } catch (e) { console.error(e); }
+            
+            const { data: usuarios } = await supabaseClient.from('usuarios_sistema').select('*').order('nome');
+            body.innerHTML = '';
+            
+            usuarios.forEach(u => {
+                const tr = document.createElement('tr');
+                const options = ROLES.map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('');
+                
+                tr.innerHTML = `
+                    <td><strong>${u.nome}</strong></td>
+                    <td><code>${u.username}</code></td>
+                    <td>
+                        <select class="user-role-select" data-id="${u.id}" data-original="${u.role}" data-nome="${u.nome}" 
+                                onchange="window.verificarAlteracoesUsuarios()" style="font-size:11px; padding:4px; border-radius:4px;">
+                            ${options}
+                        </select>
+                    </td>
+                    <td><button class="btn-danger" onclick="window.removerUser('${u.id}', '${u.nome}')">Excluir</button></td>
+                `;
+                body.appendChild(tr);
+            });
+            window.verificarAlteracoesUsuarios(); // Reseta estado inicial
         }
 
-        window.salvarAlteracaoCargo = async (userId, nome) => {
-            const novaRole = document.getElementById(`sel-role-${userId}`).value;
-            const session = JSON.parse(localStorage.getItem('rh_session'));
-            if (!confirm(`Alterar cargo de ${nome} para ${novaRole}?`)) return;
-            try {
-                await supabaseClient.from('usuarios_sistema').update({ role: novaRole }).eq('id', userId);
-                await DBHandler.registrarLog(session.user, "ALTERAR_CARGO", `Alterou cargo de ${nome} para ${novaRole}`);
-                alert("Atualizado!");
-                if (userId === session.userId) { session.role = novaRole; localStorage.setItem('rh_session', JSON.stringify(session)); window.parent.location.reload(); }
-            } catch (e) { alert("Erro ao atualizar."); }
+        window.verificarAlteracoesUsuarios = () => {
+            const selects = document.querySelectorAll('.user-role-select');
+            let mudou = false;
+            
+            selects.forEach(sel => {
+                if (sel.value !== sel.dataset.original) {
+                    mudou = true;
+                    sel.style.borderColor = 'var(--primary)';
+                    sel.style.background = '#eef2ff';
+                } else {
+                    sel.style.borderColor = '#cbd5e1';
+                    sel.style.background = '#fff';
+                }
+            });
+
+            const btnSalvar = document.getElementById('btnSalvarUsuarios');
+            const btnCanc = document.getElementById('btnCancelarUsuarios');
+            
+            btnSalvar.disabled = !mudou;
+            btnCanc.style.display = mudou ? 'block' : 'none';
         };
 
-        window.removerUser = async (id, nome) => {
-            if (confirm(`Excluir ${nome}?`)) {
-                await supabaseClient.from('usuarios_sistema').delete().eq('id', id);
-                carregarUsuarios();
+        window.cancelarAlteracoesUsuarios = () => {
+            const selects = document.querySelectorAll('.user-role-select');
+            selects.forEach(sel => sel.value = sel.dataset.original);
+            window.verificarAlteracoesUsuarios();
+        };
+
+        window.salvarAlteracoesUsuarios = async () => {
+            const selects = document.querySelectorAll('.user-role-select');
+            const dirtySelects = Array.from(selects).filter(s => s.value !== s.dataset.original);
+            const session = JSON.parse(localStorage.getItem('rh_session'));
+
+            if (!confirm(`Deseja gravar ${dirtySelects.length} alteração(ões) de cargo?`)) return;
+
+            try {
+                const btn = document.getElementById('btnSalvarUsuarios');
+                btn.disabled = true;
+                btn.textContent = "Processando...";
+
+                for (const sel of dirtySelects) {
+                    const userId = sel.dataset.id;
+                    const novaRole = sel.value;
+                    const nome = sel.dataset.nome;
+
+                    await supabaseClient.from('usuarios_sistema').update({ role: novaRole }).eq('id', userId);
+                    await DBHandler.registrarLog(session.user, "ALTERAR_CARGO", `Cargo de ${nome} mudou de ${sel.dataset.original} para ${novaRole}`);
+                    
+                    // Se for o próprio admin
+                    if (userId === session.userId) {
+                        session.role = novaRole;
+                        localStorage.setItem('rh_session', JSON.stringify(session));
+                    }
+                }
+
+                alert("Alterações gravadas com sucesso!");
+                if (localStorage.getItem('rh_session') && JSON.parse(localStorage.getItem('rh_session')).role !== 'ADMIN') {
+                    window.parent.location.reload();
+                } else {
+                    carregarUsuarios();
+                }
+            } catch (e) { alert("Erro ao salvar: " + e.message); }
+            finally { 
+                const btn = document.getElementById('btnSalvarUsuarios');
+                btn.textContent = "Gravar Alterações de Cargos";
             }
         };
 
-        document.getElementById('formNovoUsuario').onsubmit = async (e) => {
-            e.preventDefault();
-            const user = { nome: document.getElementById('addNome').value, username: document.getElementById('addLogin').value, password: document.getElementById('addSenha').value, role: document.getElementById('addRole').value };
-            const { error } = await supabaseClient.from('usuarios_sistema').insert([user]);
-            if (!error) { alert("Usuário criado!"); e.target.reset(); carregarUsuarios(); } else alert(error.message);
-        };
-
+        // 5. BLOQUEIO MODO LEITURA (Mantém lógica anterior de Auditor)
         function verificarModoLeitura() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('readonly') === 'true') {
-                const btnM = document.getElementById('btnSalvarPermissoes'); if (btnM) btnM.remove();
-                const form = document.getElementById('containerFormNovo'); if (form) form.style.display = 'none';
-                const grid = document.getElementById('gridUsuarios'); if (grid) { grid.style.gridTemplateColumns = '1fr'; grid.style.gap = '0'; }
+                document.getElementById('btnSalvarPermissoes')?.remove();
+                document.getElementById('containerFormNovo')?.remove();
+                document.getElementById('areaAcoesUsuarios')?.remove();
+                const grid = document.getElementById('gridUsuarios');
+                if (grid) { grid.style.gridTemplateColumns = '1fr'; grid.style.gap = '0'; }
                 const obs = new MutationObserver(() => {
-                    document.querySelectorAll('input[type="checkbox"], select').forEach(el => { el.disabled = true; el.style.cursor = 'not-allowed'; });
-                    document.querySelectorAll('.btn-save-row, .btn-danger').forEach(el => el.remove());
+                    document.querySelectorAll('input[type="checkbox"], select').forEach(el => el.disabled = true);
+                    document.querySelectorAll('.btn-danger').forEach(el => el.remove());
                 });
                 obs.observe(document.body, { childList: true, subtree: true });
             }
