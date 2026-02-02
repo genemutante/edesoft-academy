@@ -191,37 +191,53 @@
         const inputNova = document.getElementById('txtNovaSenha');
         const msgDiv = document.getElementById('msgSenha');
 
-        // 1. INICIALIZAÇÃO E CONTROLE DE ACESSO
+// 1. INICIALIZAÇÃO E CONTROLE DE ACESSO
         document.addEventListener('DOMContentLoaded', () => {
-
-// Adicione esta linha para preencher o campo oculto assim que a página carregar
-const session = JSON.parse(localStorage.getItem('rh_session'));
-if (session) {
-    document.getElementById('hiddenUsername').value = session.login || session.user;
-}
-            
             const sessionRaw = localStorage.getItem('rh_session');
-            if (!sessionRaw) { window.location.href = 'index.html'; return; }
-
-            const session = JSON.parse(sessionRaw);
-            document.getElementById('userName').textContent = session.user;
-            document.getElementById('userAvatar').textContent = session.user.substring(0, 2).toUpperCase();
-
-            // Restrição MATRIZ_ONLY no seletor
-            if (session.role === 'MATRIZ_ONLY') {
-                const select = document.getElementById('moduleSelect');
-                Array.from(select.options).forEach(opt => {
-                    if (opt.id !== 'optMatriz') opt.remove();
-                });
+            
+            // Se não houver sessão, redireciona imediatamente para o login
+            if (!sessionRaw) { 
+                window.location.href = 'index.html'; 
+                return; 
             }
 
+            // Converte a sessão para objeto apenas uma vez
+            const session = JSON.parse(sessionRaw);
+
+            // Preenche o campo oculto do formulário de senha (importante para acessibilidade)
+            const elHiddenUser = document.getElementById('hiddenUsername');
+            if (elHiddenUser) {
+                // Prioriza o login (testeadmin) para evitar erro 406 no banco
+                elHiddenUser.value = session.login || session.user;
+            }
+
+            // Atualiza Interface (Nome e Avatar)
+            const elName = document.getElementById('userName');
+            const elAvatar = document.getElementById('userAvatar');
+            if (elName) elName.textContent = session.user;
+            if (elAvatar) elAvatar.textContent = session.user.substring(0, 2).toUpperCase();
+
+            // Aplica Restrição MATRIZ_ONLY: Filtra as opções do seletor de módulos
+            if (session.role === 'MATRIZ_ONLY') {
+                const select = document.getElementById('moduleSelect');
+                if (select) {
+                    Array.from(select.options).forEach(opt => {
+                        // IDs configurados no HTML (ex: optMatriz)
+                        if (opt.id !== 'optMatriz') opt.remove();
+                    });
+                }
+            }
+
+            // Gerenciamento do Iframe e parâmetros de URL
             const params = new URLSearchParams(window.location.search);
             const src = params.get('src');
             const iframe = document.getElementById('contentFrame');
             const select = document.getElementById('moduleSelect');
 
-            iframe.src = src || select.options[0].value;
-            if(src) select.value = src;
+            if (iframe && select) {
+                iframe.src = src || select.options[0].value;
+                if (src) select.value = src;
+            }
         });
 
         // 2. LÓGICA DO MODAL DE SENHA
@@ -317,6 +333,7 @@ try {
     </script>
 </body>
 </html>
+
 
 
 
