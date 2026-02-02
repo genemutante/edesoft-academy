@@ -158,7 +158,7 @@
         const select = document.getElementById('moduleSelect');
         const iframe = document.getElementById('contentFrame');
 
-       // 1. INICIALIZAÇÃO DINÂMICA (CARREGAMENTO DO BANCO)
+ // 1. INICIALIZAÇÃO DINÂMICA (CARREGAMENTO DO BANCO)
 document.addEventListener('DOMContentLoaded', async () => {
     // Captura os elementos necessários da DOM
     const elSelect = document.getElementById('moduleSelect');
@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // BUSCA MÓDULOS PERMITIDOS NO BANCO (Baseado na Role da Sessão)
+        // O DBHandler agora deve retornar: [{ label, path, pode_editar }, ...]
         const modulos = await DBHandler.buscarModulosPermitidos(session.role);
         
         if (!modulos || modulos.length === 0) {
@@ -204,32 +205,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         const params = new URLSearchParams(window.location.search);
         const requestedSrc = params.get('src');
         
-        // Verifica se o SRC solicitado na URL está na lista de permitidos do usuário
-        const temPermissao = modulos.some(m => m.path === requestedSrc);
+        // Localiza o objeto do módulo solicitado para verificar permissões
+        const moduloAutorizado = modulos.find(m => m.path === requestedSrc);
         
+        let moduloParaCarregar;
+
         if (requestedSrc) {
-            if (temPermissao) {
+            if (moduloAutorizado) {
                 // Acesso Autorizado
-                elIframe.src = requestedSrc;
-                elSelect.value = requestedSrc;
+                moduloParaCarregar = moduloAutorizado;
             } else {
                 // Tentativa de Acesso Indevido
-                console.warn("Bloqueio de Segurança: Tentativa de acesso não autorizado ao módulo:", requestedSrc);
+                console.warn("Bloqueio de Segurança: Acesso não autorizado ao módulo:", requestedSrc);
                 alert("Acesso Negado: Você não tem permissão para visualizar este módulo.");
                 
                 // Redireciona para o primeiro módulo da lista permitida
-                elIframe.src = modulos[0].path;
-                elSelect.value = modulos[0].path;
+                moduloParaCarregar = modulos[0];
                 
-                // Limpa o parâmetro inválido da URL sem recarregar a página
+                // Limpa o parâmetro inválido da URL sem recarregar
                 const newUrl = window.location.pathname;
                 window.history.replaceState({}, '', newUrl);
             }
         } else {
-            // Comportamento padrão: Carrega o primeiro módulo disponível para aquele perfil
-            elIframe.src = modulos[0].path;
-            elSelect.value = modulos[0].path;
+            // Comportamento padrão: Carrega o primeiro disponível
+            moduloParaCarregar = modulos[0];
         }
+
+        // --- AJUSTE PARA MODO LEITURA (READONLY) ---
+        // Se 'pode_editar' for falso, injetamos o parâmetro na URL do iframe
+        const urlFinal = moduloParaCarregar.pode_editar 
+            ? moduloParaCarregar.path 
+            : `${moduloParaCarregar.path}?readonly=true`;
+
+        elIframe.src = urlFinal;
+        elSelect.value = moduloParaCarregar.path;
 
     } catch (err) {
         console.error("Erro crítico na inicialização do sistema:", err);
@@ -305,4 +314,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     </script>
 </body>
 </html>
+
 
