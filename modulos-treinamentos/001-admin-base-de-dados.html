@@ -3,173 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administração de Dados | Academy</title>
+    <title>Administração de Dados | Enterprise</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* Reutilizando sua base de estilos e expandindo */
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
-        .top-bar { flex-shrink: 0; height: 56px; background: #ffffff; border-bottom: 1px solid #cbd5e1; display: flex; align-items: center; padding: 0 24px; gap: 16px; z-index: 50; }
-        .top-bar h1 { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; text-transform: uppercase; }
-        .main-workspace { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+        :root {
+            --primary: #3b82f6;
+            --bg-gray: #f1f5f9;
+            --text-main: #0f172a;
+            --border-color: #cbd5e1;
+        }
+
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; background-color: var(--bg-gray); font-family: 'Inter', sans-serif; }
+
+        .top-bar { flex-shrink: 0; height: 56px; background: #ffffff; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 24px; z-index: 50; }
+        .top-bar h1 { font-size: 14px; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .main-workspace { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 30px 20px; overflow-y: auto; }
+
+        /* Card Principal com Abas */
+        .admin-card { background: #ffffff; width: 100%; max-width: 900px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow: hidden; }
         
-        .admin-card { background: #ffffff; width: 100%; max-width: 800px; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; }
-        .card-header { padding: 15px 24px; border-bottom: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
-        .card-header h2 { margin: 0; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .tabs-header { display: flex; background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 0 12px; }
+        .tab-btn { padding: 14px 20px; border: none; background: none; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #eff6ff; }
 
-        /* Sistema de Abas */
-        .tabs { display: flex; background: #f1f5f9; padding: 4px; gap: 4px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; }
-        .tab-btn.active { background: white; color: #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-        .card-body { padding: 24px; display: none; }
+        .card-body { padding: 24px; display: none; animation: fadeIn 0.2s ease-out; }
         .card-body.active { display: block; }
 
-        /* Tabela de Permissões */
-        .perm-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        .perm-table th { text-align: left; padding: 12px; background: #f8fafc; color: #475569; border-bottom: 2px solid #e2e8f0; }
-        .perm-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
-        .perm-table tr:hover { background: #fcfdfe; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Matriz de Permissões */
+        .matrix-container { overflow-x: auto; margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .perm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .perm-table th { background: #f8fafc; padding: 12px; text-align: center; color: #475569; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        .perm-table th:first-child { text-align: left; position: sticky; left: 0; background: #f8fafc; z-index: 10; }
+        .perm-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        .perm-table td:first-child { text-align: left; font-weight: 600; color: #1e293b; position: sticky; left: 0; background: white; z-index: 5; }
         
-        .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #e2e8f0; color: #475569; }
+        /* Checkbox Custom */
+        .perm-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
 
-        .btn-save { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; float: right; margin-top: 20px; }
-        .btn-save:hover { background: #2563eb; }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity 0.2s; }
+        .btn-action:hover { opacity: 0.9; }
+        .btn-action:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-        /* Meta Info Row */
-        .meta-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e2e8f0; font-size: 13px; color: #64748b; }
-        .meta-row strong { color: #0f172a; }
-
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
-        .btn-large { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; color: #475569; }
-        .btn-large:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
-        .btn-large svg { width: 20px; height: 20px; }
+        /* Estilo para avisos */
+        .info-box { background: #fff7ed; border: 1px solid #ffedd5; color: #9a3412; padding: 12px; border-radius: 6px; font-size: 12px; margin-bottom: 20px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
     <header class="top-bar">
-        <h1>Painel de Controle do Sistema</h1>
+        <h1>Centro de Administração do Sistema</h1>
     </header>
 
     <div class="main-workspace">
         <div class="admin-card">
             
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('status')">Status & Backup</button>
-                <button class="tab-btn" onclick="switchTab('permissoes')">Permissões de Acesso</button>
-                <button class="tab-btn" onclick="switchTab('usuarios')">Gestão de Usuários</button>
-            </div>
+            <nav class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab('permissoes')">Matriz de Permissões</button>
+                <button class="tab-btn" onclick="switchTab('usuarios')">Gestão de Utilizadores</button>
+                <button class="tab-btn" onclick="switchTab('backup')">Backup & Sincronia</button>
+            </nav>
 
-            <div id="tab-status" class="card-body active">
-                <div id="metaInfo">
-                    <div class="meta-row"><span>Status do Banco</span> <strong>Conectado (Supabase)</strong></div>
+            <div id="tab-permissoes" class="card-body active">
+                <div class="info-box">
+                    <strong>Gestão de Acessos:</strong> Defina quais módulos cada cargo (Role) pode visualizar. 
+                    As alterações são aplicadas no próximo carregamento de página do utilizador.
                 </div>
-                <div class="action-grid">
-                    <div class="btn-large" onclick="DBHandler.exportarArquivo()">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        <span>Backup JSON</span>
-                    </div>
-                    <div class="btn-large" onclick="alert('Funcionalidade em migração para nuvem.')">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        <span>Otimizar Tabelas</span>
-                    </div>
-                </div>
-            </div>
 
-            <div id="tab-permissoes" class="card-body">
-                <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">Marque os módulos que cada perfil tem permissão para visualizar.</p>
-                
-                <table class="perm-table">
-                    <thead>
-                        <tr>
-                            <th>Módulo</th>
-                            <th>ADMIN</th>
-                            <th>VIEWER</th>
-                            <th>MATRIZ_ONLY</th>
-                        </tr>
-                    </thead>
-                    <tbody id="permissõesBody">
+                <div class="matrix-container">
+                    <table class="perm-table">
+                        <thead>
+                            <tr id="headerRoles">
+                                <th>Módulo do Sistema</th>
+                                </tr>
+                        </thead>
+                        <tbody id="permTableBody">
+                            <tr><td colspan="7" align="center">A carregar matriz de acesso...</td></tr>
                         </tbody>
-                </table>
-                <button class="btn-save" onclick="salvarPermissoes()">Gravar Alterações</button>
+                    </table>
+                </div>
+
+                <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
+                    <button class="btn-action" id="btnSalvarPermissoes" onclick="salvarPermissoes()">
+                        Gravar Matriz de Acesso
+                    </button>
+                </div>
             </div>
 
             <div id="tab-usuarios" class="card-body">
-                <div class="empty-state-msg" style="display: block; text-align: center; padding: 40px; color: #94a3b8; border: 1px dashed #cbd5e1; border-radius: 8px;">
-                    Ferramenta de Gestão de Usuários em desenvolvimento.
-                </div>
+                <p style="color: #64748b; font-size: 13px;">Módulo de gestão de contas em desenvolvimento...</p>
+            </div>
+
+            <div id="tab-backup" class="card-body">
+                <button class="btn-action" onclick="alert('Funcionalidade integrada ao Supabase.')">
+                    Sincronizar com Nuvem
+                </button>
             </div>
 
         </div>
     </div>
 
     <script type="module">
-        import { DBHandler } from '../bd-treinamentos/db-handler.js';
-        window.DBHandler = DBHandler;
+        import { DBHandler, supabaseClient } from '../bd-treinamentos/db-handler.js';
 
-        // Lista de perfis do seu sistema
-        const ROLES = ['ADMIN', 'VIEWER', 'MATRIZ_ONLY'];
+        // 1. Definição das Roles (Cargos) do sistema
+        const ROLES = ['ADMIN', 'TD_COORD', 'RH_OPERACIONAL', 'GESTOR', 'AUDITOR', 'COLABORADOR'];
 
-        document.addEventListener('DOMContentLoaded', carregarPermissoes);
+        document.addEventListener('DOMContentLoaded', () => {
+            initMatrix();
+        });
 
-        async function carregarPermissoes() {
-            try {
-                // 1. Busca todos os módulos e todas as permissões atuais
-                const { data: modulos } = await DBHandler.supabaseClient.from('modulos_sistema').select('*').order('ordem');
-                const { data: acessos } = await DBHandler.supabaseClient.from('acesso_modulos').select('*');
+        // Gera o cabeçalho e corpo da tabela dinamicamente
+        async function initMatrix() {
+            const headerRow = document.getElementById('headerRoles');
+            const tableBody = document.getElementById('permTableBody');
 
-                const tbody = document.getElementById('permissõesBody');
-                tbody.innerHTML = '';
-
-                modulos.forEach(mod => {
-                    const tr = document.createElement('tr');
-                    let html = `<td><strong>${mod.label}</strong></td>`;
-                    
-                    ROLES.forEach(role => {
-                        const temAcesso = acessos.some(a => a.modulo_id === mod.id && a.role === role);
-                        html += `
-                            <td align="center">
-                                <input type="checkbox" class="perm-check" 
-                                    data-modulo="${mod.id}" 
-                                    data-role="${role}" 
-                                    ${temAcesso ? 'checked' : ''}>
-                            </td>`;
-                    });
-
-                    tr.innerHTML = html;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        window.salvarPermissoes = async () => {
-            if(!confirm("Deseja atualizar as permissões de acesso do sistema?")) return;
-
-            const checks = document.querySelectorAll('.perm-check');
-            const novosAcessos = [];
-
-            checks.forEach(c => {
-                if(c.checked) {
-                    novosAcessos.push({
-                        role: c.dataset.role,
-                        modulo_id: parseInt(c.dataset.modulo)
-                    });
-                }
+            // Limpa e cria cabeçalho de roles
+            headerRow.innerHTML = '<th>Módulo do Sistema</th>';
+            ROLES.forEach(role => {
+                const th = document.createElement('th');
+                th.textContent = role;
+                headerRow.appendChild(th);
             });
 
             try {
-                // 1. Limpa tudo e reinsere (estratégia simples)
-                await DBHandler.supabaseClient.from('acesso_modulos').delete().neq('id', 0);
-                await DBHandler.supabaseClient.from('acesso_modulos').insert(novosAcessos);
-                
-                alert("Permissões atualizadas com sucesso! Os usuários verão as mudanças no próximo carregamento.");
+                // Busca todos os módulos e todos os acessos atuais
+                const { data: modulos } = await supabaseClient.from('modulos_sistema').select('*').order('ordem');
+                const { data: acessos } = await supabaseClient.from('acesso_modulos').select('*');
+
+                tableBody.innerHTML = '';
+
+                modulos.forEach(mod => {
+                    const tr = document.createElement('tr');
+                    let cells = `<td>${mod.label} <br><small style="color:#94a3b8; font-weight:400">${mod.path}</small></td>`;
+                    
+                    ROLES.forEach(role => {
+                        const ativo = acessos.some(a => a.modulo_id === mod.id && a.role === role);
+                        cells += `
+                            <td>
+                                <input type="checkbox" class="perm-check" 
+                                       data-modulo="${mod.id}" 
+                                       data-role="${role}" 
+                                       ${ativo ? 'checked' : ''}>
+                            </td>`;
+                    });
+
+                    tr.innerHTML = cells;
+                    tableBody.appendChild(tr);
+                });
+
             } catch (err) {
-                alert("Erro ao salvar: " + err.message);
+                tableBody.innerHTML = `<tr><td colspan="${ROLES.length + 1}">Erro ao carregar: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Lógica para Gravar a Matriz no Banco
+        window.salvarPermissoes = async () => {
+            const btn = document.getElementById('btnSalvarPermissoes');
+            if (!confirm("Confirmar a atualização das permissões para todos os cargos?")) return;
+
+            try {
+                btn.disabled = true;
+                btn.textContent = "A gravar...";
+
+                const checks = document.querySelectorAll('.perm-check');
+                const payload = [];
+
+                checks.forEach(c => {
+                    if (c.checked) {
+                        payload.push({
+                            role: c.dataset.role,
+                            modulo_id: parseInt(c.dataset.modulo)
+                        });
+                    }
+                });
+
+                // Estratégia: Limpa a tabela de acessos e insere a nova configuração
+                // Nota: Em sistemas reais, usaríamos uma transação ou RPC, 
+                // aqui faremos o delete/insert para simplificar o seu MVP.
+                const { error: delError } = await supabaseClient.from('acesso_modulos').delete().neq('id', 0);
+                if (delError) throw delError;
+
+                const { error: insError } = await supabaseClient.from('acesso_modulos').insert(payload);
+                if (insError) throw insError;
+
+                alert("Matriz de permissões atualizada com sucesso!");
+            } catch (err) {
+                alert("Erro ao gravar permissões: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Gravar Matriz de Acesso";
             }
         };
 
+        // Switch de Abas
         window.switchTab = (tabId) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.card-body').forEach(b => b.classList.remove('active'));
