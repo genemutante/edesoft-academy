@@ -262,3 +262,29 @@ globalThis.supabaseClient = supabaseClient;
 globalThis.DBHandler = DBHandler;
 
 console.log("✅ DBHandler (ESM) carregado e Supabase conectado.");
+
+// Dentro de export const DBHandler = { ... }
+
+async alterarSenha(username, senhaAtual, novaSenha) {
+    // 1. Primeiro verificamos se a senha atual está correta
+    const { data: usuario, error: errorBusca } = await supabaseClient
+        .from("usuarios_sistema")
+        .select("*")
+        .eq("username", username)
+        .eq("password", senhaAtual)
+        .single();
+
+    if (errorBusca || !usuario) {
+        throw new Error("A senha atual está incorreta.");
+    }
+
+    // 2. Se estiver correta, atualizamos para a nova
+    const { error: errorUpdate } = await supabaseClient
+        .from("usuarios_sistema")
+        .update({ password: novaSenha })
+        .eq("username", username);
+
+    if (errorUpdate) throw new Error("Erro ao atualizar a senha.");
+    
+    return true;
+},
