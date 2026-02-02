@@ -157,29 +157,29 @@
     </main>
 
     <div id="modalSenha" class="modal-overlay" style="display: none;">
-<form class="modal-content" id="formAlterarSenha" novalidate>
-    <input type="text" id="hiddenUsername" style="display:none" autocomplete="username">
-    
-    <h3>Segurança</h3>
-    <p>Para sua proteção, a nova senha deve ter no mínimo <b>6 dígitos</b>.</p>
-    
-    <div id="msgSenha"></div>
+        <form class="modal-content" id="formAlterarSenha" novalidate>
+            <input type="text" id="hiddenUsername" style="display:none" autocomplete="username">
+            
+            <h3>Segurança</h3>
+            <p>Para sua proteção, a nova senha deve ter no mínimo <b>6 dígitos</b>.</p>
+            
+            <div id="msgSenha"></div>
 
-    <div class="input-group" id="groupAtual">
-        <label for="txtSenhaAtual">Senha Atual</label>
-        <input type="password" id="txtSenhaAtual" placeholder="Digite sua senha atual" autocomplete="current-password">
-    </div>
-    
-    <div class="input-group" id="groupNova">
-        <label for="txtNovaSenha">Nova Senha</label>
-        <input type="password" id="txtNovaSenha" placeholder="Mínimo 6 dígitos" autocomplete="new-password">
-    </div>
+            <div class="input-group" id="groupAtual">
+                <label for="txtSenhaAtual">Senha Atual</label>
+                <input type="password" id="txtSenhaAtual" placeholder="Digite sua senha atual" autocomplete="current-password">
+            </div>
+            
+            <div class="input-group" id="groupNova">
+                <label for="txtNovaSenha">Nova Senha</label>
+                <input type="password" id="txtNovaSenha" placeholder="Mínimo 6 dígitos" autocomplete="new-password">
+            </div>
 
-    <div class="modal-actions">
-        <button type="button" class="btn-cancel-pw" id="btnFecharModal">Cancelar</button>
-        <button type="submit" class="btn-save-pw" id="btnSalvarSenha">Atualizar Senha</button>
-    </div>
-</form>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel-pw" id="btnFecharModal">Cancelar</button>
+                <button type="submit" class="btn-save-pw" id="btnSalvarSenha">Atualizar Senha</button>
+            </div>
+        </form>
     </div>
 
     <script type="module">
@@ -191,23 +191,20 @@
         const inputNova = document.getElementById('txtNovaSenha');
         const msgDiv = document.getElementById('msgSenha');
 
-// 1. INICIALIZAÇÃO E CONTROLE DE ACESSO
+        // 1. INICIALIZAÇÃO E CONTROLE DE ACESSO
         document.addEventListener('DOMContentLoaded', () => {
             const sessionRaw = localStorage.getItem('rh_session');
             
-            // Se não houver sessão, redireciona imediatamente para o login
             if (!sessionRaw) { 
                 window.location.href = 'index.html'; 
                 return; 
             }
 
-            // Converte a sessão para objeto apenas uma vez
             const session = JSON.parse(sessionRaw);
 
-            // Preenche o campo oculto do formulário de senha (importante para acessibilidade)
+            // Preenche o campo oculto do formulário de senha para o browser/acessibilidade
             const elHiddenUser = document.getElementById('hiddenUsername');
             if (elHiddenUser) {
-                // Prioriza o login (testeadmin) para evitar erro 406 no banco
                 elHiddenUser.value = session.login || session.user;
             }
 
@@ -217,18 +214,17 @@
             if (elName) elName.textContent = session.user;
             if (elAvatar) elAvatar.textContent = session.user.substring(0, 2).toUpperCase();
 
-            // Aplica Restrição MATRIZ_ONLY: Filtra as opções do seletor de módulos
+            // Aplica Restrição MATRIZ_ONLY
             if (session.role === 'MATRIZ_ONLY') {
                 const select = document.getElementById('moduleSelect');
                 if (select) {
                     Array.from(select.options).forEach(opt => {
-                        // IDs configurados no HTML (ex: optMatriz)
                         if (opt.id !== 'optMatriz') opt.remove();
                     });
                 }
             }
 
-            // Gerenciamento do Iframe e parâmetros de URL
+            // Gerenciamento do Iframe
             const params = new URLSearchParams(window.location.search);
             const src = params.get('src');
             const iframe = document.getElementById('contentFrame');
@@ -250,7 +246,6 @@
             inputEl.focus();
         }
 
-        // Limpa erro ao digitar
         [inputAtual, inputNova].forEach(input => {
             input.oninput = () => {
                 input.closest('.input-group').classList.remove('has-error');
@@ -259,6 +254,7 @@
         });
 
         document.getElementById('btnPerfil').onclick = () => modal.style.display = 'flex';
+        
         document.getElementById('btnFecharModal').onclick = () => {
             modal.style.display = 'none';
             formSenha.reset();
@@ -266,49 +262,53 @@
             document.querySelectorAll('.input-group').forEach(g => g.classList.remove('has-error'));
         };
 
-formSenha.onsubmit = async (e) => {
-    e.preventDefault();
-    
-    const atual = inputAtual.value.trim();
-    const nova = inputNova.value.trim();
-    const session = JSON.parse(localStorage.getItem('rh_session'));
+        formSenha.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const atual = inputAtual.value.trim();
+            const nova = inputNova.value.trim();
+            const session = JSON.parse(localStorage.getItem('rh_session'));
+            const loginReal = session.login || session.user;
 
-    // 1. Pega o login real (testeadmin). 
-    // Se a sessão for antiga e não tiver .login, ele tentará o .user, 
-    // mas o ideal é relogar para ter o .login preenchido.
-    const loginReal = session.login || session.user;
+            console.log("Tentando alterar senha para o login:", loginReal);
 
-    console.log("Tentando alterar senha para o login:", loginReal);
+            // Validação: Apenas se os campos estão preenchidos
+            if (!atual) return aplicarErro(inputAtual, "Digite a senha atual.");
+            
+            // Validação: Regra de 6 dígitos apenas para a nova senha
+            if (nova.length < 6) {
+                return aplicarErro(inputNova, "A nova senha deve ter no mínimo 6 dígitos.");
+            }
+            
+            if (atual === nova) {
+                return aplicarErro(inputNova, "A nova senha não pode ser igual à atual.");
+            }
 
-    // Validação Visual
-    if (!atual) return aplicarErro(inputAtual, "Digite a senha atual.");
-    if (nova.length < 6) return aplicarErro(inputNova, "A nova senha deve ter no mínimo 6 dígitos.");
-    if (atual === nova) return aplicarErro(inputNova, "A nova senha não pode ser igual à atual.");
+            try {
+                const btn = document.getElementById('btnSalvarSenha');
+                btn.disabled = true;
+                btn.textContent = "Validando...";
 
-    try {
-        const btn = document.getElementById('btnSalvarSenha');
-        btn.disabled = true;
-        btn.textContent = "Validando...";
+                // Chamada ao Banco
+                await DBHandler.alterarSenha(loginReal, atual, nova);
 
-        // CHAMADA AO BANCO
-        await DBHandler.alterarSenha(loginReal, atual, nova);
-
-        alert("Senha alterada com sucesso!");
-        document.getElementById('btnFecharModal').click();
-    } catch (err) {
-        // Se o erro for 406 ou "não encontrado", é porque o login enviado está errado
-        if (err.message.includes("406") || err.message.toLowerCase().includes("atual")) {
-            aplicarErro(inputAtual, "A senha atual não confere ou usuário não identificado.");
-        } else {
-            msgDiv.textContent = "Erro: " + err.message;
-            msgDiv.style.display = 'block';
-        }
-    } finally {
-        const btn = document.getElementById('btnSalvarSenha');
-        btn.disabled = false;
-        btn.textContent = "Atualizar Senha";
-    }
-};
+                alert("Senha alterada com sucesso!");
+                document.getElementById('btnFecharModal').click();
+            } catch (err) {
+                // Se o erro for do banco (senha atual errada), focamos no campo atual
+                if (err.message.toLowerCase().includes("atual") || err.message.includes("406")) {
+                    aplicarErro(inputAtual, "A senha atual está incorreta.");
+                } else {
+                    msgDiv.textContent = "Erro: " + err.message;
+                    msgDiv.className = 'msg-error';
+                    msgDiv.style.display = 'block';
+                }
+            } finally {
+                const btn = document.getElementById('btnSalvarSenha');
+                btn.disabled = false;
+                btn.textContent = "Atualizar Senha";
+            }
+        };
 
         // 3. FUNÇÕES GLOBAIS
         window.trocarModulo = (url) => {
@@ -326,9 +326,3 @@ formSenha.onsubmit = async (e) => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
