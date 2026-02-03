@@ -6,7 +6,16 @@
     <title>Gestão de Certificações | Academy</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4f46e5; --primary-hover: #4338ca; --border: #e2e8f0; --bg: #f8fafc; --text: #1e293b; --muted: #64748b; }
+        :root { 
+            --primary: #4f46e5; 
+            --primary-hover: #4338ca; 
+            --border: #e2e8f0; 
+            --bg: #f8fafc; 
+            --text: #1e293b; 
+            --muted: #64748b;
+            --view-color: #3b82f6;
+            --edit-color: #6366f1;
+        }
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { margin: 0; background-color: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
@@ -22,9 +31,26 @@
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         th { background: #f1f5f9; text-align: left; padding: 14px 16px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        tr:hover { background: #f8fafc; }
+
+        /* BADGES */
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .type-cert { background: #e0e7ff; color: #4338ca; }
         .type-notorio { background: #fef3c7; color: #92400e; }
+
+        /* --- BOTÕES DE AÇÃO (CORES CORRIGIDAS) --- */
+        .btn-action { 
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent;
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 16px; transition: all 0.2s; margin-left: 6px;
+        }
+        /* Botão Visualizar - Azul */
+        .btn-view { background: #eff6ff; color: var(--view-color); border-color: #dbeafe; }
+        .btn-view:hover { background: var(--view-color); color: white; }
+
+        /* Botão Editar - Roxo */
+        .btn-edit { background: #eef2ff; color: var(--edit-color); border-color: #e0e7ff; }
+        .btn-edit:hover { background: var(--edit-color); color: white; }
 
         /* --- VISÃO 2: FORMULÁRIO --- */
         #view-formulario { flex: 1; display: none; height: 100%; overflow: hidden; }
@@ -35,27 +61,24 @@
         label { font-size: 11px; font-weight: 800; display: block; margin-bottom: 6px; color: var(--muted); text-transform: uppercase; }
         select, input, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 10px; background: white; }
         
-        /* MODO LEITURA */
-        .readonly-mode input, .readonly-mode select, .readonly-mode textarea { 
-            background-color: #f1f5f9; color: #475569; cursor: not-allowed; border-style: dashed; pointer-events: none; 
-        }
+        .readonly-mode input, .readonly-mode select, .readonly-mode textarea { background-color: #f1f5f9; color: #475569; border-style: dashed; pointer-events: none; }
         
-        .evidence-button { padding: 16px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; margin-bottom: 12px; background: white; }
-        .evidence-button.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+        .evidence-button { padding: 16px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; margin-bottom: 12px; background: white; transition: 0.2s; }
+        .evidence-button.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); font-weight: 700; }
 
         .footer { margin-top: 40px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border); padding-top: 24px; }
         
         .btn { height: 40px; padding: 0 20px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; font-size: 13px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: white; border: 1px solid var(--border); color: var(--muted); }
-        .btn-icon { padding: 6px; background: #f1f5f9; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); font-size: 16px; }
+        
         .admin-only { display: none; }
     </style>
 </head>
-<body class="list-view">
+<body>
 
     <header class="app-header">
-        <div class="header-title">📜 Registro de Certificações</div>
+        <div class="header-title">📜 Gestão de Certificações</div>
         <div id="header-actions">
             <button class="btn btn-primary admin-only" id="btnTopNovo" onclick="window.abrirFormulario()">➕ Nova Homologação</button>
         </div>
@@ -93,7 +116,6 @@
                 <div class="section-title" style="font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 15px;">1. IDENTIFICAÇÃO</div>
                 <label>Colaborador</label>
                 <select id="selectColaborador"><option value="">Carregando...</option></select>
-                
                 <label>Competência Alvo</label>
                 <select id="selectTreinamento"><option value="">Carregando...</option></select>
 
@@ -174,15 +196,13 @@
 
         async function carregarCombos() {
             const colabs = await DBHandler.listarColaboradores({ somenteAtivos: true });
-            document.getElementById('selectColaborador').innerHTML = '<option value="">Selecione o colaborador...</option>' + 
+            document.getElementById('selectColaborador').innerHTML = '<option value="">Selecione...</option>' + 
                 colabs.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
             const { treinamentos } = await DBHandler.carregarDadosIniciais();
-            document.getElementById('selectTreinamento').innerHTML = '<option value="">Selecione o curso...</option>' + 
+            document.getElementById('selectTreinamento').innerHTML = '<option value="">Selecione...</option>' + 
                 treinamentos.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
         }
-
-        // --- NAVEGAÇÃO SPA ---
 
         window.abrirFormulario = async (id = null, isView = false) => {
             currentId = id;
@@ -191,19 +211,11 @@
             document.getElementById('btnTopNovo').style.display = 'none';
 
             if (id) {
-                // MODO EDIÇÃO OU VISUALIZAÇÃO
                 const dado = await DBHandler.buscarHomologacaoPorId(id);
                 preencherCampos(dado);
-                
-                if (isView) {
-                    travarCampos(true);
-                    document.getElementById('form-title').textContent = "Visualizar Certificação";
-                } else {
-                    travarCampos(false);
-                    document.getElementById('form-title').textContent = "Editar Certificação";
-                }
+                travarCampos(isView);
+                document.getElementById('form-title').textContent = isView ? "Visualizar Certificação" : "Editar Certificação";
             } else {
-                // MODO INSERIR NOVO
                 resetarFormulario();
                 travarCampos(false);
                 document.getElementById('form-title').textContent = "Nova Homologação";
@@ -218,8 +230,6 @@
             window.carregarLista();
         };
 
-        // --- LÓGICA DA TABELA ---
-
         window.carregarLista = async () => {
             try {
                 DADOS_LISTA = await DBHandler.listarHomologacoes();
@@ -229,6 +239,8 @@
 
         function renderizarTabela(lista) {
             const tbody = document.querySelector("#homologTable tbody");
+            const session = JSON.parse(localStorage.getItem('rh_session'));
+            
             tbody.innerHTML = lista.map(item => `
                 <tr>
                     <td><strong>${item.colaboradores?.nome || '—'}</strong></td>
@@ -237,14 +249,11 @@
                     <td>${item.data_homologacao ? new Date(item.data_homologacao).toLocaleDateString('pt-BR') : '—'}</td>
                     <td>${item.nota || 'N/A'}</td>
                     <td style="text-align: right; white-space: nowrap;">
-                        <button class="btn-icon" onclick="window.abrirFormulario(${item.id}, true)" title="Visualizar">👁️</button>
-                        <button class="btn-icon admin-only" onclick="window.abrirFormulario(${item.id}, false)" title="Editar" style="margin-left:5px">✏️</button>
+                        <button class="btn-action btn-view" onclick="window.abrirFormulario(${item.id}, true)" title="Visualizar">👁️</button>
+                        ${session.role === 'ADMIN' ? `<button class="btn-action btn-edit" onclick="window.abrirFormulario(${item.id}, false)" title="Editar">✏️</button>` : ''}
                     </td>
                 </tr>
             `).join('');
-            
-            const session = JSON.parse(localStorage.getItem('rh_session'));
-            if(session.role !== 'ADMIN') document.querySelectorAll('tbody .admin-only').forEach(e => e.style.display = 'none');
         }
 
         window.filtrar = () => {
@@ -257,8 +266,6 @@
             });
             renderizarTabela(filtrados);
         };
-
-        // --- LÓGICA DE CAMPOS ---
 
         window.selectMode = (mode, el) => {
             currentMode = mode.toUpperCase();
@@ -281,8 +288,6 @@
             if (check) input.value = "";
         };
 
-        // --- PERSISTÊNCIA ---
-
         window.salvarHomologacao = async () => {
             const session = JSON.parse(localStorage.getItem('rh_session'));
             const payload = {
@@ -300,24 +305,21 @@
 
             try {
                 await DBHandler.salvarHomologacao({ ...(currentId ? { id: currentId } : {}), ...payload });
-                alert("✅ Registro processado com sucesso!");
+                alert("✅ Registro processado!");
                 window.voltarParaLista();
             } catch (e) { alert("Erro ao salvar: " + e.message); }
         };
 
-        // --- AUXILIARES ---
-
         function preencherCampos(d) {
             document.getElementById('selectColaborador').value = d.colaborador_id;
             document.getElementById('selectTreinamento').value = d.treinamento_id;
-            
             if (d.atividade_externa === 'NOTORIO') {
                 window.selectMode('notorio', document.getElementById('btn-notorio'));
                 document.getElementById('notorioJustificativa').value = d.observacoes || "";
                 document.getElementById('notorioAprovador').value = d.instrutor || "";
             } else {
                 window.selectMode('certificado', document.getElementById('btn-cert'));
-                document.getElementById('certInstituicao').value = d.instrutor || "Edesoft-Academy";
+                document.getElementById('certInstituicao').value = d.instrutor;
                 document.getElementById('checkEdesoft').checked = (d.instrutor === "Edesoft-Academy");
                 document.getElementById('certData').value = d.data_homologacao;
                 document.getElementById('certLink').value = d.observacoes || "";
@@ -335,13 +337,10 @@
         function travarCampos(travar) {
             const inputs = document.querySelectorAll('#view-formulario input, #view-formulario select, #view-formulario textarea');
             inputs.forEach(el => el.disabled = travar);
-            
-            // Esconde botões/checks que não fazem sentido na visualização
             document.getElementById('btnSalvar').style.display = travar ? 'none' : 'block';
             document.getElementById('boxCheckEdesoft').style.display = travar ? 'none' : 'block';
             document.getElementById('boxCheckNota').style.display = travar ? 'none' : 'block';
             document.getElementById('tipoEvidenciaBox').style.pointerEvents = travar ? 'none' : 'auto';
-            
             if(travar) document.getElementById('formWrapper').classList.add('readonly-mode');
             else document.getElementById('formWrapper').classList.remove('readonly-mode');
         }
@@ -353,10 +352,7 @@
             document.getElementById('certInstituicao').readOnly = true;
             document.getElementById('checkEdesoft').checked = true;
             document.getElementById('checkNotaNA').checked = true;
-            document.getElementById('certNota').value = "";
             document.getElementById('certData').value = new Date().toISOString().split('T')[0];
-            document.getElementById('notorioJustificativa').value = "";
-            document.getElementById('notorioAprovador').value = "";
             window.selectMode('certificado', document.getElementById('btn-cert'));
         }
     </script>
