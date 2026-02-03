@@ -297,6 +297,48 @@ async registrarLog(usuario, acao, detalhes, tela) {
     async reativarColaborador(id) {
         return this.atualizarColaborador(id, { data_demissao: null, motivo_demissao: null });
     }
+
+// Dentro do export const DBHandler = { ... }
+
+    // =========================
+    // 8) HOMOLOGAÇÕES (MÓDULO 4)
+    // =========================
+    async listarHomologacoes() {
+        const { data, error } = await supabaseClient
+            .from("homologacoes_treinamentos")
+            .select(`
+                *,
+                colaboradores (nome, departamento),
+                treinamentos (nome, categoria)
+            `)
+            .order("data_homologacao", { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    async salvarHomologacao(payload) {
+        const { data, error } = await supabaseClient
+            .from("homologacoes_treinamentos")
+            .upsert([payload])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async excluirHomologacao(id) {
+        const { error } = await supabaseClient
+            .from("homologacoes_treinamentos")
+            .delete()
+            .eq("id", id);
+        if (error) throw error;
+    }
+
+
+    
 };
+
 
 
