@@ -228,9 +228,30 @@ body {
 }
 
 .btn-primary {
-    background: var(--primary);
-    color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #4f46e5; /* Roxo vibrante */
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-transform: uppercase;
 }
+
+.btn-primary i {
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+}
+
 
 /* ================= TABELA ================= */
 
@@ -1170,6 +1191,7 @@ window.gerarAtestado = (id) => {
     </script>
 </body>
 </html>
+
 
 
 
