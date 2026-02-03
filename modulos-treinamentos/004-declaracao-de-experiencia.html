@@ -21,30 +21,32 @@
         
         /* HEADER */
         .app-header { 
-            height: 64px; background: var(--white); border-bottom: 1px solid var(--border); 
-            display: flex; align-items: center; padding: 0 32px; justify-content: space-between; 
+            height: 56px; background: var(--white); border-bottom: 1px solid var(--border); 
+            display: flex; align-items: center; padding: 0 24px; justify-content: space-between; 
             flex-shrink: 0; z-index: 50; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
-        .header-title { font-size: 18px; font-weight: 800; letter-spacing: -0.025em; color: var(--primary); }
+        .header-title { font-size: 16px; font-weight: 800; color: var(--primary); }
 
         /* --- VISÃO 1: LISTA (DASHBOARD) --- */
-        #view-lista { flex: 1; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn 0.3s ease; }
-        .filter-bar { background: var(--white); padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: center; }
-        .search-input { flex: 1; height: 44px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; background: #f1f5f9; transition: all 0.2s; }
-        .search-input:focus { border-color: var(--primary); background: white; outline: none; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        #view-lista { flex: 1; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn 0.2s ease; }
         
-        .table-container { flex: 1; overflow: auto; padding: 32px; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--white); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        th { background: #f8fafc; text-align: left; padding: 16px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
-        td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
-        tr:last-child td { border-bottom: none; }
+        /* FILTROS AJUSTADOS (MAIS COMPACTOS) */
+        .filter-bar { background: var(--white); padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+        .search-input { flex: 1; height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: #f1f5f9; transition: all 0.2s; }
+        .search-input:focus { border-color: var(--primary); background: white; outline: none; }
+        .filter-select { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-size: 13px; min-width: 150px; }
+        
+        /* TABELA AJUSTADA (LINHAS MAIS BAIXAS) */
+        .table-container { flex: 1; overflow: auto; padding: 16px 24px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--white); border-radius: 8px; border: 1px solid var(--border); }
+        th { background: #f8fafc; text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 8px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; line-height: 1.2; }
         tr:hover td { background: #fcfdfe; }
 
-        /* BOTÕES DE AÇÃO NA TABELA */
         .btn-action { 
-            width: 36px; height: 36px; border-radius: 10px; border: 1px solid transparent;
+            width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent;
             cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-            font-size: 16px; transition: all 0.2s; margin-left: 4px;
+            font-size: 14px; transition: all 0.2s; margin-left: 2px;
         }
         .btn-view { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
         .btn-view:hover { background: #2563eb; color: white; }
@@ -54,65 +56,59 @@
         .btn-delete:hover { background: #dc2626; color: white; }
 
         /* --- VISÃO 2: FORMULÁRIO (EDITOR) --- */
-        #view-formulario { flex: 1; display: none; height: 100%; overflow: hidden; animation: slideIn 0.3s ease; }
+        #view-formulario { flex: 1; display: none; height: 100%; overflow: hidden; }
         .form-container { display: flex; height: 100%; }
-        
-        .sidebar { width: 340px; padding: 32px; background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
-        .main-form { flex: 1; padding: 48px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; align-items: center; }
-        .form-card-content { width: 100%; max-width: 800px; background: var(--white); padding: 40px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+        .sidebar { width: 300px; padding: 24px; background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
+        .main-form { flex: 1; padding: 32px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; align-items: center; }
+        .form-card-content { width: 100%; max-width: 750px; background: var(--white); padding: 32px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
 
-        .section-title { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.1em; border-bottom: 2px solid var(--bg); padding-bottom: 8px; }
-        label { font-size: 12px; font-weight: 700; display: block; margin-bottom: 8px; color: #475569; }
-        select, input, textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; margin-bottom: 20px; background: #fff; transition: all 0.2s; }
-        select:focus, input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        label { font-size: 11px; font-weight: 800; display: block; margin-bottom: 4px; color: var(--text-muted); text-transform: uppercase; }
+        select, input, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
 
-        .evidence-button { padding: 20px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; margin-bottom: 12px; background: #fcfdfe; transition: all 0.2s; border-left: 4px solid transparent; }
-        .evidence-button:hover { background: #f8fafc; border-color: var(--primary); }
-        .evidence-button.active { border-color: var(--primary); border-left-color: var(--primary); background: #eff6ff; color: var(--primary); }
+        .evidence-button { padding: 16px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; margin-bottom: 8px; background: #fcfdfe; transition: 0.2s; }
+        .evidence-button.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); font-weight: 700; }
 
-        .footer { margin-top: 32px; display: flex; justify-content: flex-end; gap: 16px; border-top: 1px solid var(--border); padding-top: 32px; width: 100%; }
-        
-        /* BOTÕES GERAIS */
-        .btn { height: 44px; padding: 0 24px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; font-size: 14px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .footer { margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border); padding-top: 24px; }
+        .btn { height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-muted); }
-        .btn-outline:hover { background: #f8fafc; color: var(--text-main); }
 
-        .badge { padding: 6px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.05em; }
-        .readonly-mode input, .readonly-mode select, .readonly-mode textarea { background-color: #f8fafc; color: #64748b; border-style: dashed; pointer-events: none; }
+        .badge { padding: 4px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .type-cert { background: #e0e7ff; color: #4338ca; }
+        .type-notorio { background: #fef3c7; color: #92400e; }
+        
+        .readonly-mode input, .readonly-mode select, .readonly-mode textarea { background-color: #f8fafc; border-style: dashed; pointer-events: none; }
+        .admin-only { display: none; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .admin-only { display: none; }
     </style>
 </head>
 <body>
 
     <header class="app-header">
-        <div class="header-title">ACADEMY // CERTIFICAÇÕES</div>
-        <div id="header-actions">
-            <button class="btn btn-primary admin-only" id="btnTopNovo" onclick="window.abrirFormulario()">
-                <span>➕</span> Nova Homologação
-            </button>
-        </div>
+        <div class="header-title">ACADEMY // HOMOLOGAÇÕES</div>
+        <button class="btn btn-primary admin-only" id="btnTopNovo" onclick="window.abrirFormulario()">
+            <span>➕</span> Novo Registro
+        </button>
     </header>
 
     <div id="view-lista">
         <div class="filter-bar">
-            <input type="text" id="searchBox" class="search-input" placeholder="Pesquisar por colaborador, competência ou tipo..." onkeyup="window.filtrar()">
-            <select id="filterTipo" onchange="window.filtrar()">
+            <input type="text" id="searchBox" class="search-input" placeholder="Filtrar por nome ou competência..." onkeyup="window.filtrar()">
+            <select id="filterTipo" class="filter-select" onchange="window.filtrar()">
                 <option value="TODOS">Todos os tipos</option>
                 <option value="CERTIFICADO">Certificados</option>
                 <option value="NOTORIO">Notório Saber</option>
             </select>
+            <button class="btn btn-outline" style="height: 36px;" onclick="window.limparFiltros()">Limpar</button>
         </div>
+        
         <div class="table-container">
             <table id="homologTable">
                 <thead>
                     <tr>
                         <th>Colaborador</th>
-                        <th>Competência Alvo</th>
+                        <th>Competência</th>
                         <th>Tipo</th>
                         <th>Data</th>
                         <th>Nota</th>
@@ -127,71 +123,66 @@
     <div id="view-formulario">
         <div class="form-container" id="formWrapper">
             <aside class="sidebar">
-                <div class="section-title">1. Configuração</div>
-                <label>Colaborador</label>
+                <label>1. Colaborador</label>
                 <select id="selectColaborador"><option value="">Carregando...</option></select>
                 
-                <label>Competência do Catálogo</label>
+                <label>2. Competência</label>
                 <select id="selectTreinamento"><option value="">Carregando...</option></select>
 
-                <div style="margin-top: 12px;" id="tipoEvidenciaBox">
-                    <div class="section-title">2. Tipo de Evidência</div>
+                <div id="tipoEvidenciaBox" style="margin-top: 10px;">
+                    <label>3. Evidência</label>
                     <div id="btn-cert" class="evidence-button active" onclick="window.selectMode('certificado', this)">
-                        <b>Certificado Externo</b><br><small style="font-weight: 400; opacity: 0.8;">Documento de outra instituição</small>
+                        <b>Certificado</b><br><small style="font-weight: 400; opacity: 0.8;">Externo / Interno</small>
                     </div>
                     <div id="btn-notorio" class="evidence-button" onclick="window.selectMode('notorio', this)">
-                        <b>Notório Saber</b><br><small style="font-weight: 400; opacity: 0.8;">Parecer técnico do RH</small>
+                        <b>Notório Saber</b><br><small style="font-weight: 400; opacity: 0.8;">Avaliação Técnica</small>
                     </div>
                 </div>
             </aside>
 
             <main class="main-form">
                 <div class="form-card-content">
-                    <h2 id="form-title" style="margin: 0 0 32px 0; font-size: 22px; font-weight: 800; color: var(--text-main);">Nova Homologação</h2>
+                    <h2 id="form-title" style="margin: 0 0 24px 0; font-size: 20px; font-weight: 800;">Registro</h2>
 
                     <div id="form-certificado">
-                        <div style="display: flex; gap: 24px;">
+                        <div style="display: flex; gap: 20px;">
                             <div style="flex: 2;">
-                                <label>Instituição Emissora</label>
+                                <label>Instituição</label>
                                 <input type="text" id="certInstituicao" value="Edesoft-Academy" readonly>
-                                <div id="boxCheckEdesoft" style="display: flex; align-items: center; gap: 8px;">
-                                    <input type="checkbox" id="checkEdesoft" checked onchange="window.toggleInstituicao(this.checked)" style="width: auto; margin: 0;"> 
-                                    <span style="font-size: 12px; color: var(--text-muted);">Instituição Padrão</span>
+                                <div id="boxCheckEdesoft" style="display: flex; align-items: center; gap: 6px; margin-top: -10px; margin-bottom: 15px;">
+                                    <input type="checkbox" id="checkEdesoft" checked onchange="window.toggleInstituicao(this.checked)" style="width: 14px; margin: 0;"> 
+                                    <span style="font-size: 11px; color: var(--text-muted);">Padrão Academy</span>
                                 </div>
                             </div>
                             <div style="flex: 1;">
-                                <label>Data de Conclusão</label>
+                                <label>Conclusão</label>
                                 <input type="date" id="certData">
                             </div>
                         </div>
-                        <div style="margin-top: 32px; display: flex; gap: 24px; align-items: flex-start;">
+                        <div style="display: flex; gap: 20px;">
                             <div style="flex: 1;">
-                                <label>Nota / Avaliação</label>
+                                <label>Nota</label>
                                 <input type="number" id="certNota" placeholder="N/A" readonly step="0.1">
-                                <div id="boxCheckNota" style="display: flex; align-items: center; gap: 8px;">
-                                    <input type="checkbox" id="checkNotaNA" checked onchange="window.toggleNota(this.checked)" style="width: auto; margin: 0;"> 
-                                    <span style="font-size: 12px; color: var(--text-muted);">Não se aplica</span>
+                                <div id="boxCheckNota" style="display: flex; align-items: center; gap: 6px; margin-top: -10px;">
+                                    <input type="checkbox" id="checkNotaNA" checked onchange="window.toggleNota(this.checked)" style="width: 14px; margin: 0;"> 
+                                    <span style="font-size: 11px; color: var(--text-muted);">Não se aplica</span>
                                 </div>
                             </div>
                             <div style="flex: 2;">
-                                <label>Link de Validação (Opcional)</label>
-                                <input type="url" id="certLink" placeholder="https://validador.com/...">
+                                <label>Link de Validação</label>
+                                <input type="url" id="certLink" placeholder="https://...">
                             </div>
                         </div>
                     </div>
 
                     <div id="form-notorio" style="display: none;">
-                        <label>Justificativa do Parecer Técnico</label>
-                        <textarea id="notorioJustificativa" placeholder="Descreva os motivos, testes ou históricos que validam esta competência..."></textarea>
-                        <div style="display: flex; gap: 24px; margin-top: 8px;">
-                            <div style="flex: 1;">
-                                <label>Aprovador (Gestor/Especialista)</label>
-                                <input type="text" id="notorioAprovador" placeholder="Nome do responsável">
-                            </div>
-                        </div>
-                        <div id="boxCheckRH" style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-top: 10px; display: flex; align-items: center; gap: 12px;">
-                            <input type="checkbox" id="checkRH" style="width: 20px; height: 20px; margin: 0;"> 
-                            <span style="font-size: 13px; font-weight: 600;">Confirmo a validação técnica desta competência conforme normas internas.</span>
+                        <label>Justificativa do Parecer</label>
+                        <textarea id="notorioJustificativa" placeholder="Descreva os motivos da validação..."></textarea>
+                        <label>Aprovador Técnico</label>
+                        <input type="text" id="notorioAprovador" placeholder="Nome do gestor/especialista">
+                        <div id="boxCheckRH" style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 8px;">
+                            <input type="checkbox" id="checkRH" style="width: 18px; height: 18px; margin: 0;"> 
+                            <span style="font-size: 12px; font-weight: 600;">Confirmo a validação técnica desta competência.</span>
                         </div>
                     </div>
 
@@ -223,16 +214,14 @@
         async function carregarCombos() {
             try {
                 const colabs = await DBHandler.listarColaboradores({ somenteAtivos: true });
-                document.getElementById('selectColaborador').innerHTML = '<option value="">Selecione o colaborador...</option>' + 
+                document.getElementById('selectColaborador').innerHTML = '<option value="">Selecione...</option>' + 
                     colabs.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
                 const { treinamentos } = await DBHandler.carregarDadosIniciais();
-                document.getElementById('selectTreinamento').innerHTML = '<option value="">Selecione a competência...</option>' + 
+                document.getElementById('selectTreinamento').innerHTML = '<option value="">Selecione...</option>' + 
                     treinamentos.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
             } catch (e) { console.error(e); }
         }
-
-        // --- NAVEGAÇÃO SPA ---
 
         window.abrirFormulario = async (id = null, isView = false) => {
             currentId = id;
@@ -259,8 +248,6 @@
             if(session.role === 'ADMIN') document.getElementById('btnTopNovo').style.display = 'inline-flex';
             window.carregarLista();
         };
-
-        // --- LÓGICA DA TABELA ---
 
         window.carregarLista = async () => {
             try {
@@ -302,7 +289,11 @@
             renderizarTabela(filtrados);
         };
 
-        // --- LÓGICA DO FORMULÁRIO ---
+        window.limparFiltros = () => {
+            document.getElementById('searchBox').value = "";
+            document.getElementById('filterTipo').value = "TODOS";
+            window.carregarLista();
+        };
 
         window.selectMode = (mode, el) => {
             currentMode = mode.toUpperCase();
@@ -326,12 +317,11 @@
         };
 
         window.deletarRegistro = async (id) => {
-            if(!confirm("Tem certeza que deseja excluir esta homologação? Esta ação é irreversível.")) return;
+            if(!confirm("Deseja realmente excluir este registro?")) return;
             try {
                 await DBHandler.excluirHomologacao(id);
-                alert("Registro removido com sucesso.");
                 window.carregarLista();
-            } catch (e) { alert("Erro ao excluir: " + e.message); }
+            } catch (e) { alert(e.message); }
         };
 
         window.salvarHomologacao = async () => {
@@ -347,16 +337,13 @@
                 observacoes: currentMode === 'NOTORIO' ? document.getElementById('notorioJustificativa').value : (document.getElementById('certLink').value || null)
             };
 
-            if (!payload.colaborador_id || !payload.treinamento_id) return alert("Selecione Colaborador e Competência.");
+            if (!payload.colaborador_id || !payload.treinamento_id) return alert("Preencha Colaborador e Competência.");
 
             try {
                 await DBHandler.salvarHomologacao({ ...(currentId ? { id: currentId } : {}), ...payload });
-                alert("✅ Registro gravado com sucesso!");
                 window.voltarParaLista();
-            } catch (e) { alert("Erro ao salvar: " + e.message); }
+            } catch (e) { alert(e.message); }
         };
-
-        // --- AUXILIARES ---
 
         function preencherCampos(d) {
             document.getElementById('selectColaborador').value = d.colaborador_id;
