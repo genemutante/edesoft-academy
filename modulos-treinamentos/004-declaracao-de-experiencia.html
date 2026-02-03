@@ -17,8 +17,8 @@
 
         /* FILTROS */
         .filter-bar { background: white; padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-        .search-input { flex: 1; min-width: 250px; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; }
-        select { height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: white; min-width: 160px; }
+        .search-input { flex: 1; min-width: 250px; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+        select { height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: white; min-width: 160px; font-size: 14px; }
 
         /* TABELA */
         .table-container { flex: 1; overflow: auto; padding: 24px; }
@@ -32,9 +32,11 @@
         .type-cert { background: #e0e7ff; color: #4338ca; }
         .type-notorio { background: #fef3c7; color: #92400e; }
         
-        .btn { height: 40px; padding: 0 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid transparent; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn { height: 40px; padding: 0 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid transparent; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-icon { padding: 6px; background: #f1f5f9; color: #64748b; border: 1px solid var(--border); border-radius: 6px; }
+        .btn-ghost { background: transparent; color: #64748b; border: 1px solid var(--border); }
+        .btn-ghost:hover { background: #f1f5f9; }
+        .btn-icon { padding: 8px; background: #f1f5f9; color: #64748b; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 16px; }
         .btn-icon:hover { background: #e2e8f0; color: var(--text); }
         
         .admin-only { display: none; }
@@ -44,19 +46,19 @@
 
     <header class="app-header">
         <div class="header-title">📜 Gestão de Homologações</div>
-        <button class="btn btn-primary admin-only" id="btnNovo" onclick="window.location.href='004-declaracao-de-experiencia.html'">
+        <button class="btn btn-primary admin-only" id="btnNovo" onclick="window.location.href='homologacao-competencia.html'">
             ➕ Nova Homologação
         </button>
     </header>
 
     <div class="filter-bar">
-        <input type="text" id="searchBox" class="search-input" placeholder="Pesquisar por colaborador ou curso..." onkeyup="filtrar()">
-        <select id="filterTipo" onchange="filtrar()">
+        <input type="text" id="searchBox" class="search-input" placeholder="Pesquisar por colaborador ou curso..." onkeyup="window.filtrar()">
+        <select id="filterTipo" onchange="window.filtrar()">
             <option value="TODOS">Tipo: Todos</option>
             <option value="CERTIFICADO">Certificado</option>
             <option value="NOTORIO">Notório Saber</option>
         </select>
-        <button class="btn btn-ghost" onclick="limparFiltros()">Limpar</button>
+        <button class="btn btn-ghost" onclick="window.limparFiltros()">Limpar Filtros</button>
     </div>
 
     <div class="table-container">
@@ -82,8 +84,15 @@
         let DADOS = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const session = JSON.parse(localStorage.getItem('rh_session'));
-            if(session.role === 'ADMIN') {
+            const sessionRaw = localStorage.getItem('rh_session');
+            if (!sessionRaw) {
+                window.top.location.href = '../login.html';
+                return;
+            }
+            const session = JSON.parse(sessionRaw);
+
+            // Controle de visibilidade Admin
+            if (session.role === 'ADMIN') {
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'inline-flex');
             }
 
@@ -92,58 +101,85 @@
 
         async function carregarLista() {
             try {
-                // Aqui usamos a função que já criamos no DBHandler anteriormente
+                // Busca os dados reais do Supabase
                 DADOS = await DBHandler.listarHomologacoes();
                 renderizar(DADOS);
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("Erro ao carregar lista de homologações:", e);
+            }
         }
 
         function renderizar(lista) {
             const tbody = document.querySelector("#homologTable tbody");
-            tbody.innerHTML = lista.map(item => `
+            if (!tbody) return;
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px; color: #64748b;">Nenhum registro encontrado.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = lista.map(item => {
+                const isNotorio = item.atividade_externa === 'NOTORIO_SABER';
+                return `
                 <tr>
                     <td><strong>${item.colaboradores?.nome || '—'}</strong></td>
                     <td>${item.treinamentos?.nome || item.atividade_externa || '—'}</td>
-                    <td><span class="badge ${item.treinamento_id ? 'type-cert' : 'type-notorio'}">
-                        ${item.treinamento_id ? 'Certificado' : 'Notório'}</span>
+                    <td>
+                        <span class="badge ${isNotorio ? 'type-notorio' : 'type-cert'}">
+                            ${isNotorio ? 'Notório Saber' : 'Certificado'}
+                        </span>
                     </td>
-                    <td>${new Date(item.data_homologacao).toLocaleDateString('pt-BR')}</td>
-                    <td>${item.nota || 'N/A'}</td>
+                    <td>${item.data_homologacao ? new Date(item.data_homologacao).toLocaleDateString('pt-BR') : '—'}</td>
+                    <td>${item.nota !== null ? item.nota : 'N/A'}</td>
                     <td style="text-align: right;">
-                        <button class="btn-icon" onclick="verDetalhes(${item.id})" title="Visualizar">👁️</button>
-                        <button class="btn-icon admin-only" onclick="editar(${item.id})" title="Editar">✏️</button>
+                        <button class="btn-icon" onclick="window.verDetalhes(${item.id})" title="Visualizar">👁️</button>
+                        <button class="btn-icon admin-only" onclick="window.editar(${item.id})" title="Editar">✏️</button>
                     </td>
                 </tr>
-            `).join('');
+            `;}).join('');
             
-            // Re-checa permissão para os botões recém criados
+            // Re-aplica visibilidade admin para elementos dinâmicos
             const session = JSON.parse(localStorage.getItem('rh_session'));
-            if(session.role !== 'ADMIN') {
+            if (session.role !== 'ADMIN') {
                 document.querySelectorAll('tbody .admin-only').forEach(el => el.style.display = 'none');
             }
         }
+
+        // --- FUNÇÕES EXPOSTAS AO WINDOW ---
 
         window.filtrar = () => {
             const busca = document.getElementById('searchBox').value.toLowerCase();
             const tipo = document.getElementById('filterTipo').value;
 
             const filtrados = DADOS.filter(item => {
-                const matchBusca = (item.colaboradores?.nome?.toLowerCase().includes(busca)) || 
-                                   (item.treinamentos?.nome?.toLowerCase().includes(busca));
-                const itemTipo = item.treinamento_id ? 'CERTIFICADO' : 'NOTORIO';
-                const matchTipo = tipo === 'TODOS' || itemTipo === tipo;
+                const nomeColab = (item.colaboradores?.nome || "").toLowerCase();
+                const nomeCurso = (item.treinamentos?.nome || "").toLowerCase();
+                const atividade = (item.atividade_externa || "").toLowerCase();
+
+                const matchBusca = nomeColab.includes(busca) || nomeCurso.includes(busca) || atividade.includes(busca);
+                
+                const itemTipoReal = item.atividade_externa === 'NOTORIO_SABER' ? 'NOTORIO' : 'CERTIFICADO';
+                const matchTipo = tipo === 'TODOS' || itemTipoReal === tipo;
+
                 return matchBusca && matchTipo;
             });
             renderizar(filtrados);
         };
 
+        window.limparFiltros = () => {
+            document.getElementById('searchBox').value = "";
+            document.getElementById('filterTipo').value = "TODOS";
+            renderizar(DADOS);
+        };
+
         window.verDetalhes = (id) => {
-            window.location.href = `004-declaracao-de-experiencia.html?id=${id}&mode=view`;
+            window.location.href = `homologacao-competencia.html?id=${id}&mode=view`;
         };
 
         window.editar = (id) => {
-            window.location.href = `004-declaracao-de-experiencia.html?id=${id}&mode=edit`;
+            window.location.href = `homologacao-competencia.html?id=${id}&mode=edit`;
         };
+
     </script>
 </body>
 </html>
