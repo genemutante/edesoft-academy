@@ -985,9 +985,11 @@ window.gerarAtestado = (id) => {
         ? new Date(item.data_homologacao).toLocaleDateString('pt-BR') 
         : new Date().toLocaleDateString('pt-BR');
     
-    // Justificativa baseada no campo observações (onde salvamos a justificativa do RH)
     const justificativa = item.observacoes || "Validação de competência baseada em histórico profissional e evidências de desempenho prático.";
     const aprovador = item.instrutor || "Conselho Técnico Edesoft";
+
+    // CORREÇÃO: Declarando a variável que estava faltando
+    const hashUnico = `ED-NOT-${item.id}-${new Date().getFullYear()}`;
 
     const janelaAtestado = window.open('', '_blank');
     
@@ -1001,14 +1003,12 @@ window.gerarAtestado = (id) => {
             <style>
                 body { margin: 0; padding: 0; background: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Crimson Pro', serif; }
                 
-                /* CANVAS A4 PAISAGEM - ESTILO PAPEL TIMBRADO */
                 .atestado-canvas { 
                     width: 297mm; height: 210mm; background: #fff; position: relative; 
                     display: flex; flex-direction: column; padding: 60px 100px; box-sizing: border-box; 
                     border: 20px solid #f8fafc; outline: 1px solid #cbd5e1;
                 }
 
-                /* Moldura clássica dupla */
                 .atestado-canvas::after {
                     content: ""; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
                     border: 2px solid #1e293b; pointer-events: none;
@@ -1031,7 +1031,6 @@ window.gerarAtestado = (id) => {
                 .signature-area { text-align: center; width: 300px; }
                 .signature-line { border-top: 1px solid #1e293b; margin-top: 10px; padding-top: 10px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; }
 
-                /* Selo Seco (Estilo Cartório) */
                 .dry-seal {
                     width: 120px; height: 120px; border: 2px solid #e2e8f0; border-radius: 50%;
                     display: flex; align-items: center; justify-content: center;
@@ -1089,11 +1088,12 @@ window.gerarAtestado = (id) => {
         </html>
     `);
     janelaAtestado.document.close();
-};        
+};;        
         
     </script>
 </body>
 </html>
+
 
 
 
