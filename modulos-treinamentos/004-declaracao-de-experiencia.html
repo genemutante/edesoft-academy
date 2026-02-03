@@ -449,15 +449,31 @@ tr:hover td { background: #fcfdfe; }
                 </div>
 
                 
-<!-- Replace this block where needed -->
-<div class="evidence-options">
-<button class="evidence-card active" onclick="selecionarEvidencia('CERTIFICADO')">
-<div class="icon-box blue">📄</div>
-<div class="text-box">
-<strong>Certificado Externo</strong>
-<span>Curso realizado em outra instituição.</span>
+<!-- Botões de Tipo de Evidência (Substitua onde necessário) -->
+<div class="evidence-options" style="display: flex; flex-direction: column; gap: 12px;">
+  
+  <button class="evidence-card active" type="button" data-mode="certificado" onclick="window.selectMode('certificado')">
+    <div class="icon-box" style="background: #e0e7ff; color: #4338ca;">
+      📄
+    </div>
+    <div class="text-box">
+      <strong>Certificado Externo</strong><br>
+      <small>Curso realizado em outra instituição.</small>
+    </div>
+  </button>
+
+  <button class="evidence-card" type="button" data-mode="notorio" onclick="window.selectMode('notorio')">
+    <div class="icon-box" style="background: #fef3c7; color: #92400e;">
+      ✔️
+    </div>
+    <div class="text-box">
+      <strong>Notório Saber</strong><br>
+      <small>Experiência prática comprovada.</small>
+    </div>
+  </button>
+
 </div>
-</button>
+
 
 
 <button class="evidence-card" onclick="selecionarEvidencia('NOTORIO')">
@@ -699,6 +715,7 @@ tr:hover td { background: #fcfdfe; }
     </script>
 </body>
 </html>
+
 
 
 
