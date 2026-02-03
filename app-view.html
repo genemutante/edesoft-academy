@@ -48,10 +48,17 @@
             display: flex; align-items: center; gap: 8px; background: #1e293b;
             padding: 4px 12px; border-radius: 6px; border: 1px solid #334155;
         }
-        .module-switcher select {
-            background: transparent; border: none; color: #f1f5f9;
-            font-size: 13px; font-weight: 500; outline: none; cursor: pointer;
-        }
+.module-switcher select {
+    background-color: #1e293b;  /* Cor escura compatível com o restante do menu */
+    color: #f1f5f9;              /* Texto claro */
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    appearance: none;            /* Remove o estilo nativo (opcional) */
+}
+
 
         .header-right { display: flex; align-items: center; gap: 16px; }
         .user-profile {
@@ -280,3 +287,4 @@
     </script>
 </body>
 </html>
+
