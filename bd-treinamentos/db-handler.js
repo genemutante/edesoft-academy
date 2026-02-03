@@ -334,7 +334,7 @@ async registrarLog(usuario, acao, detalhes, tela) {
             .delete()
             .eq("id", id);
         if (error) throw error;
-    }
+    },
 
 async buscarHomologacaoPorId(id) {
     const { data, error } = await supabaseClient
@@ -348,6 +348,7 @@ async buscarHomologacaoPorId(id) {
 }
     
 };
+
 
 
 
