@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homologação de Competência</title>
+  <title>Homologação de Competência | RH</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -17,11 +17,10 @@
     }
 
     * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-
     body { margin: 0; background-color: var(--bg); color: var(--text); }
-
     .container { display: flex; min-height: 100vh; }
 
+    /* --- SIDEBAR --- */
     .sidebar {
       width: 320px; padding: 32px 24px; background: var(--card-bg);
       border-right: 1px solid var(--border); display: flex;
@@ -29,22 +28,18 @@
     }
 
     .content { flex: 1; padding: 40px; display: flex; flex-direction: column; }
-
     h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-
-    label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; }
+    label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; color: #475569; }
 
     select, input, textarea {
       width: 100%; padding: 10px 12px; font-size: 14px;
       border: 1px solid var(--border); border-radius: 6px; background: white;
+      transition: border-color 0.2s;
     }
+    select:focus, input:focus, textarea:focus { border-color: var(--primary); outline: none; }
+    textarea { resize: vertical; min-height: 120px; }
 
-    textarea { resize: vertical; min-height: 100px; }
-
-    .section-title {
-      text-transform: uppercase; font-size: 12px; font-weight: 700;
-      color: var(--muted); margin-bottom: 12px;
-    }
+    .section-title { text-transform: uppercase; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.05em; }
 
     .evidence-button {
       padding: 14px 16px; border: 1px solid var(--border);
@@ -52,27 +47,24 @@
       font-weight: 600; font-size: 14px; margin-bottom: 12px;
       transition: 0.2s; display: flex; flex-direction: column;
     }
-
-    .evidence-button.active {
-      border-color: var(--primary); background: #eff6ff; color: var(--primary);
-    }
+    .evidence-button.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+    .evidence-button small { font-weight: 400; color: var(--muted); margin-top: 4px; }
 
     .warning-box {
-      background: #fff7ed; border: 1px solid #fde68a; color: #92400e;
-      padding: 12px 16px; border-radius: 8px; font-size: 13px;
-      font-weight: 600; margin-bottom: 20px;
+      background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;
+      padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 20px;
     }
 
     .row { display: flex; gap: 16px; margin-bottom: 20px; }
     .row > div { flex: 1; }
-
-    .checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 16px; }
+    .checkbox { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 16px; font-weight: 500; color: #334155; }
+    .checkbox input { width: 18px; height: 18px; cursor: pointer; }
 
     .footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 12px; padding-top: 40px; }
-
-    .btn { padding: 10px 24px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; }
+    .btn { padding: 12px 24px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; }
     .btn-outline { background: white; border: 1px solid var(--border); color: var(--muted); }
     .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
     .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
   </style>
 </head>
@@ -80,40 +72,40 @@
 <div class="container">
   <div class="sidebar">
     <div>
-      <div class="section-title">1. Configuração</div>
-      <label>Colaborador</label>
-      <select id="selectColaborador"><option value="">Carregando...</option></select>
+      <div class="section-title">1. Configuração do Registro</div>
+      <label>Colaborador Alvo</label>
+      <select id="selectColaborador"><option value="">Carregando lista...</option></select>
       
-      <label style="margin-top: 16px;">Curso / Competência</label>
-      <select id="selectTreinamento"><option value="">Carregando...</option></select>
+      <label style="margin-top: 16px;">Competência / Curso</label>
+      <select id="selectTreinamento"><option value="">Carregando catálogo...</option></select>
     </div>
     <div>
-      <div class="section-title">2. Tipo de Evidência</div>
+      <div class="section-title">2. Base da Homologação</div>
       <div id="btn-cert" class="evidence-button active" onclick="selectMode('certificado', this)">
-        <span style="font-weight: 600; color: inherit;">Certificado</span>
-        <small style="font-weight: 400; color: var(--muted);">Curso realizado em outra instituição.</small>
+        <span>Certificado Externo</span>
+        <small>Validar documento de outra instituição.</small>
       </div>
       <div id="btn-notorio" class="evidence-button" onclick="selectMode('notorio', this)">
-        <span style="font-weight: 600; color: inherit;">Notório Saber</span>
-        <small style="font-weight: 400; color: var(--muted);">Experiência prática comprovada.</small>
+        <span>Notório Saber</span>
+        <small>Parecer técnico de proficiência.</small>
       </div>
     </div>
   </div>
 
   <div class="content">
-    <h2>3. Detalhes da Homologação</h2>
+    <h2 id="main-title">3. Detalhes da Homologação (Certificado)</h2>
 
     <div id="form-certificado">
       <div class="row">
         <div>
           <label>Instituição Emissora</label>
-          <input type="text" id="certInstituicao" placeholder="Ex: Alura, Udemy, Coursera...">
+          <input type="text" id="certInstituicao" placeholder="Ex: SENAI, Alura, FGV...">
         </div>
       </div>
       <div class="row">
         <div>
-          <label>Nome no Certificado</label>
-          <input type="text" id="certNome" placeholder="Nome exato do curso...">
+          <label>Nome do Curso no Documento</label>
+          <input type="text" id="certNome" placeholder="Ex: NR-35 Trabalho em Altura">
         </div>
         <div>
           <label>Data de Conclusão</label>
@@ -122,38 +114,42 @@
       </div>
       <div class="row">
         <div>
-          <label>Link de Validação (URL)</label>
-          <input type="url" id="certLink" placeholder="https://...">
-          <small style="color: var(--muted); font-size: 12px;">Cole o link público para visualizar o certificado.</small>
+          <label>URL de Validação / Credencial</label>
+          <input type="url" id="certLink" placeholder="https://certificado.com/validar/123...">
+          <small style="color: var(--muted); font-size: 12px; margin-top: 4px; display: block;">Link público para conferência digital.</small>
         </div>
       </div>
     </div>
 
     <div id="form-notorio" style="display: none">
       <div class="warning-box">
-        <strong>Processo de Auditoria:</strong> Esta declaração será enviada para validação técnica do gestor da área.
+        Registro de Validação: Este parecer substitui o certificado físico com base na comprovação técnica de proficiência.
       </div>
       <div class="row">
         <div style="flex: 1">
-          <label>Contexto de Aplicação</label>
-          <textarea id="notorioContexto" placeholder="Descreva em quais projetos você utilizou este conhecimento..."></textarea>
+          <label>Justificativa da Validação Técnica</label>
+          <textarea id="notorioJustificativa" placeholder="Descreva os projetos, histórico profissional ou situações reais que comprovam que o colaborador domina esta competência..."></textarea>
         </div>
       </div>
       <div class="row">
         <div>
-          <label>Ferramentas Relacionadas</label>
-          <input type="text" id="notorioFerramentas" placeholder="Ex: Jira, Excel, SAP, Python...">
+          <label>Evidências Consultadas / Testes</label>
+          <input type="text" id="notorioEvidencias" placeholder="Ex: Teste prático, Entrevista com Gestor, Análise de Portfólio...">
+        </div>
+        <div>
+          <label>Aprovador Técnico (Gestor/Especialista)</label>
+          <input type="text" id="notorioAprovador" placeholder="Nome de quem deu o aval técnico">
         </div>
       </div>
       <div class="checkbox">
         <input type="checkbox" id="declaracaoCheck">
-        <label for="declaracaoCheck">Declaro ser verdade que possuo o conhecimento necessário.</label>
+        <label for="declaracaoCheck">Confirmo que as competências acima foram validadas conforme critérios de qualidade do RH.</label>
       </div>
     </div>
 
     <div class="footer">
       <button class="btn btn-outline" onclick="window.location.reload()">Cancelar</button>
-      <button class="btn btn-primary" id="btnSalvar" onclick="salvarHomologacao()">Registrar Homologação</button>
+      <button class="btn btn-primary" id="btnSalvar" onclick="salvarRegistroRH()">Gravar Homologação</button>
     </div>
   </div>
 </div>
@@ -162,8 +158,6 @@
   import { DBHandler } from '../bd-treinamentos/db-handler.js';
 
   let currentMode = 'certificado';
-  let COLABORADORES = [];
-  let TREINAMENTOS = [];
 
   document.addEventListener('DOMContentLoaded', async () => {
     await carregarDadosIniciais();
@@ -171,18 +165,13 @@
 
   async function carregarDadosIniciais() {
     try {
-      // 1. Carregar Colaboradores
-      COLABORADORES = await DBHandler.listarColaboradores({ somenteAtivos: true });
-      const selColab = document.getElementById('selectColaborador');
-      selColab.innerHTML = '<option value="">Selecione o colaborador...</option>' + 
-          COLABORADORES.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      const colabs = await DBHandler.listarColaboradores({ somenteAtivos: true });
+      document.getElementById('selectColaborador').innerHTML = '<option value="">Selecione o colaborador...</option>' + 
+          colabs.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
-      // 2. Carregar Cursos
-      const dados = await DBHandler.carregarDadosIniciais();
-      TREINAMENTOS = dados.treinamentos;
-      const selTreino = document.getElementById('selectTreinamento');
-      selTreino.innerHTML = '<option value="">Selecione o curso...</option>' + 
-          TREINAMENTOS.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+      const { treinamentos } = await DBHandler.carregarDadosIniciais();
+      document.getElementById('selectTreinamento').innerHTML = '<option value="">Selecione o curso...</option>' + 
+          treinamentos.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
     } catch (e) { console.error(e); }
   }
 
@@ -192,59 +181,61 @@
     el.classList.add('active');
     document.getElementById('form-certificado').style.display = (mode === 'certificado') ? 'block' : 'none';
     document.getElementById('form-notorio').style.display = (mode === 'notorio') ? 'block' : 'none';
+    document.getElementById('main-title').textContent = mode === 'certificado' ? '3. Detalhes da Homologação (Certificado)' : '3. Parecer de Notório Saber (Validação RH)';
   }
 
-  window.salvarHomologacao = async function() {
+  window.salvarRegistroRH = async function() {
     const session = JSON.parse(localStorage.getItem('rh_session'));
     const btn = document.getElementById('btnSalvar');
 
+    const colabSelect = document.getElementById('selectColaborador');
+    const treinoSelect = document.getElementById('selectTreinamento');
+
     const payload = {
-      colaborador_id: document.getElementById('selectColaborador').value,
-      treinamento_id: document.getElementById('selectTreinamento').value,
+      colaborador_id: colabSelect.value,
+      treinamento_id: treinoSelect.value,
       tipo_evidencia: currentMode.toUpperCase(),
       usuario_registro: session.user,
-      status: 'Pendente Validação',
-      // Campos Certificado
-      instituicao: document.getElementById('certInstituicao').value,
-      nome_certificado: document.getElementById('certNome').value,
-      data_homologacao: document.getElementById('certData').value || new Date().toISOString().slice(0,10),
-      link_validacao: document.getElementById('certLink').value,
-      // Campos Notório
+      status: 'Homologado (RH)',
+      data_homologacao: currentMode === 'certificado' ? document.getElementById('certData').value : new Date().toISOString().slice(0, 10),
+      instituicao: currentMode === 'certificado' ? document.getElementById('certInstituicao').value : 'Validação Interna RH',
+      link_validacao: currentMode === 'certificado' ? document.getElementById('certLink').value : null,
       observacoes: currentMode === 'notorio' ? 
-        `Contexto: ${document.getElementById('notorioContexto').value}\nFerramentas: ${document.getElementById('notorioFerramentas').value}` : null
+        `Justificativa: ${document.getElementById('notorioJustificativa').value}\nEvidências: ${document.getElementById('notorioEvidencias').value}\nAprovador: ${document.getElementById('notorioAprovador').value}` : null
     };
 
     if (!payload.colaborador_id || !payload.treinamento_id) {
-      alert("Selecione o colaborador e o curso.");
-      return;
+        alert("Selecione o colaborador e a competência."); return;
     }
 
     if (currentMode === 'notorio' && !document.getElementById('declaracaoCheck').checked) {
-      alert("Você precisa marcar a declaração de veracidade.");
-      return;
+        alert("O analista do RH deve marcar a confirmação de validade."); return;
     }
 
     try {
       btn.disabled = true;
-      btn.textContent = "Gravando...";
+      btn.textContent = "Processando...";
 
-      // Salvamento no Banco (Usando a tabela de homologações criada anteriormente)
       await DBHandler.salvarHomologacao(payload);
 
-      // Registro do Log de Auditoria
-      const colabNome = document.getElementById('selectColaborador').options[document.getElementById('selectColaborador').selectedIndex].text;
-      const treinoNome = document.getElementById('selectTreinamento').options[document.getElementById('selectTreinamento').selectedIndex].text;
+      // --- LOG DE AUDITORIA (DEIXANDO CLARO QUE FOI O RH) ---
+      const colabNome = colabSelect.options[colabSelect.selectedIndex].text;
+      const treinoNome = treinoSelect.options[treinoSelect.selectedIndex].text;
       
-      const detalhesLog = `• Colaborador: ${colabNome}\n• Competência: ${treinoNome}\n• Tipo: ${currentMode.toUpperCase()}\n• Detalhe: ${payload.instituicao || 'Notório Saber'}`;
-      
-      await DBHandler.registrarLog(session.user, "HOMOLOGAR_COMPETENCIA", detalhesLog, "Homologação de Competência");
+      let detalhesAudit = "";
+      if (currentMode === 'notorio') {
+          detalhesAudit = `• VALIDAÇÃO TÉCNICA (NOTÓRIO SABER)\n• Colaborador: ${colabNome}\n• Competência: ${treinoNome}\n• Aprovador Técnico: ${document.getElementById('notorioAprovador').value}`;
+      } else {
+          detalhesAudit = `• HOMOLOGAÇÃO DE CERTIFICADO EXTERNO\n• Colaborador: ${colabNome}\n• Instituição: ${payload.instituicao}\n• Curso: ${document.getElementById('certNome').value}`;
+      }
 
-      alert("Homologação registrada com sucesso!");
+      await DBHandler.registrarLog(session.user, "VALIDAR_COMPETENCIA_RH", detalhesAudit, "Homologação de Competência");
+
+      alert("Homologação registrada e rastro de auditoria gravado.");
       window.location.reload();
     } catch (e) {
       alert("Erro ao salvar: " + e.message);
       btn.disabled = false;
-      btn.textContent = "Registrar Homologação";
     }
   }
 </script>
