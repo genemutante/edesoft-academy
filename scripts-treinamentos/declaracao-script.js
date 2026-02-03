@@ -10,13 +10,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function carregarDadosIniciais() {
     try {
-        // Carrega Funcionários
+        // 1. Carregar Funcionários Ativos
         COLABORADORES = await DBHandler.listarColaboradores({ somenteAtivos: true });
         const selColab = document.getElementById('selectColaborador');
         selColab.innerHTML = '<option value="">Selecione o funcionário...</option>' + 
             COLABORADORES.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
-        // Carrega Treinamentos Internos
+        // 2. Carregar Treinamentos Internos
         const dados = await DBHandler.carregarDadosIniciais();
         TREINAMENTOS = dados.treinamentos;
         const selTreino = document.getElementById('selectTreinamento');
@@ -24,7 +24,7 @@ async function carregarDadosIniciais() {
             TREINAMENTOS.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
             
     } catch (e) {
-        console.error("Erro ao carregar dados:", e);
+        console.error("Erro na inicialização:", e);
     }
 }
 
@@ -37,7 +37,7 @@ window.registrarRegistro = async function() {
         usuario_registro: session.user
     };
 
-    // Mapeamento baseado na aba ativa (Exatamente conforme os IDs do HTML)
+    // Mapeamento dinâmico baseado na aba ativa
     if (mode === 'TREINAMENTO') {
         payload.treinamento_id = document.getElementById('selectTreinamento').value;
         payload.data_homologacao = document.getElementById('dataTreino').value;
@@ -54,29 +54,42 @@ window.registrarRegistro = async function() {
         payload.validade_meses = document.getElementById('validadeExp').value;
     }
 
-    // Validação de campos obrigatórios
+    // Validação
     if (!payload.colaborador_id || !payload.data_homologacao) {
-        alert("Por favor, selecione o colaborador e a data do evento.");
+        alert("Campos obrigatórios: Colaborador e Data.");
+        return;
+    }
+    if (mode === 'TREINAMENTO' && !payload.treinamento_id) {
+        alert("Selecione o treinamento interno.");
+        return;
+    }
+    if (mode === 'EXPERIENCIA' && !payload.atividade_externa) {
+        alert("Informe a atividade externa.");
         return;
     }
 
     try {
         await DBHandler.salvarHomologacao(payload);
 
-        // --- GERAÇÃO DE LOG PARA ADMINISTRAÇÃO ---
+        // --- REGISTRO DE LOG (AUDIT TRAIL) ---
         const colabNome = document.getElementById('selectColaborador').options[document.getElementById('selectColaborador').selectedIndex].text;
-        const infoPrincipal = mode === 'TREINAMENTO' 
+        const infoCert = mode === 'TREINAMENTO' 
             ? `Treinamento: ${document.getElementById('selectTreinamento').options[document.getElementById('selectTreinamento').selectedIndex].text}`
             : `Experiência: ${payload.atividade_externa}`;
 
-        const detalhesAudit = `• Modo: ${mode}\n• Colaborador: ${colabNome}\n• ${infoPrincipal}\n• Nota: ${payload.nota}`;
+        const detalhesLog = `• Modo: ${mode}\n• Colaborador: ${colabNome}\n• ${infoCert}\n• Nota: ${payload.nota}`;
         
-        await DBHandler.registrarLog(session.user, "CERTIFICACAO_REGISTRO", detalhesAudit, "Registro de Homologação");
+        await DBHandler.registrarLog(
+            session.user, 
+            "REGISTRO_CERTIFICACAO", 
+            detalhesLog, 
+            "Registro de Homologação"
+        );
 
         alert("✅ Registro gravado com sucesso!");
         window.location.reload();
         
     } catch (e) {
-        alert("Erro ao gravar no banco: " + e.message);
+        alert("Erro ao salvar no banco: " + e.message);
     }
 };
