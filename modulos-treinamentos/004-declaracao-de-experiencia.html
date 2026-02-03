@@ -557,6 +557,12 @@ tr:hover td { background: #fcfdfe; }
         let currentId = null;
         let currentMode = 'CERTIFICADO';
 
+// Função para garantir que null, "" e undefined sejam tratados como iguais
+const normalizar = (val) => {
+    if (val === null || val === undefined || String(val).trim() === "") return null;
+    return String(val).trim();
+};
+        
         // --- SETUP ---
         document.addEventListener('DOMContentLoaded', async () => {
             const session = JSON.parse(localStorage.getItem('rh_session')) || { role: 'VIEWER' };
@@ -677,8 +683,12 @@ window.abrirFormulario = async (id = null, visualizar = false) => {
 
 window.salvarHomologacao = async () => {
     const session = JSON.parse(localStorage.getItem('rh_session'));
-    
-    // Captura dos novos valores
+    const btn = document.getElementById('btnSalvar');
+
+    // Função interna para tratar null, undefined e "" como idênticos na comparação
+    const normalizar = (v) => (v === null || v === undefined || String(v).trim() === "" ? null : String(v).trim());
+
+    // 1. Captura dos novos valores do formulário
     const payload = {
         colaborador_id: document.getElementById('selectColaborador').value,
         treinamento_id: document.getElementById('selectTreinamento').value,
@@ -691,50 +701,68 @@ window.salvarHomologacao = async () => {
 
     try {
         let detalhesLog = "";
+        let houveAlteracaoReal = false;
 
-        if (currentId && DADO_ORIGINAL) {
-            // LÓGICA DE COMPARAÇÃO (ANTES vs DEPOIS)
+        if (currentId && typeof DADO_ORIGINAL !== 'undefined' && DADO_ORIGINAL) {
             const alteracoes = [];
             
-            // Compara campos específicos (mapeando chaves técnicas para nomes amigáveis)
-            const campos = {
+            // Mapeamento de campos técnicos para nomes legíveis no log
+            const camposParaComparar = {
                 'instrutor': 'Origem/Instrutor',
                 'nota': 'Nota',
                 'data_homologacao': 'Data',
-                'atividade_externa': 'Tipo'
+                'atividade_externa': 'Tipo',
+                'observacoes': 'Observações/Link'
             };
 
-            for (let chave in campos) {
-                let valorAntigo = DADO_ORIGINAL[chave] || "N/A";
-                let valorNovo = payload[chave] || "N/A";
+            for (let chave in camposParaComparar) {
+                // Compara valores normalizados
+                const vAntigo = normalizar(DADO_ORIGINAL[chave]);
+                const vNovo = normalizar(payload[chave]);
 
-                if (String(valorAntigo) !== String(valorNovo)) {
-                    alteracoes.push(`${campos[chave]}: [${valorAntigo}] ➔ [${valorNovo}]`);
+                if (vAntigo !== vNovo) {
+                    alteracoes.push(`${camposParaComparar[chave]}: [${vAntigo || 'vazio'}] ➔ [${vNovo || 'vazio'}]`);
+                    houveAlteracaoReal = true;
                 }
             }
 
-            detalhesLog = alteracoes.length > 0 
-                ? `Edição de Registo:\n${alteracoes.join('\n')}` 
-                : "Edição sem alteração de valores nos campos principais.";
+            detalhesLog = houveAlteracaoReal 
+                ? `Edição de Registro:\n${alteracoes.join('\n')}` 
+                : "Edição salva sem alteração de valores.";
         } else {
-            detalhesLog = `Criação de novo registo para o Colaborador ID: ${payload.colaborador_id}`;
+            detalhesLog = `Criação de novo registro para o Colaborador ID: ${payload.colaborador_id}`;
+            houveAlteracaoReal = true;
         }
 
-        // 1. Grava no Banco
+        // Feedback visual e trava de segurança
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = "Gravando...";
+        }
+
+        // 1. Grava no Banco de Dados
         await DBHandler.salvarHomologacao({ ...(currentId ? { id: currentId } : {}), ...payload, usuario_registro: session.user });
 
-        // 2. Grava o Log com o Antes/Depois
-        await DBHandler.registrarLog(
-            session.user, 
-            currentId ? "ALTERAÇÃO_CERTIFICADO" : "INSERÇÃO_CERTIFICADO", 
-            detalhesLog, 
-            "Gestão de Certificações"
-        );
+        // 2. Grava o Log de Auditoria (apenas se for novo ou se algo mudou de fato)
+        if (houveAlteracaoReal || !currentId) {
+            await DBHandler.registrarLog(
+                session.user, 
+                currentId ? "ALTERAÇÃO_CERTIFICADO" : "INSERÇÃO_CERTIFICADO", 
+                detalhesLog, 
+                "Gestão de Certificações"
+            );
+        }
 
-        alert("✅ Operação concluída com log de auditoria!");
+        alert("✅ Registro e log processados com sucesso!");
         window.voltarParaLista();
+
     } catch (e) {
-        alert("Erro: " + e.message);
+        alert("Erro ao processar: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "GRAVAR DADOS";
+        }
     }
 };
 
@@ -779,6 +807,7 @@ window.salvarHomologacao = async () => {
     </script>
 </body>
 </html>
+
 
 
 
