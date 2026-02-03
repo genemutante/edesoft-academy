@@ -975,6 +975,8 @@ window.gerarCertificado = (id) => {
 
 
 
+
+
 window.gerarAtestado = (id) => {
     const item = DADOS_LISTA.find(i => i.id === id);
     if (!item) return alert("Registro não encontrado.");
@@ -985,11 +987,9 @@ window.gerarAtestado = (id) => {
         ? new Date(item.data_homologacao).toLocaleDateString('pt-BR') 
         : new Date().toLocaleDateString('pt-BR');
     
-    const justificativa = item.observacoes || "Validação de competência baseada em histórico profissional e evidências de desempenho prático.";
-    const aprovador = item.instrutor || "Conselho Técnico Edesoft";
-
-    // CORREÇÃO: Declarando a variável que estava faltando
-    const hashUnico = `ED-NOT-${item.id}-${new Date().getFullYear()}`;
+    const justificativa = item.observacoes || "Experiência prática comprovada no exercício das funções.";
+    const aprovador = item.instrutor || "Gestão de Talentos";
+    const hashUnico = `ED-VAL-${item.id}-${new Date().getFullYear()}`;
 
     const janelaAtestado = window.open('', '_blank');
     
@@ -998,101 +998,103 @@ window.gerarAtestado = (id) => {
         <html lang="pt-BR">
         <head>
             <meta charset="UTF-8">
-            <title>Atestado de Notório Saber - ${nomeColaborador}</title>
-            <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Crimson+Pro:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+            <title>Validação de Competência - ${nomeColaborador}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
             <style>
-                body { margin: 0; padding: 0; background: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Crimson Pro', serif; }
+                body { margin: 0; padding: 0; background: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Montserrat', sans-serif; }
                 
-                .atestado-canvas { 
+                .canvas { 
                     width: 297mm; height: 210mm; background: #fff; position: relative; 
-                    display: flex; flex-direction: column; padding: 60px 100px; box-sizing: border-box; 
-                    border: 20px solid #f8fafc; outline: 1px solid #cbd5e1;
+                    display: flex; flex-direction: column; padding: 80px; box-sizing: border-box; 
+                    border: 1px solid #e2e8f0;
                 }
 
-                .atestado-canvas::after {
-                    content: ""; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
-                    border: 2px solid #1e293b; pointer-events: none;
+                /* Detalhe lateral de cor para diferenciar do certificado */
+                .canvas::before {
+                    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 12px;
+                    background: #64748b; /* Cinza sóbrio */
                 }
 
-                .header { text-align: center; margin-bottom: 40px; }
-                .header h1 { font-family: 'Playfair Display', serif; font-size: 42px; color: #1e293b; text-transform: uppercase; margin: 0; letter-spacing: 2px; }
-                .header p { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #64748b; margin-top: 10px; letter-spacing: 5px; text-transform: uppercase; }
+                .header { border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 40px; }
+                .header h1 { font-size: 28px; color: #0f172a; margin: 0; letter-spacing: -1px; }
+                .header p { font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 5px 0 0 0; }
 
-                .content { flex: 1; text-align: justify; color: #1e293b; font-size: 20px; line-height: 1.8; }
-                .content b { color: #000; }
+                .main-text { flex: 1; font-size: 20px; color: #334155; line-height: 1.6; }
+                .main-text b { color: #0f172a; }
 
-                .justificativa-box { 
-                    background: #f8fafc; border: 1px dashed #cbd5e1; padding: 20px; 
-                    margin: 30px 0; font-size: 16px; font-style: italic; color: #475569;
+                .box-evidencia { 
+                    margin: 40px 0; padding: 25px; background: #f8fafc; 
+                    border-radius: 8px; border-left: 4px solid #cbd5e1;
                 }
+                .box-evidencia small { display: block; color: #94a3b8; text-transform: uppercase; font-weight: 800; font-size: 10px; margin-bottom: 10px; }
 
-                .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; }
+                .footer { display: flex; justify-content: space-between; align-items: flex-end; }
                 
-                .signature-area { text-align: center; width: 300px; }
-                .signature-line { border-top: 1px solid #1e293b; margin-top: 10px; padding-top: 10px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; }
+                .signature-box { text-align: left; }
+                .line { border-top: 2px solid #0f172a; width: 250px; margin-bottom: 8px; }
+                .label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
 
-                .dry-seal {
-                    width: 120px; height: 120px; border: 2px solid #e2e8f0; border-radius: 50%;
-                    display: flex; align-items: center; justify-content: center;
-                    font-family: 'Montserrat'; font-size: 8px; text-align: center; color: #cbd5e1;
-                    text-transform: uppercase; transform: rotate(-15deg);
+                .seal-simple {
+                    border: 2px solid #f1f5f9; padding: 15px; border-radius: 8px;
+                    color: #cbd5e1; font-weight: 800; font-size: 12px; text-transform: uppercase;
                 }
 
                 @media print { 
                     body { background: white; } 
                     @page { size: A4 landscape; margin: 0; } 
-                    .atestado-canvas { border: none; outline: none; -webkit-print-color-adjust: exact; } 
+                    .canvas { border: none; } 
                 }
             </style>
         </head>
         <body onload="window.print()">
-            <div class="atestado-canvas">
+            <div class="canvas">
                 <div class="header">
-                    <h1>Atestado de Notório Saber</h1>
-                    <p>Reconhecimento de Competência Profissional</p>
+                    <p>Edesoft Academy // Gestão de Talentos</p>
+                    <h1>Atestado de Equivalência Técnica</h1>
                 </div>
 
-                <div class="content">
-                    A instituição <b>EDESOFT ACADEMY</b>, no uso de suas atribuições técnicas e pedagógicas, atesta para os devidos fins que 
-                    <b>${nomeColaborador.toUpperCase()}</b> demonstrou, através de rigorosa avaliação de seu histórico profissional e evidências práticas, 
-                    plena proficiência e domínio na área de <b>${nomeCurso}</b>.
-                    
-                    <div class="justificativa-box">
-                        <b>Parecer Técnico:</b> "${justificativa}"
-                    </div>
+                <div class="main-text">
+                    Declaramos para os devidos fins que o colaborador <b>${nomeColaborador}</b> teve sua experiência profissional 
+                    validada pela plataforma <b>Academy</b>, demonstrando proficiência prática integral nos temas abordados pelo treinamento:
+                    <br><br>
+                    <b>${nomeCurso.toUpperCase()}</b>
+                    <br><br>
+                    Esta validação reconhece que o histórico profissional do colaborador supre a necessidade de realização do curso supracitado, 
+                    conferindo-lhe o status de <b>Habilitado</b> por equivalência de funções.
+                </div>
 
-                    Este documento possui equivalência plena à certificação do referido curso nesta plataforma, isentando o profissional de obrigatoriedades acadêmicas sobre o tema e validando seu conhecimento como <b>Notório Saber</b>.
+                <div class="box-evidencia">
+                    <small>Fundamentação da Homologação</small>
+                    "${justificativa}"
                 </div>
 
                 <div class="footer">
-                    <div class="dry-seal">
-                        Edesoft Academy<br>Corporate Validation<br>Est. 2001
+                    <div class="signature-box">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 5px;">${aprovador}</div>
+                        <div class="line"></div>
+                        <div class="label">Validação Institucional</div>
                     </div>
 
-                    <div style="text-align: center; font-size: 14px;">
-                        Emitido em ${dataEmissao}<br>
-                        São Paulo - SP
+                    <div style="text-align: right;">
+                        <div class="seal-simple">Autenticidade Verificada</div>
+                        <div class="label" style="margin-top: 10px;">ID: ${hashUnico}</div>
+                        <div class="label" style="font-size: 9px; font-weight: 400;">Emissão: ${dataEmissao}</div>
                     </div>
-
-                    <div class="signature-area">
-                        <div style="font-family: 'Playfair Display'; font-size: 22px;">${aprovador}</div>
-                        <div class="signature-line">VALIDADOR RESPONSÁVEL</div>
-                    </div>
-                </div>
-                
-                <div style="position: absolute; bottom: 30px; left: 100px; font-size: 10px; color: #94a3b8; font-family: monospace;">
-                    Cod. Autenticidade: ${btoa(hashUnico).substring(0, 20).toUpperCase()}
                 </div>
             </div>
         </body>
         </html>
     `);
     janelaAtestado.document.close();
-};;        
+};
+
+
+        
         
     </script>
 </body>
 </html>
+
 
 
 
