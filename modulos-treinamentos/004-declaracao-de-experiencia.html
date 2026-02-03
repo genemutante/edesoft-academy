@@ -330,22 +330,27 @@ tr:hover td { background: #fcfdfe; }
 
 
 <div class="filter-bar">
-  <div class="filter-group" style="flex: 1;">
-    <label>Pesquisar Colaborador ou Curso</label>
-    <input type="text" id="searchBox" class="control-slim" placeholder="Buscar..." onkeyup="window.filtrar()">
-  </div>
-  <div class="filter-group" style="width: 160px;">
-    <label>Tipo</label>
-    <select id="filterTipo" class="control-slim" onchange="window.filtrar()">
-      <option value="TODOS">Todos</option>
-      <option value="CERTIFICADO">Certificado</option>
-      <option value="NOTORIO">Notório</option>
-    </select>
-  </div>
-  <div style="display: flex; align-items: flex-end;">
-    <button class="btn btn-outline" onclick="window.limparFiltros()">LIMPAR</button>
+  <div class="filter-inner">
+    <div class="filter-group" style="flex: 1;">
+      <label>Pesquisar Colaborador ou Curso</label>
+      <input type="text" id="searchBox" class="control-slim" placeholder="Buscar..." onkeyup="window.filtrar()">
+    </div>
+
+    <div class="filter-group" style="width: 160px;">
+      <label>Tipo</label>
+      <select id="filterTipo" class="control-slim" onchange="window.filtrar()">
+        <option value="TODOS">Todos</option>
+        <option value="CERTIFICADO">Certificado</option>
+        <option value="NOTORIO">Notório</option>
+      </select>
+    </div>
+
+    <div style="display: flex; align-items: flex-end;">
+      <button class="btn btn-outline" onclick="window.limparFiltros()">LIMPAR</button>
+    </div>
   </div>
 </div>
+
 
         
 
@@ -616,6 +621,7 @@ tr:hover td { background: #fcfdfe; }
     </script>
 </body>
 </html>
+
 
 
 
