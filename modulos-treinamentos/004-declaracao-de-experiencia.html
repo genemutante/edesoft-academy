@@ -634,13 +634,20 @@ tr:hover td { background: #fcfdfe; }
         };
 
         // --- LÓGICA FORMULÁRIO ---
-        window.selectMode = (mode, el) => {
-            currentMode = mode.toUpperCase();
-            document.querySelectorAll('.mode-card').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('form-certificado').style.display = mode === 'certificado' ? 'block' : 'none';
-            document.getElementById('form-notorio').style.display = mode === 'notorio' ? 'block' : 'none';
-        };
+        window.selectMode = (mode) => {
+  currentMode = mode.toUpperCase();
+
+  // Ativa apenas o botão correspondente
+  document.querySelectorAll('.evidence-card').forEach(btn => {
+    const isActive = btn.dataset.mode === mode;
+    btn.classList.toggle('active', isActive);
+  });
+
+  // Alterna o formulário
+  document.getElementById('form-certificado').style.display = mode === 'certificado' ? 'block' : 'none';
+  document.getElementById('form-notorio').style.display = mode === 'notorio' ? 'block' : 'none';
+};
+
 
         window.toggleInstituicao = (check) => {
             const input = document.getElementById('certInstituicao');
@@ -715,6 +722,7 @@ tr:hover td { background: #fcfdfe; }
     </script>
 </body>
 </html>
+
 
 
 
