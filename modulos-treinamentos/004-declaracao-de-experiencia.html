@@ -23,8 +23,24 @@
         #view-lista { flex: 1; display: none; flex-direction: column; overflow: hidden; }
         #view-lista.active { display: flex; }
 
-        .filter-bar { background: var(--white); padding: 8px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-bar {
+  background: var(--white);
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap; /* ADICIONADO: permite quebra de linha */
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+  flex: 1 1 220px; /* ADICIONADO: permite que os grupos cresçam ou encolham responsivamente */
+}
+
         .filter-group.grow { flex: 1; }
         .filter-group label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
         
@@ -79,21 +95,27 @@
     </header>
 
     <div id="view-lista" class="active">
-        <div class="filter-bar">
-            <div class="filter-group grow">
-                <label>Pesquisar Colaborador ou Competência</label>
-                <input type="text" id="searchBox" class="control-slim" placeholder="Ex: João Silva ou Excel..." onkeyup="window.filtrar()">
-            </div>
-            <div class="filter-group" style="width: 140px;">
-                <label>Tipo</label>
-                <select id="filterTipo" class="control-slim" onchange="window.filtrar()">
-                    <option value="TODOS">Todos</option>
-                    <option value="CERTIFICADO">Certificado</option>
-                    <option value="NOTORIO">Notório</option>
-                </select>
-            </div>
-            <button class="btn btn-outline" style="height: 32px;" onclick="window.limparFiltros()">Limpar</button>
-        </div>
+<div class="filter-bar">
+  <div class="filter-group grow">
+    <label>Pesquisar Colaborador ou Competência</label>
+    <input type="text" id="searchBox" class="control-slim" placeholder="Ex: João Silva ou Excel..." onkeyup="window.filtrar()">
+  </div>
+
+  <div class="filter-group" style="max-width: 160px;">
+    <label>Tipo</label>
+    <select id="filterTipo" class="control-slim" onchange="window.filtrar()">
+      <option value="TODOS">Todos</option>
+      <option value="CERTIFICADO">Certificado</option>
+      <option value="NOTORIO">Notório</option>
+    </select>
+  </div>
+
+  <div class="filter-group" style="flex: 0 0 auto;">
+    <label style="opacity: 0;">Limpar</label> <!-- espaço para alinhamento -->
+    <button class="btn btn-outline" style="height: 32px;" onclick="window.limparFiltros()">Limpar</button>
+  </div>
+</div>
+
         
         <div class="table-area">
             <table id="homologTable">
@@ -360,3 +382,4 @@
     </script>
 </body>
 </html>
+
