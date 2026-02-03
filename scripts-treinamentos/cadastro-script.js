@@ -4,6 +4,7 @@ import { DBHandler } from "../bd-treinamentos/db-handler.js";
 let COLABS = [];
 let CARGOS = [];
 let CARGOS_MAP = new Map();
+let GESTORES_MAP = new Map(); // Adicionado para logs legíveis
 let sortState = { key: "nome", asc: true };
 
 let currentId = null;
@@ -40,7 +41,6 @@ function showView(viewList) {
 function setFormEnabled(enabled) {
   const form = $("viewForm");
   form.querySelectorAll("input, select, textarea").forEach((el) => {
-    // não desabilita hidden
     if (el.type === "hidden") return;
     el.disabled = !enabled;
   });
@@ -49,7 +49,6 @@ function setFormEnabled(enabled) {
 // ---------- Boot ----------
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    // sessão já é verificada pelo HTML, mas deixo “safe”
     const sessionRaw = localStorage.getItem("rh_session");
     if (!sessionRaw) return;
 
@@ -59,7 +58,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     showView(true);
     renderizarTabela();
 
-    // ✅ garante a primeira aba ativa quando abrir formulário
     const firstTabBtn = document.querySelector(".tab-link");
     if (firstTabBtn) firstTabBtn.click();
     
@@ -74,20 +72,20 @@ async function carregarCombos() {
   CARGOS = await DBHandler.listarCargos();
   CARGOS_MAP = new Map(CARGOS.map((c) => [Number(c.id), c.nome]));
 
-  // combo do formulário
   const selCargo = $("cargoAtualId");
   selCargo.innerHTML = `<option value="">Selecione...</option>` + CARGOS.map(
     (c) => `<option value="${c.id}">${c.nome}</option>`
   ).join("");
 
-  // filtro de cargo
   const filtroCargo = $("filtroCargo");
   filtroCargo.innerHTML =
     `<option value="todos">Cargo: Todos</option>` +
     CARGOS.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
 
-  // Gestores: (usa a própria lista de colaboradores como base)
+  // Gestores
   const gestores = await DBHandler.listarColaboradores({ somenteAtivos: false });
+  GESTORES_MAP = new Map(gestores.map(g => [Number(g.id), g.nome])); // Mapeado para o Log
+  
   const selGestor = $("gestorId");
   selGestor.innerHTML =
     `<option value="">Selecione...</option>` +
@@ -101,7 +99,6 @@ async function carregarCombos() {
 async function carregarLista() {
   COLABS = await DBHandler.listarColaboradores({ somenteAtivos: false });
 
-  // filtro depto (dinâmico)
   const deptos = Array.from(
     new Set(COLABS.map((c) => c.departamento).filter(Boolean))
   ).sort((a, b) => a.localeCompare(b));
@@ -121,55 +118,36 @@ function applyFilters(list) {
 
   return list.filter((c) => {
     const ativo = isAtivo(c);
-
     if (fStatus === "ativos" && !ativo) return false;
     if (fStatus === "desligados" && ativo) return false;
-
-    if (fDepto && fDepto !== "todos" && (c.departamento || "") !== fDepto)
-      return false;
-
+    if (fDepto && fDepto !== "todos" && (c.departamento || "") !== fDepto) return false;
     const cargoId = Number(c.cargo_atual_id ?? c.cargoAtualId ?? 0);
-    if (fCargo && fCargo !== "todos" && cargoId !== Number(fCargo))
-      return false;
+    if (fCargo && fCargo !== "todos" && cargoId !== Number(fCargo)) return false;
 
     if (q) {
-      const blob = [
-        c.nome,
-        getCargoNome(c),
-        c.departamento,
-        c.cpf,
-        c.email_empresarial,
-        c.email_pessoal,
-      ]
-        .map(safeLower)
-        .join(" ");
+      const blob = [c.nome, getCargoNome(c), c.departamento, c.cpf].map(safeLower).join(" ");
       if (!blob.includes(q)) return false;
     }
-
     return true;
   });
 }
 
 function applySort(list) {
   const { key, asc } = sortState;
-
   const sorted = list.slice().sort((a, b) => {
     if (key === "nome") return (a.nome || "").localeCompare(b.nome || "");
     if (key === "cargo") return getCargoNome(a).localeCompare(getCargoNome(b));
     if (key === "status") return Number(isAtivo(b)) - Number(isAtivo(a));
     return 0;
   });
-
   return asc ? sorted : sorted.reverse();
 }
 
 function updateSortIndicators() {
   ["nome", "cargo", "status"].forEach((k) => {
     const el = $(`sort-${k}`);
-    if (!el) return;
-    el.textContent = "";
+    if (el) el.textContent = "";
   });
-
   const target = $(`sort-${sortState.key}`);
   if (target) target.textContent = sortState.asc ? "▲" : "▼";
 }
@@ -188,8 +166,7 @@ function montarLinha(colab) {
     <td style="text-align:right;">
       <button class="btn-icon-action" onclick="visualizar(${colab.id})">👁️</button>
       <button class="btn-icon-action admin-only" onclick="editar(${colab.id})">✏️</button>
-      ${
-        isAtivo(colab)
+      ${isAtivo(colab)
           ? `<button class="btn-icon-action admin-only" onclick="abrirModalDesligamento(${colab.id})">🗑️</button>`
           : `<button class="btn-icon-action admin-only" onclick="reativar(${colab.id})">♻️</button>`
       }
@@ -198,17 +175,13 @@ function montarLinha(colab) {
   return tr;
 }
 
-// ---------- Funções globais exigidas pelo HTML ----------
 window.renderizarTabela = function renderizarTabela() {
   const tbody = document.querySelector("#colabTable tbody");
   if (!tbody) return;
-
   let list = applyFilters(COLABS);
   list = applySort(list);
-
   tbody.innerHTML = "";
   list.forEach((c) => tbody.appendChild(montarLinha(c)));
-
   $("contadorRegistros").textContent = `${list.length} registro(s)`;
   updateSortIndicators();
 };
@@ -228,110 +201,57 @@ window.ordenar = function ordenar(key) {
 };
 
 // ---------- Tabs ----------
-// ---------- Tabs (FIX) ----------
 window.openTab = function openTab(tabId, btn) {
-  // 1) esconde todos os conteúdos
   document.querySelectorAll(".tab-content").forEach((t) => {
     t.classList.remove("active");
     t.style.display = "none";
   });
-
-  // 2) desativa todos os botões
-  document.querySelectorAll(".tab-link").forEach((b) => {
-    b.classList.remove("active");
-  });
-
-  // 3) ativa o conteúdo alvo
-  const target = document.getElementById(tabId);
-  if (!target) {
-    console.warn("Tab não encontrada:", tabId);
-    return;
+  document.querySelectorAll(".tab-link").forEach((b) => b.classList.remove("active"));
+  const target = $(tabId);
+  if (target) {
+    target.classList.add("active");
+    target.style.display = "block";
   }
-  target.classList.add("active");
-  target.style.display = "block";
-
-  // 4) ativa o botão clicado
   if (btn) btn.classList.add("active");
 };
 
-
-// ---------- Navegação / Form ----------
+// ---------- Form Context ----------
 function limparForm() {
   currentId = null;
+  window.originalColabData = null; // Reseta auditoria
   $("colabId").value = "";
-
-  // limpa inputs/selects do form
   $("mainForm").querySelectorAll("input, select, textarea").forEach((el) => {
     if (el.type === "checkbox") el.checked = false;
-    else if (el.type === "hidden") el.value = "";
     else el.value = "";
   });
-
-  // defaults
   $("nacionalidade").value = "Brasileira";
   $("moeda").value = "BRL";
 }
 
 function setModoForm(mode) {
-  // Validação de modo
-  if (!["view", "edit", "new"].includes(mode)) {
-    console.warn("❗Modo inválido passado para setModoForm:", mode);
-    mode = "view";
-  }
-
-  console.log("⚙️ Modo atual:", mode);
-
   const isAdmin = document.body.classList.contains("is-admin");
   const podeEditar = isAdmin && (mode === "edit" || mode === "new");
 
-  // --- Botões principais ---
-  const btnSalvar = $("btnSalvar");
-  const btnEditar = $("btnIrParaEdicao");
-  const btnExcluir = $("btnExcluir");
-
-  if (btnSalvar) {
-    btnSalvar.style.display = podeEditar ? "inline-flex" : "none";
+  if ($("btnSalvar")) $("btnSalvar").style.display = podeEditar ? "inline-flex" : "none";
+  if ($("btnIrParaEdicao")) {
+    const deveMostrar = isAdmin && mode === "view" && !!currentId;
+    $("btnIrParaEdicao").style.setProperty("display", deveMostrar ? "inline-flex" : "none", "important");
   }
 
-  // Corrige conflito com CSS !important
-  if (btnEditar) {
-    const deveMostrarEditar = isAdmin && mode === "view" && !!currentId;
-
-    btnEditar.style.setProperty(
-      "display",
-      deveMostrarEditar ? "inline-flex" : "none",
-      "important"
-    );
-
-    // Logs detalhados
-    console.log("🔎 isAdmin:", isAdmin);
-    console.log("🔎 currentId:", currentId);
-    console.log("🔎 Deve mostrar botão editar?", deveMostrarEditar);
-    console.log("🔧 btnEditar.style.display:", btnEditar.style.display);
-  }
-
-  if (btnExcluir) {
-    btnExcluir.style.display = "none";
-  }
-
-  // --- Habilitar/desabilitar campos ---
   setFormEnabled(podeEditar);
 
-  // --- Badge de status ---
   const badge = $("formStatusBadge");
   if (badge) {
-    if (!currentId) {
-      badge.style.display = "none";
-    } else {
+    if (!currentId) badge.style.display = "none";
+    else {
       const col = COLABS.find((x) => x.id === currentId);
       const ativo = col ? isAtivo(col) : true;
       badge.style.display = "inline-flex";
       badge.textContent = ativo ? "ATIVO" : "DESLIGADO";
+      badge.className = `status-pill ${ativo ? "status-ok" : "status-off"}`;
     }
   }
 }
-
-
 
 window.novoColaborador = function novoColaborador() {
   limparForm();
@@ -350,60 +270,24 @@ window.ativarModoEdicao = function ativarModoEdicao() {
   setModoForm("edit");
 };
 
-// ---------- View/Edit ----------
-window.visualizar = async function visualizar(id) {
-  await abrirFicha(id, "view");
-};
-
-window.editar = async function editar(id) {
-  await abrirFicha(id, "edit");
-};
+window.visualizar = id => abrirFicha(id, "view");
+window.editar = id => abrirFicha(id, "edit");
 
 async function abrirFicha(id, mode = "view") {
-  // 1. Busca os dados e define o estado
   const colab = await DBHandler.buscarColaboradorPorId(id);
   if (!colab) return;
   
   currentId = colab.id;
+  window.originalColabData = JSON.parse(JSON.stringify(colab)); // Deep copy para auditoria
 
-  // 2. Atualiza o Header Persistente (Nome e Badge de Status)
-  const headerNome = $("headerNome");
-  const statusBadge = $("formStatusBadge");
-
-  if (headerNome) {
-    headerNome.textContent = colab.nome || "Novo Colaborador";
-  }
-
-  if (statusBadge) {
-    const ativo = isAtivo(colab); // Usa sua função utilitária isAtivo
-    statusBadge.textContent = ativo ? "ATIVO" : "INATIVO";
-    statusBadge.className = `badge-status ${ativo ? "status-ativo" : "status-inativo"}`;
-    statusBadge.style.display = "inline-block";
-  }
-
-  // 3. Preenche os inputs do formulário
   preencherForm(colab);
-
-  // 4. Sincronização em tempo real (Nome no Header acompanha o Input)
-  const inputNome = $("inpNome"); // Certifique-se que o ID do input de nome é 'inpNome'
-  if (inputNome && headerNome) {
-    inputNome.oninput = (e) => {
-      headerNome.textContent = e.target.value || "Novo Colaborador";
-    };
-  }
-
-  // 5. Interface e Modos
   $("formTitle").textContent = mode === "edit" ? "Editar Colaborador" : "Ficha do Colaborador";
-
-  showView(false); // Alterna para a tela do formulário
-  setModoForm(mode); // Configura se os campos são editáveis ou apenas leitura
+  showView(false);
+  setModoForm(mode);
 }
-
 
 function preencherForm(c) {
   $("colabId").value = c.id ?? "";
-
-  // TAB Dados
   $("nome").value = c.nome ?? "";
   $("cpf").value = c.cpf ?? "";
   $("dataNascimento").value = c.data_nascimento ?? "";
@@ -417,21 +301,17 @@ function preencherForm(c) {
   $("nomePai").value = c.nome_pai ?? "";
   $("pcd").checked = !!c.pcd;
   $("candidato").checked = !!c.candidato;
-
-  // TAB Contrato
   $("dataAdmissao").value = c.data_admissao ?? "";
   $("cargoAtualId").value = c.cargo_atual_id ?? "";
   $("departamento").value = c.departamento ?? "";
   $("matricula").value = c.matricula ?? "";
-  $("tipoContrato").value = c.tipo_contrato ?? $("tipoContrato").value;
+  $("tipoContrato").value = c.tipo_contrato ?? "CLT Indeterminado";
   $("salario").value = c.salario ?? "";
   $("moeda").value = c.moeda ?? "BRL";
   $("unidade").value = c.unidade ?? "";
   $("gestorId").value = c.gestor_id ?? "";
   $("emailEmpresarial").value = c.email_empresarial ?? "";
   $("turno").value = c.turno ?? "";
-
-  // TAB Docs
   $("rg").value = c.rg ?? "";
   $("orgaoExpedidor").value = c.orgao_expedidor ?? "";
   $("dataExpedicao").value = c.data_expedicao ?? "";
@@ -442,8 +322,6 @@ function preencherForm(c) {
   $("zonaEleitoral").value = c.zona_eleitoral ?? "";
   $("reservista").value = c.reservista ?? "";
   $("cnh").value = c.cnh ?? "";
-
-  // TAB Endereço
   $("cep").value = c.cep ?? "";
   $("logradouro").value = c.logradouro ?? "";
   $("numero").value = c.numero ?? "";
@@ -454,8 +332,6 @@ function preencherForm(c) {
   $("emailPessoal").value = c.email_pessoal ?? "";
   $("celular").value = c.celular ?? "";
   $("telefoneEmergencia").value = c.telefone_emergencia ?? "";
-
-  // TAB Bancários
   $("banco").value = c.banco ?? "";
   $("agencia").value = c.agencia ?? "";
   $("contaCorrente").value = c.conta_corrente ?? "";
@@ -467,7 +343,6 @@ function coletarPayload() {
     cpf: onlyDigits($("cpf").value),
     data_admissao: $("dataAdmissao").value || null,
     cargo_atual_id: $("cargoAtualId").value ? Number($("cargoAtualId").value) : null,
-
     data_nascimento: $("dataNascimento").value || null,
     genero: $("genero").value || null,
     estado_civil: $("estadoCivil").value || null,
@@ -479,7 +354,6 @@ function coletarPayload() {
     nome_pai: $("nomePai").value || null,
     pcd: !!$("pcd").checked,
     candidato: !!$("candidato").checked,
-
     departamento: $("departamento").value || null,
     matricula: $("matricula").value || null,
     tipo_contrato: $("tipoContrato").value || null,
@@ -489,7 +363,6 @@ function coletarPayload() {
     gestor_id: $("gestorId").value ? Number($("gestorId").value) : null,
     email_empresarial: $("emailEmpresarial").value || null,
     turno: $("turno").value || null,
-
     rg: $("rg").value || null,
     orgao_expedidor: $("orgaoExpedidor").value || null,
     data_expedicao: $("dataExpedicao").value || null,
@@ -500,7 +373,6 @@ function coletarPayload() {
     zona_eleitoral: $("zonaEleitoral").value || null,
     reservista: $("reservista").value || null,
     cnh: $("cnh").value || null,
-
     cep: $("cep").value || null,
     logradouro: $("logradouro").value || null,
     numero: $("numero").value || null,
@@ -511,13 +383,11 @@ function coletarPayload() {
     email_pessoal: $("emailPessoal").value || null,
     celular: $("celular").value || null,
     telefone_emergencia: $("telefoneEmergencia").value || null,
-
     banco: $("banco").value || null,
     agencia: $("agencia").value || null,
     conta_corrente: $("contaCorrente").value || null,
   };
 
-  // regras mínimas (batem com seus NOT NULL que já te deram erro)
   if (!payload.nome) throw new Error("Nome é obrigatório.");
   if (!payload.cpf) throw new Error("CPF é obrigatório.");
   if (!payload.data_admissao) throw new Error("Data de admissão é obrigatória.");
@@ -526,15 +396,55 @@ function coletarPayload() {
   return payload;
 }
 
+// ---------- Salvar com Auditoria ----------
 window.salvarColaborador = async function salvarColaborador() {
   try {
+    const session = JSON.parse(localStorage.getItem("rh_session"));
     const payload = coletarPayload();
+    let logDetalhes = "";
+    let acao = currentId ? "EDITAR_COLABORADOR" : "CRIAR_COLABORADOR";
 
-    if (!currentId) {
-      await DBHandler.inserirColaborador(payload);
+    // Lógica de Diff para Auditoria
+    if (currentId && window.originalColabData) {
+      const camposMonitorados = {
+        'nome': 'Nome',
+        'cpf': 'CPF',
+        'data_admissao': 'Admissão',
+        'cargo_atual_id': { label: 'Cargo', isSelect: true, map: CARGOS_MAP },
+        'salario': 'Salário',
+        'departamento': 'Depto',
+        'gestor_id': { label: 'Gestor', isSelect: true, map: GESTORES_MAP },
+        'unidade': 'Unidade',
+        'tipo_contrato': 'Contrato'
+      };
+
+      let mudancas = [];
+      for (const [key, config] of Object.entries(camposMonitorados)) {
+        const label = typeof config === 'string' ? config : config.label;
+        let valorNovo = payload[key] ?? "—";
+        let valorAntigo = window.originalColabData[key] ?? "—";
+
+        if (config.isSelect) {
+          valorNovo = config.map.get(Number(valorNovo)) || "—";
+          valorAntigo = config.map.get(Number(valorAntigo)) || "—";
+        }
+
+        if (String(valorNovo).trim() !== String(valorAntigo).trim()) {
+          mudancas.push(`• ${label}: ${valorAntigo} ➔ ${valorNovo}`);
+        }
+      }
+      logDetalhes = mudancas.length > 0 ? mudancas.join('\n') : "Nenhuma alteração detectada.";
     } else {
-      await DBHandler.atualizarColaborador(currentId, payload);
+      const cargoNome = CARGOS_MAP.get(payload.cargo_atual_id) || "—";
+      logDetalhes = `• Admissão de Novo Colaborador\n• Nome: ${payload.nome}\n• Cargo: ${cargoNome}`;
     }
+
+    // Execução
+    if (!currentId) await DBHandler.inserirColaborador(payload);
+    else await DBHandler.atualizarColaborador(currentId, payload);
+
+    // Registro no Log de Auditoria
+    await DBHandler.registrarLog(session.user, acao, logDetalhes, "Gestão de Colaboradores");
 
     await carregarLista();
     showView(true);
@@ -549,57 +459,64 @@ window.salvarColaborador = async function salvarColaborador() {
 // ---------- Desligamento / Reativação ----------
 let modalTargetId = null;
 
-window.abrirModalDesligamento = function abrirModalDesligamento(id) {
+window.abrirModalDesligamento = id => {
   modalTargetId = id;
   $("modalDataDemissao").value = new Date().toISOString().slice(0, 10);
   $("modalMotivo").value = "";
   $("modalDesligamento").style.display = "flex";
 };
 
-window.fecharModalDesligamento = function fecharModalDesligamento() {
+window.fecharModalDesligamento = () => {
   $("modalDesligamento").style.display = "none";
   modalTargetId = null;
 };
 
-window.confirmarDesligamento = async function confirmarDesligamento() {
+window.confirmarDesligamento = async () => {
   try {
     if (!modalTargetId) return;
+    const session = JSON.parse(localStorage.getItem("rh_session"));
+    const colab = COLABS.find(c => c.id === modalTargetId);
+    const dataD = $("modalDataDemissao").value;
+    const motivo = $("modalMotivo").value || "Não informado";
 
     await DBHandler.desativarColaborador(modalTargetId, {
-      dataDemissao: $("modalDataDemissao").value,
-      motivoDemissao: $("modalMotivo").value || null,
+      dataDemissao: dataD,
+      motivoDemissao: motivo,
     });
+
+    await DBHandler.registrarLog(session.user, "DESLIGAR_COLABORADOR", `• Colaborador: ${colab.nome}\n• Data: ${fmtDateBR(dataD)}\n• Motivo: ${motivo}`, "Gestão de Colaboradores");
 
     fecharModalDesligamento();
     await carregarLista();
     renderizarTabela();
   } catch (e) {
-    console.error(e);
-    alert("Erro ao desligar:\n" + (e.message || e));
+    alert("Erro ao desligar: " + (e.message || e));
   }
 };
 
-window.reativar = async function reativar(id) {
+window.reativar = async id => {
   try {
+    const session = JSON.parse(localStorage.getItem("rh_session"));
+    const colab = COLABS.find(c => c.id === id);
+    
     await DBHandler.reativarColaborador(id);
+    await DBHandler.registrarLog(session.user, "REATIVAR_COLABORADOR", `• Colaborador: ${colab.nome} foi reativado no sistema.`, "Gestão de Colaboradores");
+
     await carregarLista();
     renderizarTabela();
   } catch (e) {
-    console.error(e);
-    alert("Erro ao reativar:\n" + (e.message || e));
+    alert("Erro ao reativar: " + (e.message || e));
   }
 };
 
 // ---------- ViaCEP ----------
-window.buscarCep = async function buscarCep(cep) {
+window.buscarCep = async cep => {
   try {
     const clean = onlyDigits(cep);
     if (clean.length !== 8) return;
-
     const r = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
     const j = await r.json();
     if (j.erro) return;
-
     $("logradouro").value = j.logradouro || "";
     $("bairro").value = j.bairro || "";
     $("cidade").value = j.localidade || "";
@@ -608,10 +525,3 @@ window.buscarCep = async function buscarCep(cep) {
     console.warn("ViaCEP falhou:", e);
   }
 };
-
-
-
-
-
-
-
