@@ -27,23 +27,19 @@
         .footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 12px; padding-top: 40px; }
         .btn { padding: 12px 28px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
     </style>
 </head>
 <body>
 <div class="container">
-  
     <aside class="sidebar">
         <div>
             <div class="section-title">1. Configuração do Registro</div>
             <label>Colaborador</label>
             <select id="selectColaborador"><option value="">Carregando...</option></select>
-            
-            <div style="margin-top: 20px;">
-                <label>Competência Alvo (Catálogo)</label>
-                <select id="selectTreinamento"><option value="">Carregando...</option></select>
-            </div>
+            <label style="margin-top: 20px;">Curso / Competência Alvo</label>
+            <select id="selectTreinamento"><option value="">Carregando catálogo...</option></select>
         </div>
-
         <div>
             <div class="section-title">2. Tipo de Evidência</div>
             <div id="btn-cert" class="evidence-button active" onclick="selectMode('certificado', this)">
@@ -99,14 +95,8 @@
                 </div>
             </div>
             <div class="row">
-                <div>
-                    <label>Evidências Consultadas</label>
-                    <input type="text" id="notorioEvidencias" placeholder="Ex: Teste prático, Entrevista...">
-                </div>
-                <div>
-                    <label>Aprovador Técnico</label>
-                    <input type="text" id="notorioAprovador" placeholder="Nome do Gestor">
-                </div>
+                <div><label>Evidências Consultadas</label><input type="text" id="notorioEvidencias" placeholder="Ex: Teste prático, Entrevista..."></div>
+                <div><label>Aprovador Técnico</label><input type="text" id="notorioAprovador" placeholder="Nome do Gestor"></div>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="checkRH">
@@ -116,38 +106,11 @@
 
         <div class="footer">
             <button class="btn btn-outline" onclick="window.location.reload()">Cancelar</button>
-            <button class="btn btn-primary" id="btnSalvar" onclick="salvarHomologacao()">Finalizar Homologação</button>
+            <button class="btn btn-primary" id="btnSalvar" onclick="salvarHomologacao()">Registrar Homologação</button>
         </div>
     </main>
 </div>
 
 <script type="module" src="../scripts-treinamentos/declaracao-script.js"></script>
-<script>
-    // Funções de UI acessíveis globalmente
-    window.selectMode = function(mode, el) {
-        window.currentMode = mode;
-        document.querySelectorAll('.evidence-button').forEach(btn => btn.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('form-certificado').style.display = (mode === 'certificado') ? 'block' : 'none';
-        document.getElementById('form-notorio').style.display = (mode === 'notorio') ? 'block' : 'none';
-        document.getElementById('main-title').textContent = mode === 'certificado' ? '3. Detalhes da Homologação (Certificado)' : '3. Parecer de Notório Saber';
-    };
-
-    window.toggleInstituicao = function(isEdesoft) {
-        const input = document.getElementById('certInstituicao');
-        input.value = isEdesoft ? "Edesoft-Academy" : "";
-        input.readOnly = isEdesoft;
-        if(!isEdesoft) input.focus();
-    };
-
-    window.toggleNota = function(isNA) {
-        const input = document.getElementById('certNota');
-        input.value = "";
-        input.readOnly = isNA;
-        input.placeholder = isNA ? "N/A" : "0.0";
-        if(!isNA) input.focus();
-    };
-</script>
 </body>
 </html>
-
