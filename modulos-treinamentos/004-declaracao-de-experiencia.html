@@ -22,50 +22,82 @@
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { margin: 0; background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* HEADER SLIM */
         .app-header { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; justify-content: space-between; flex-shrink: 0; }
         .header-title { font-size: 16px; font-weight: 800; color: var(--primary); letter-spacing: -0.02em; }
 
-        /* --- VISÃO LISTA --- */
         #view-lista { flex: 1; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn 0.2s ease; }
-        .filter-bar { background: var(--white); padding: 10px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 15px; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+
+        /* FILTROS */
+        .filter-bar {
+            background: var(--white);
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 220px;
+            flex: 1;
+        }
+
         .filter-group label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-        .search-input { flex: 1; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: #f1f5f9; }
-        .filter-select { width: 160px; height: 34px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: white; font-size: 13px; }
-        
-        /* TABELA COMPACTA */
+
+        .search-input,
+        .filter-select {
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: #f1f5f9;
+        }
+
+        .filter-select { background: white; }
+
+        /* TABELA */
         .table-container { flex: 1; overflow: auto; padding: 16px 24px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--white); border-radius: 8px; border: 1px solid var(--border); }
         th { background: #f8fafc; text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
         td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; line-height: 1.2; }
         tr:hover td { background: #fcfdfe; }
 
-        /* BOTÕES DE AÇÃO COLORIDOS */
-        .btn-action { width: 30px; height: 30px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s; margin-left: 4px; }
+        /* AÇÕES SEM QUEBRA */
+        .actions-cell {
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
+            white-space: nowrap;
+            min-width: 110px;
+        }
+
+        .btn-action {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
         .btn-view { background: #eff6ff; color: var(--view-blue); border-color: #dbeafe; }
         .btn-view:hover { background: var(--view-blue); color: white; }
+
         .btn-edit { background: #f5f3ff; color: var(--edit-purple); border-color: #ede9fe; }
         .btn-edit:hover { background: var(--edit-purple); color: white; }
+
         .btn-delete { background: #fef2f2; color: var(--delete-red); border-color: #fee2e2; }
         .btn-delete:hover { background: var(--delete-red); color: white; }
 
-        /* --- VISÃO FORMULÁRIO --- */
-        #view-formulario { flex: 1; display: none; height: 100%; overflow: hidden; }
-        .form-container { display: flex; height: 100%; }
-        .sidebar { width: 280px; padding: 24px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
-        .main-form { flex: 1; padding: 32px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; align-items: center; }
-        .form-card { width: 100%; max-width: 700px; background: white; padding: 30px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-
-        .form-label { font-size: 11px; font-weight: 800; display: block; margin-bottom: 4px; color: var(--text-muted); text-transform: uppercase; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: white; }
-        
-        .readonly-mode input, .readonly-mode select, .readonly-mode textarea { background-color: #f1f5f9; border-style: dashed; pointer-events: none; color: #475569; }
-
-        .evidence-button { padding: 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-bottom: 8px; background: #fcfdfe; transition: 0.2s; }
-        .evidence-button.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); font-weight: 700; }
-
-        .footer { margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border); padding-top: 20px; }
         .btn { height: 36px; padding: 0 16px; border-radius: 6px; font-weight: 700; cursor: pointer; border: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-muted); }
@@ -78,317 +110,102 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
+
 <body>
 
-    <header class="app-header">
-        <div class="header-title">ACADEMY // GESTÃO DE CERTIFICAÇÕES</div>
-        <button class="btn btn-primary admin-only" id="btnTopNovo" onclick="window.abrirFormulario()">
-            <span>➕</span> NOVO REGISTRO
-        </button>
-    </header>
+<header class="app-header">
+    <div class="header-title">ACADEMY // GESTÃO DE CERTIFICAÇÕES</div>
+    <button class="btn btn-primary admin-only" id="btnTopNovo" onclick="window.abrirFormulario()">➕ NOVO REGISTRO</button>
+</header>
 
-    <div id="view-lista">
-        <div class="filter-bar">
-            <div class="filter-group" style="flex: 1;">
-                <label>Pesquisar Colaborador ou Curso</label>
-                <input type="text" id="searchBox" class="search-input" placeholder="Digite para filtrar..." onkeyup="window.filtrar()">
-            </div>
-            <div class="filter-group">
-                <label>Tipo</label>
-                <select id="filterTipo" class="filter-select" onchange="window.filtrar()">
-                    <option value="TODOS">Todos</option>
-                    <option value="CERTIFICADO">Certificados</option>
-                    <option value="NOTORIO">Notório Saber</option>
-                </select>
-            </div>
-            <button class="btn btn-outline" style="height: 34px;" onclick="window.limparFiltros()">LIMPAR</button>
+<div id="view-lista">
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>Pesquisar Colaborador ou Curso</label>
+            <input type="text" id="searchBox" class="search-input" placeholder="Buscar colaborador ou curso..." onkeyup="window.filtrar()">
         </div>
-        
-        <div class="table-container">
-            <table id="homologTable">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">Colaborador</th>
-                        <th style="width: 30%;">Competência</th>
-                        <th style="width: 15%;">Tipo</th>
-                        <th style="width: 12%;">Data</th>
-                        <th style="width: 8%;">Nota</th>
-                        <th style="text-align: right; width: 10%;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+
+        <div class="filter-group" style="flex:0">
+            <label>Tipo</label>
+            <select id="filterTipo" class="filter-select" onchange="window.filtrar()">
+                <option value="TODOS">Todos</option>
+                <option value="CERTIFICADO">Certificados</option>
+                <option value="NOTORIO">Notório Saber</option>
+            </select>
         </div>
+
+        <button class="btn btn-outline" onclick="window.limparFiltros()">LIMPAR</button>
     </div>
 
-    <div id="view-formulario">
-        <div class="form-container" id="formWrapper">
-            <aside class="sidebar">
-                <label class="form-label">Colaborador</label>
-                <select id="selectColaborador" class="form-control"><option value="">Carregando...</option></select>
-                
-                <label class="form-label">Competência Catálogo</label>
-                <select id="selectTreinamento" class="form-control"><option value="">Carregando...</option></select>
-
-                <div id="tipoEvidenciaBox" style="margin-top: 10px;">
-                    <label class="form-label">Origem</label>
-                    <div id="btn-cert" class="evidence-button active" onclick="window.selectMode('certificado', this)">
-                        <b>Certificado</b><br><small>Externo / Interno</small>
-                    </div>
-                    <div id="btn-notorio" class="evidence-button" onclick="window.selectMode('notorio', this)">
-                        <b>Notório Saber</b><br><small>Avaliação do RH</small>
-                    </div>
-                </div>
-            </aside>
-
-            <main class="main-form">
-                <div class="form-card">
-                    <h2 id="form-title" style="margin: 0 0 20px 0; font-size: 18px; font-weight: 800;">Detalhes do Registro</h2>
-
-                    <div id="form-certificado">
-                        <div style="display: flex; gap: 15px;">
-                            <div style="flex: 2;">
-                                <label class="form-label">Instituição</label>
-                                <input type="text" id="certInstituicao" class="form-control" value="Edesoft-Academy" readonly>
-                                <div id="boxCheckEdesoft" style="display: flex; align-items: center; gap: 6px; margin-top: -10px; margin-bottom: 10px;">
-                                    <input type="checkbox" id="checkEdesoft" checked onchange="window.toggleInstituicao(this.checked)" style="width: 13px;"> 
-                                    <span style="font-size: 10px; font-weight: 600;">Instituição Padrão</span>
-                                </div>
-                            </div>
-                            <div style="flex: 1;">
-                                <label class="form-label">Data Conclusão</label>
-                                <input type="date" id="certData" class="form-control">
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 15px;">
-                            <div style="flex: 1;">
-                                <label class="form-label">Nota</label>
-                                <input type="number" id="certNota" class="form-control" placeholder="N/A" readonly step="0.1">
-                                <div id="boxCheckNota" style="display: flex; align-items: center; gap: 6px; margin-top: -10px;">
-                                    <input type="checkbox" id="checkNotaNA" checked onchange="window.toggleNota(this.checked)" style="width: 13px;"> 
-                                    <span style="font-size: 10px; font-weight: 600;">N/A</span>
-                                </div>
-                            </div>
-                            <div style="flex: 2;">
-                                <label class="form-label">Link Validação (URL)</label>
-                                <input type="url" id="certLink" class="form-control" placeholder="Opcional">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="form-notorio" style="display: none;">
-                        <label class="form-label">Justificativa técnica</label>
-                        <textarea id="notorioJustificativa" class="form-control" style="height: 100px;" placeholder="Evidências de proficiência..."></textarea>
-                        <label class="form-label">Aprovador Técnico</label>
-                        <input type="text" id="notorioAprovador" class="form-control" placeholder="Nome do Gestor">
-                        <div id="boxCheckRH" style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
-                            <input type="checkbox" id="checkRH" style="width: 16px; height: 16px;"> 
-                            <span style="font-size: 11px; font-weight: 700;">CONFIRMO A VALIDAÇÃO DO RH.</span>
-                        </div>
-                    </div>
-
-                    <div class="footer">
-                        <button class="btn btn-outline" onclick="window.voltarParaLista()">VOLTAR</button>
-                        <button class="btn btn-primary" id="btnSalvar" onclick="window.salvarHomologacao()">GRAVAR</button>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <script type="module">
-        import { DBHandler } from '../bd-treinamentos/db-handler.js';
-
-        let DADOS_LISTA = [];
-        let currentId = null;
-        let currentMode = 'CERTIFICADO';
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const sessionRaw = localStorage.getItem('rh_session');
-            const session = sessionRaw ? JSON.parse(sessionRaw) : { role: 'VIEWER' };
-            if (session.role === 'ADMIN') {
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'inline-flex');
-            }
-            // Importante carregar os combos ANTES da lista para que a edição funcione
-            await carregarCombos();
-            await window.carregarLista();
-        });
-
-        async function carregarCombos() {
-            try {
-                const colabs = await DBHandler.listarColaboradores({ somenteAtivos: true });
-                document.getElementById('selectColaborador').innerHTML = '<option value="">Selecione...</option>' + 
-                    colabs.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-
-                const { treinamentos } = await DBHandler.carregarDadosIniciais();
-                document.getElementById('selectTreinamento').innerHTML = '<option value="">Selecione...</option>' + 
-                    treinamentos.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
-            } catch (e) { console.error(e); }
-        }
-
-        // --- NAVEGAÇÃO ---
-        window.abrirFormulario = async (id = null, isView = false) => {
-            currentId = id;
-            document.getElementById('view-lista').style.display = 'none';
-            document.getElementById('view-formulario').style.display = 'block';
-            document.getElementById('btnTopNovo').style.display = 'none';
-
-            if (id) {
-                const dado = await DBHandler.buscarHomologacaoPorId(id);
-                preencherCampos(dado);
-                travarCampos(isView);
-                document.getElementById('form-title').textContent = isView ? "VISUALIZAÇÃO DE REGISTRO" : "EDIÇÃO DE REGISTRO";
-            } else {
-                resetarFormulario();
-                travarCampos(false);
-                document.getElementById('form-title').textContent = "NOVA HOMOLOGAÇÃO";
-            }
-        };
-
-        window.voltarParaLista = () => {
-            document.getElementById('view-lista').style.display = 'flex';
-            document.getElementById('view-formulario').style.display = 'none';
-            const session = JSON.parse(localStorage.getItem('rh_session'));
-            if(session.role === 'ADMIN') document.getElementById('btnTopNovo').style.display = 'inline-flex';
-            window.carregarLista();
-        };
-
-        window.carregarLista = async () => {
-            DADOS_LISTA = await DBHandler.listarHomologacoes();
-            renderizarTabela(DADOS_LISTA);
-        };
-
-        function renderizarTabela(lista) {
-            const tbody = document.querySelector("#homologTable tbody");
-            const session = JSON.parse(localStorage.getItem('rh_session'));
-            
-            tbody.innerHTML = lista.map(item => `
+    <div class="table-container">
+        <table id="homologTable">
+            <thead>
                 <tr>
-                    <td><strong>${item.colaboradores?.nome || '—'}</strong></td>
-                    <td>${item.treinamentos?.nome || '—'}</td>
-                    <td><span class="badge ${item.atividade_externa === 'NOTORIO' ? 'type-notorio' : 'type-cert'}">${item.atividade_externa || 'CERTIFICADO'}</span></td>
-                    <td>${item.data_homologacao ? new Date(item.data_homologacao).toLocaleDateString('pt-BR') : '—'}</td>
-                    <td>${item.nota || 'N/A'}</td>
-                    <td style="text-align: right;">
-                        <button class="btn-action btn-view" onclick="window.abrirFormulario(${item.id}, true)" title="Visualizar">👁️</button>
-                        ${session.role === 'ADMIN' ? `
-                            <button class="btn-action btn-edit" onclick="window.abrirFormulario(${item.id}, false)" title="Editar">✏️</button>
-                            <button class="btn-action btn-delete" onclick="window.deletarRegistro(${item.id})" title="Excluir">🗑️</button>
-                        ` : ''}
-                    </td>
+                    <th>Colaborador</th>
+                    <th>Competência</th>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>Nota</th>
+                    <th style="text-align:right">Ações</th>
                 </tr>
-            `).join('');
-        }
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
 
-        window.filtrar = () => {
-            const busca = document.getElementById('searchBox').value.toLowerCase();
-            const tipo = document.getElementById('filterTipo').value;
-            const filtrados = DADOS_LISTA.filter(i => {
-                const matchBusca = (i.colaboradores?.nome || "").toLowerCase().includes(busca) || 
-                                   (i.treinamentos?.nome || "").toLowerCase().includes(busca);
-                const matchTipo = tipo === 'TODOS' || i.atividade_externa === tipo;
-                return matchBusca && matchTipo;
-            });
-            renderizarTabela(filtrados);
-        };
+<script type="module">
+import { DBHandler } from '../bd-treinamentos/db-handler.js';
 
-        window.limparFiltros = () => {
-            document.getElementById('searchBox').value = "";
-            document.getElementById('filterTipo').value = "TODOS";
-            renderizarTabela(DADOS_LISTA);
-        };
+let DADOS_LISTA = [];
 
-        window.selectMode = (mode, el) => {
-            currentMode = mode.toUpperCase();
-            document.querySelectorAll('.evidence-button').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('form-certificado').style.display = mode === 'certificado' ? 'block' : 'none';
-            document.getElementById('form-notorio').style.display = mode === 'notorio' ? 'block' : 'none';
-        };
+window.carregarLista = async () => {
+    DADOS_LISTA = await DBHandler.listarHomologacoes();
+    renderizarTabela(DADOS_LISTA);
+};
 
-        window.toggleInstituicao = (check) => {
-            const input = document.getElementById('certInstituicao');
-            input.value = check ? "Edesoft-Academy" : "";
-            input.readOnly = check;
-        };
+function renderizarTabela(lista) {
+    const tbody = document.querySelector("#homologTable tbody");
+    const session = JSON.parse(localStorage.getItem('rh_session'));
 
-        window.toggleNota = (check) => {
-            const input = document.getElementById('certNota');
-            input.readOnly = check;
-            input.placeholder = check ? "N/A" : "0.0";
-            if (check) input.value = "";
-        };
+    tbody.innerHTML = lista.map(item => `
+        <tr>
+            <td><strong>${item.colaboradores?.nome || '—'}</strong></td>
+            <td>${item.treinamentos?.nome || '—'}</td>
+            <td><span class="badge ${item.atividade_externa === 'NOTORIO' ? 'type-notorio' : 'type-cert'}">${item.atividade_externa || 'CERTIFICADO'}</span></td>
+            <td>${item.data_homologacao ? new Date(item.data_homologacao).toLocaleDateString('pt-BR') : '—'}</td>
+            <td>${item.nota || 'N/A'}</td>
+            <td class="actions-cell">
+                <button class="btn-action btn-view" onclick="window.abrirFormulario(${item.id}, true)">👁️</button>
+                ${session.role === 'ADMIN' ? `
+                    <button class="btn-action btn-edit" onclick="window.abrirFormulario(${item.id}, false)">✏️</button>
+                    <button class="btn-action btn-delete" onclick="window.deletarRegistro(${item.id})">🗑️</button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
 
-        window.deletarRegistro = async (id) => {
-            if(!confirm("Remover permanentemente?")) return;
-            try {
-                await DBHandler.excluirHomologacao(id);
-                window.carregarLista();
-            } catch (e) { alert(e.message); }
-        };
+window.filtrar = () => {
+    const busca = document.getElementById('searchBox').value.toLowerCase();
+    const tipo = document.getElementById('filterTipo').value;
 
-        window.salvarHomologacao = async () => {
-            const session = JSON.parse(localStorage.getItem('rh_session'));
-            const payload = {
-                colaborador_id: document.getElementById('selectColaborador').value,
-                treinamento_id: document.getElementById('selectTreinamento').value,
-                usuario_registro: session.user,
-                atividade_externa: currentMode,
-                data_homologacao: currentMode === 'CERTIFICADO' ? document.getElementById('certData').value : new Date().toISOString().split('T')[0],
-                nota: (currentMode === 'CERTIFICADO' && !document.getElementById('checkNotaNA').checked) ? document.getElementById('certNota').value : null,
-                instrutor: currentMode === 'CERTIFICADO' ? document.getElementById('certInstituicao').value : document.getElementById('notorioAprovador').value,
-                observacoes: currentMode === 'NOTORIO' ? document.getElementById('notorioJustificativa').value : (document.getElementById('certLink').value || null)
-            };
-            try {
-                await DBHandler.salvarHomologacao({ ...(currentId ? { id: currentId } : {}), ...payload });
-                alert("Salvo!");
-                window.voltarParaLista();
-            } catch (e) { alert(e.message); }
-        };
+    renderizarTabela(DADOS_LISTA.filter(i =>
+        ((i.colaboradores?.nome || "").toLowerCase().includes(busca) ||
+         (i.treinamentos?.nome || "").toLowerCase().includes(busca)) &&
+        (tipo === 'TODOS' || i.atividade_externa === tipo)
+    ));
+};
 
-        function preencherCampos(d) {
-            document.getElementById('selectColaborador').value = d.colaborador_id;
-            document.getElementById('selectTreinamento').value = d.treinamento_id;
-            if (d.atividade_externa === 'NOTORIO') {
-                window.selectMode('notorio', document.getElementById('btn-notorio'));
-                document.getElementById('notorioJustificativa').value = d.observacoes || "";
-                document.getElementById('notorioAprovador').value = d.instrutor || "";
-            } else {
-                window.selectMode('certificado', document.getElementById('btn-cert'));
-                document.getElementById('certInstituicao').value = d.instrutor || "Edesoft-Academy";
-                document.getElementById('checkEdesoft').checked = (d.instrutor === "Edesoft-Academy");
-                document.getElementById('certData').value = d.data_homologacao;
-                document.getElementById('certLink').value = d.observacoes || "";
-                if(d.nota) {
-                    document.getElementById('checkNotaNA').checked = false;
-                    window.toggleNota(false);
-                    document.getElementById('certNota').value = d.nota;
-                } else {
-                    document.getElementById('checkNotaNA').checked = true;
-                    window.toggleNota(true);
-                }
-            }
-        }
+window.limparFiltros = () => {
+    searchBox.value = "";
+    filterTipo.value = "TODOS";
+    renderizarTabela(DADOS_LISTA);
+};
 
-        function travarCampos(travar) {
-            document.querySelectorAll('#view-formulario input, #view-formulario select, #view-formulario textarea').forEach(el => el.disabled = travar);
-            document.getElementById('btnSalvar').style.display = travar ? 'none' : 'inline-flex';
-            document.getElementById('boxCheckEdesoft').style.display = travar ? 'none' : 'flex';
-            document.getElementById('boxCheckNota').style.display = travar ? 'none' : 'flex';
-            document.getElementById('boxCheckRH').style.display = travar ? 'none' : 'flex';
-            document.getElementById('tipoEvidenciaBox').style.pointerEvents = travar ? 'none' : 'auto';
-            if(travar) document.getElementById('formWrapper').classList.add('readonly-mode');
-            else document.getElementById('formWrapper').classList.remove('readonly-mode');
-        }
+window.carregarLista();
+</script>
 
-        function resetarFormulario() {
-            document.querySelectorAll('#view-formulario input, #view-formulario select, #view-formulario textarea').forEach(el => { el.value = ""; el.disabled = false; });
-            document.getElementById('certInstituicao').value = "Edesoft-Academy";
-            document.getElementById('checkEdesoft').checked = true;
-            document.getElementById('checkNotaNA').checked = true;
-            document.getElementById('certData').value = new Date().toISOString().split('T')[0];
-            window.selectMode('certificado', document.getElementById('btn-cert'));
-        }
-    </script>
 </body>
 </html>
