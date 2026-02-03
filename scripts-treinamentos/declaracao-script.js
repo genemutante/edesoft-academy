@@ -1,157 +1,152 @@
-// /scripts-treinamentos/declaracao-script.js
-import { DBHandler } from "../bd-treinamentos/db-handler.js";
-
-let COLABORADORES = [];
-let TREINAMENTOS = [];
-
-document.addEventListener('DOMContentLoaded', async () => {
-    await carregarDadosIniciais();
-    // Define a data de hoje como padrão nos campos de data
-    const hoje = new Date().toISOString().split('T')[0];
-    if (document.getElementById('certData')) document.getElementById('certData').value = hoje;
-    if (document.getElementById('notorioData')) document.getElementById('notorioData').value = hoje;
-});
-
-/**
- * Carrega os dados dos combos (Colaboradores e Treinamentos) vindos do Supabase
- */
-async function carregarDadosIniciais() {
-    try {
-        // 1. Carregar Colaboradores Ativos
-        COLABORADORES = await DBHandler.listarColaboradores({ somenteAtivos: true });
-        const selColab = document.getElementById('selectColaborador');
-        if (selColab) {
-            selColab.innerHTML = '<option value="">Selecione o colaborador...</option>' + 
-                COLABORADORES.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-        }
-
-        // 2. Carregar Treinamentos do Catálogo Oficial
-        const dados = await DBHandler.carregarDadosIniciais();
-        TREINAMENTOS = dados.treinamentos;
-        const selTreino = document.getElementById('selectTreinamento');
-        if (selTreino) {
-            selTreino.innerHTML = '<option value="">Selecione a competência alvo...</option>' + 
-                TREINAMENTOS.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
-        }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homologação de Competência | RH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #3b82f6; --primary-hover: #2563eb; --border: #e2e8f0; --bg: #f9fafb; --text: #0f172a; --muted: #64748b; --card-bg: #ffffff; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { margin: 0; background-color: var(--bg); color: var(--text); overflow: hidden; }
+        .container { display: flex; height: 100vh; }
+        .sidebar { width: 340px; padding: 32px 24px; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 28px; flex-shrink: 0; }
+        .content { flex: 1; padding: 40px; display: flex; flex-direction: column; overflow-y: auto; }
+        h2 { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+        label { font-size: 11px; font-weight: 800; display: block; margin-bottom: 8px; color: var(--muted); text-transform: uppercase; }
+        select, input, textarea { width: 100%; padding: 12px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; background: white; transition: all 0.2s; }
+        input:read-only, textarea:read-only { background-color: #f8fafc; color: #64748b; cursor: not-allowed; border-style: dashed; }
+        .section-title { font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .evidence-button { padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); cursor: pointer; margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
+        .evidence-button.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+        .row { display: flex; gap: 20px; margin-bottom: 24px; }
+        .row > div { flex: 1; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .checkbox-group input { width: 16px; height: 16px; cursor: pointer; }
+        .checkbox-group label { text-transform: none; font-weight: 500; margin-bottom: 0; color: var(--text); font-size: 13px; cursor: pointer; }
+        .footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 12px; padding-top: 40px; }
+        .btn { padding: 12px 28px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+<div class="container">
+  
+    <aside class="sidebar">
+        <div>
+            <div class="section-title">1. Configuração do Registro</div>
+            <label>Colaborador</label>
+            <select id="selectColaborador"><option value="">Carregando...</option></select>
             
-    } catch (e) {
-        console.error("Erro ao inicializar dados:", e);
-    }
-}
+            <div style="margin-top: 20px;">
+                <label>Competência Alvo (Catálogo)</label>
+                <select id="selectTreinamento"><option value="">Carregando...</option></select>
+            </div>
+        </div>
 
-/**
- * Lógica do Checkbox de Instituição (Edesoft-Academy)
- */
-window.toggleInstituicao = function(isEdesoft) {
-    const input = document.getElementById('certInstituicao');
-    if (!input) return;
+        <div>
+            <div class="section-title">2. Tipo de Evidência</div>
+            <div id="btn-cert" class="evidence-button active" onclick="selectMode('certificado', this)">
+                <b>Certificado</b>
+                <small>Formação externa ou interna.</small>
+            </div>
+            <div id="btn-notorio" class="evidence-button" onclick="selectMode('notorio', this)">
+                <b>Parecer de Notório Saber</b>
+                <small>Validação técnica do RH.</small>
+            </div>
+        </div>
+    </aside>
 
-    if (isEdesoft) {
-        input.value = "Edesoft-Academy";
-        input.readOnly = true;
-    } else {
-        input.value = "";
-        input.readOnly = false;
-        input.focus();
-    }
-};
+    <main class="content">
+        <h2 id="main-title">3. Detalhes da Homologação (Certificado)</h2>
 
-/**
- * Lógica do Checkbox de Nota (Não se aplica / NA)
- */
-window.toggleNota = function(isNA) {
-    const input = document.getElementById('certNota');
-    if (!input) return;
+        <div id="form-certificado">
+            <div class="row">
+                <div>
+                    <label>Instituição de Ensino</label>
+                    <input type="text" id="certInstituicao" value="Edesoft-Academy" readonly>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="checkEdesoft" checked onchange="toggleInstituicao(this.checked)">
+                        <label for="checkEdesoft">Instituição Edesoft-Academy</label>
+                    </div>
+                </div>
+                <div>
+                    <label>Data de Conclusão</label>
+                    <input type="date" id="certData">
+                </div>
+            </div>
+            <div class="row">
+                <div style="flex: 2;">
+                    <label>Link de Validação (URL)</label>
+                    <input type="url" id="certLink" placeholder="https://...">
+                </div>
+                <div style="flex: 1;">
+                    <label>Nota / Avaliação</label>
+                    <input type="number" id="certNota" step="0.1" placeholder="N/A" readonly>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="checkNotaNA" checked onchange="toggleNota(this.checked)">
+                        <label for="checkNotaNA">Não se aplica</label>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    if (isNA) {
-        input.value = "";
-        input.readOnly = true;
-        input.placeholder = "N/A";
-    } else {
-        input.readOnly = false;
-        input.placeholder = "0.0";
-        input.focus();
-    }
-};
+        <div id="form-notorio" style="display: none">
+            <div class="row">
+                <div style="flex: 1">
+                    <label>Justificativa da Validação</label>
+                    <textarea id="notorioJustificativa" placeholder="Descreva as evidências técnicas..."></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Evidências Consultadas</label>
+                    <input type="text" id="notorioEvidencias" placeholder="Ex: Teste prático, Entrevista...">
+                </div>
+                <div>
+                    <label>Aprovador Técnico</label>
+                    <input type="text" id="notorioAprovador" placeholder="Nome do Gestor">
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkRH">
+                <label for="checkRH">Confirmo a validação técnica desta competência.</label>
+            </div>
+        </div>
 
-/**
- * Função principal de salvamento (Gravar Homologação)
- */
-window.salvarCertificacao = async function() {
-    const sessionRaw = localStorage.getItem('rh_session');
-    if (!sessionRaw) return alert("Sessão expirada. Faça login novamente.");
-    const session = JSON.parse(sessionRaw);
+        <div class="footer">
+            <button class="btn btn-outline" onclick="window.location.reload()">Cancelar</button>
+            <button class="btn btn-primary" id="btnSalvar" onclick="salvarHomologacao()">Finalizar Homologação</button>
+        </div>
+    </main>
+</div>
 
-    const btn = document.getElementById('btnSalvar');
-    const mode = window.activeMode || 'TREINAMENTO'; // Captura o modo da aba ativa
-    
-    // Elementos de Identificação
-    const idColab = document.getElementById('selectColaborador').value;
-    const idTreino = document.getElementById('selectTreinamento').value;
-
-    if (!idColab || !idTreino) {
-        alert("Campos obrigatórios: Selecione o Colaborador e a Competência.");
-        return;
-    }
-
-    // Preparação do Payload para a tabela homologacoes_treinamentos
-    let payload = {
-        colaborador_id: idColab,
-        treinamento_id: idTreino,
-        usuario_registro: session.user,
-        status: 'Homologado (RH)'
+<script type="module" src="../scripts-treinamentos/declaracao-script.js"></script>
+<script>
+    // Funções de UI acessíveis globalmente
+    window.selectMode = function(mode, el) {
+        window.currentMode = mode;
+        document.querySelectorAll('.evidence-button').forEach(btn => btn.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('form-certificado').style.display = (mode === 'certificado') ? 'block' : 'none';
+        document.getElementById('form-notorio').style.display = (mode === 'notorio') ? 'block' : 'none';
+        document.getElementById('main-title').textContent = mode === 'certificado' ? '3. Detalhes da Homologação (Certificado)' : '3. Parecer de Notório Saber';
     };
 
-    if (mode === 'TREINAMENTO' || mode === 'certificado') {
-        // Fluxo Certificado
-        const notaNA = document.getElementById('checkNotaNA').checked;
-        
-        payload.data_homologacao = document.getElementById('certData').value;
-        payload.instrutor = document.getElementById('certInstituicao').value; // Instituição no campo instrutor
-        payload.nota = notaNA ? null : document.getElementById('certNota').value;
-        payload.atividade_externa = 'CERTIFICADO_EXTERNO';
-        payload.observacoes = document.getElementById('certLink').value ? `Link: ${document.getElementById('certLink').value}` : null;
-    } else {
-        // Fluxo Notório Saber (Parecer RH)
-        if (!document.getElementById('checkAudit').checked) {
-            alert("É necessário confirmar a validação dos critérios técnicos.");
-            return;
-        }
+    window.toggleInstituicao = function(isEdesoft) {
+        const input = document.getElementById('certInstituicao');
+        input.value = isEdesoft ? "Edesoft-Academy" : "";
+        input.readOnly = isEdesoft;
+        if(!isEdesoft) input.focus();
+    };
 
-        payload.data_homologacao = document.getElementById('notorioData')?.value || new Date().toISOString().split('T')[0];
-        payload.instrutor = document.getElementById('notorioAprovador').value; // Gestor/Aprovador no campo instrutor
-        payload.nota = null; // Geralmente N/A para notório saber
-        payload.atividade_externa = 'NOTORIO_SABER';
-        payload.observacoes = `Justificativa: ${document.getElementById('notorioJustificativa').value}\nEvidências: ${document.getElementById('notorioMetodo').value}`;
-    }
-
-    try {
-        btn.disabled = true;
-        btn.textContent = "Gravando...";
-
-        // 1. Persistência no Banco de Dados
-        await DBHandler.salvarHomologacao(payload);
-
-        // 2. Registro do Log de Auditoria
-        const colabNome = document.getElementById('selectColaborador').options[document.getElementById('selectColaborador').selectedIndex].text;
-        const treinoNome = document.getElementById('selectTreinamento').options[document.getElementById('selectTreinamento').selectedIndex].text;
-        
-        const detalhesLog = `• Colaborador: ${colabNome}\n• Competência: ${treinoNome}\n• Tipo: ${payload.atividade_externa}\n• Responsável/Inst.: ${payload.instrutor}\n• Nota: ${payload.nota || 'N/A'}`;
-        
-        await DBHandler.registrarLog(
-            session.user, 
-            "HOMOLOGAR_COMPETENCIA_RH", 
-            detalhesLog, 
-            "Homologação de Competência"
-        );
-
-        alert("✅ Homologação registada com sucesso!");
-        window.location.reload();
-        
-    } catch (e) {
-        console.error(e);
-        alert("Erro ao salvar no banco: " + (e.message || e));
-        btn.disabled = false;
-        btn.textContent = "Gravar Homologação";
-    }
-};
+    window.toggleNota = function(isNA) {
+        const input = document.getElementById('certNota');
+        input.value = "";
+        input.readOnly = isNA;
+        input.placeholder = isNA ? "N/A" : "0.0";
+        if(!isNA) input.focus();
+    };
+</script>
+</body>
+</html>
