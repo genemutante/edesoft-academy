@@ -577,15 +577,19 @@ tr:hover td { background: #fcfdfe; }
         }
 
         // --- NAVEGAÇÃO SPA ---
-        window.abrirFormulario = async (id = null, visualizar = false) => {
-            currentId = id;
-            if (id) {
-                const dado = await DBHandler.buscarHomologacaoPorId(id);
-                preencherCampos(dado);
-                travarCampos(visualizar);
+let DADO_ORIGINAL = null; // Variável global no topo do script
+
+window.abrirFormulario = async (id = null, visualizar = false) => {
+    currentId = id;
+    if (id) {
+        const dado = await DBHandler.buscarHomologacaoPorId(id);
+        DADO_ORIGINAL = JSON.parse(JSON.stringify(dado)); // Guarda uma cópia limpa do original
+        preencherCampos(dado);
+        travarCampos(visualizar);
                 document.getElementById('form-title').textContent = visualizar ? 'CONSULTA DE REGISTRO' : 'EDIÇÃO DE REGISTRO';
-            } else {
-                limparFormulario();
+} else {
+        DADO_ORIGINAL = null;
+        limparFormulario();
                 travarCampos(false);
                 document.getElementById('form-title').textContent = 'NOVO REGISTRO';
             }
@@ -671,24 +675,68 @@ tr:hover td { background: #fcfdfe; }
             if (check) input.value = "";
         };
 
-        window.salvarHomologacao = async () => {
-            const session = JSON.parse(localStorage.getItem('rh_session'));
-            const payload = {
-                colaborador_id: document.getElementById('selectColaborador').value,
-                treinamento_id: document.getElementById('selectTreinamento').value,
-                usuario_registro: session.user,
-                atividade_externa: currentMode,
-                data_homologacao: currentMode === 'CERTIFICADO' ? document.getElementById('certData').value : new Date().toISOString().split('T')[0],
-                nota: (currentMode === 'CERTIFICADO' && !document.getElementById('checkNotaNA').checked) ? document.getElementById('certNota').value : null,
-                instrutor: currentMode === 'CERTIFICADO' ? document.getElementById('certInstituicao').value : document.getElementById('notorioAprovador').value,
-                observacoes: currentMode === 'NOTORIO' ? document.getElementById('notorioJustificativa').value : document.getElementById('certLink').value
+window.salvarHomologacao = async () => {
+    const session = JSON.parse(localStorage.getItem('rh_session'));
+    
+    // Captura dos novos valores
+    const payload = {
+        colaborador_id: document.getElementById('selectColaborador').value,
+        treinamento_id: document.getElementById('selectTreinamento').value,
+        atividade_externa: currentMode,
+        data_homologacao: currentMode === 'CERTIFICADO' ? document.getElementById('certData').value : new Date().toISOString().split('T')[0],
+        nota: (currentMode === 'CERTIFICADO' && !document.getElementById('checkNotaNA').checked) ? document.getElementById('certNota').value : null,
+        instrutor: currentMode === 'CERTIFICADO' ? document.getElementById('certInstituicao').value : document.getElementById('notorioAprovador').value,
+        observacoes: currentMode === 'NOTORIO' ? document.getElementById('notorioJustificativa').value : document.getElementById('certLink').value
+    };
+
+    try {
+        let detalhesLog = "";
+
+        if (currentId && DADO_ORIGINAL) {
+            // LÓGICA DE COMPARAÇÃO (ANTES vs DEPOIS)
+            const alteracoes = [];
+            
+            // Compara campos específicos (mapeando chaves técnicas para nomes amigáveis)
+            const campos = {
+                'instrutor': 'Origem/Instrutor',
+                'nota': 'Nota',
+                'data_homologacao': 'Data',
+                'atividade_externa': 'Tipo'
             };
-            try {
-                await DBHandler.salvarHomologacao({ ...(currentId ? { id: currentId } : {}), ...payload });
-                alert("Gravado!");
-                window.voltarParaLista();
-            } catch (e) { alert(e.message); }
-        };
+
+            for (let chave in campos) {
+                let valorAntigo = DADO_ORIGINAL[chave] || "N/A";
+                let valorNovo = payload[chave] || "N/A";
+
+                if (String(valorAntigo) !== String(valorNovo)) {
+                    alteracoes.push(`${campos[chave]}: [${valorAntigo}] ➔ [${valorNovo}]`);
+                }
+            }
+
+            detalhesLog = alteracoes.length > 0 
+                ? `Edição de Registo:\n${alteracoes.join('\n')}` 
+                : "Edição sem alteração de valores nos campos principais.";
+        } else {
+            detalhesLog = `Criação de novo registo para o Colaborador ID: ${payload.colaborador_id}`;
+        }
+
+        // 1. Grava no Banco
+        await DBHandler.salvarHomologacao({ ...(currentId ? { id: currentId } : {}), ...payload, usuario_registro: session.user });
+
+        // 2. Grava o Log com o Antes/Depois
+        await DBHandler.registrarLog(
+            session.user, 
+            currentId ? "ALTERAÇÃO_CERTIFICADO" : "INSERÇÃO_CERTIFICADO", 
+            detalhesLog, 
+            "Gestão de Certificações"
+        );
+
+        alert("✅ Operação concluída com log de auditoria!");
+        window.voltarParaLista();
+    } catch (e) {
+        alert("Erro: " + e.message);
+    }
+};
 
         window.deletarRegistro = async (id) => {
             if (!confirm('Excluir permanentemente?')) return;
@@ -731,6 +779,7 @@ tr:hover td { background: #fcfdfe; }
     </script>
 </body>
 </html>
+
 
 
 
