@@ -17,45 +17,92 @@
             --border-color: #cbd5e1;
         }
 
+        /* --- RESET & ESTRUTURA 100% FIXA --- */
         * { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; background-color: var(--bg-gray); font-family: 'Inter', sans-serif; }
+        html, body { 
+            height: 100vh; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; /* Impede a página toda de rolar */
+            display: flex; 
+            flex-direction: column; 
+            background-color: var(--bg-gray); 
+            font-family: 'Inter', sans-serif; 
+        }
 
-        /* --- HEADER --- */
-        .top-bar { flex-shrink: 0; height: 56px; background: #ffffff; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 24px; z-index: 50; }
+        /* --- HEADER FIXO --- */
+        .top-bar { 
+            flex-shrink: 0; 
+            height: 56px; 
+            background: #ffffff; 
+            border-bottom: 1px solid var(--border-color); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 24px; 
+            z-index: 100; 
+        }
         .top-bar h1 { font-size: 14px; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- LAYOUT --- */
-        .main-workspace { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 30px 20px; overflow-y: auto; }
-        .admin-card { background: #ffffff; width: 100%; max-width: 1250px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow: hidden; }
+        /* --- WORKSPACE QUE PREENCHE A TELA --- */
+        .main-workspace { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column;
+            padding: 20px; 
+            overflow: hidden; /* O workspace não rola, o card sim */
+            align-items: center;
+        }
+
+        /* --- CARD QUE SE ADAPTA À ALTURA --- */
+        .admin-card { 
+            background: #ffffff; 
+            width: 100%; 
+            max-width: 1300px; 
+            height: 100%; /* Força o card a usar o espaço do workspace */
+            border-radius: 12px; 
+            border: 1px solid var(--border-color); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
+            display: flex;
+            flex-direction: column; /* Organiza abas e conteúdo */
+            overflow: hidden; 
+        }
         
-        /* --- ABAS --- */
-        .tabs-header { display: flex; background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 0 12px; }
+        /* --- ABAS FIXAS NO TOPO DO CARD --- */
+        .tabs-header { 
+            flex-shrink: 0; 
+            display: flex; 
+            background: #f8fafc; 
+            border-bottom: 1px solid #e2e8f0; 
+            padding: 0 12px; 
+        }
         .tab-btn { padding: 14px 20px; border: none; background: none; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #eff6ff; }
 
-        .card-body { padding: 24px; display: none; }
-        .card-body.active { display: block; animation: fadeIn 0.3s ease-out; }
+        /* --- ÁREA DE CONTEÚDO COM ROLAGEM INTERNA --- */
+        .card-body { 
+            flex: 1; 
+            padding: 24px; 
+            display: none; 
+            overflow-y: auto; /* Apenas aqui dentro rola! */
+            background: #fff;
+        }
+        .card-body.active { display: block; animation: fadeIn 0.2s ease-out; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- TABELAS --- */
-        .matrix-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; }
+        /* --- COMPONENTES --- */
+        .matrix-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px; }
         .perm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .perm-table th { background: #f8fafc; padding: 10px; text-align: center; color: #475569; border-bottom: 2px solid #e2e8f0; }
-        .perm-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: center; vertical-align: middle; }
+        .perm-table th { background: #f8fafc; padding: 12px; text-align: center; color: #475569; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
+        .perm-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: center; }
         .perm-table td:first-child { text-align: left; font-weight: 600; color: #1e293b; font-size: 12px; padding-left: 15px; }
 
-        /* --- DETALHES DO LOG (SUPORTE QUEBRA DE LINHA) --- */
-        .log-details-cell { text-align: left !important; font-size: 10px !important; white-space: pre-line !important; color: #475569; line-height: 1.4; }
-
-        /* --- FILTROS --- */
         .filter-bar { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; align-items: flex-end; gap: 15px; }
         .filter-group { display: flex; flex-direction: column; gap: 5px; }
         .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         .filter-input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #fff; }
 
-        /* --- UI ELEMENTS --- */
-        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .btn-action:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
         .btn-cancel { background: #fff; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: none; }
         
@@ -64,6 +111,7 @@
         .check-detalhes { accent-color: var(--success) !important; width: 16px; height: 16px; }
         .highlight-change { background-color: #eef2ff !important; border: 1px solid var(--primary) !important; }
         .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #e0e7ff; color: #4338ca; text-transform: uppercase; }
+        .log-details-cell { text-align: left !important; font-size: 10px !important; white-space: pre-line !important; color: #475569; }
     </style>
 </head>
 <body>
@@ -72,7 +120,7 @@
         <h1>Centro de Administração do Sistema</h1>
     </header>
 
-    <div class="main-workspace">
+    <main class="main-workspace">
         <div class="admin-card">
             
             <nav class="tabs-header">
@@ -86,7 +134,7 @@
 
             <div id="tab-permissoes" class="card-body">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div style="font-size: 12px; color: #64748b;">Ajuste o acesso global. Células em destaque indicam intervenção pendente.</div>
+                    <div style="font-size: 12px; color: #64748b;">Configure o acesso. Células azuis indicam alterações pendentes.</div>
                     <div id="areaAcoesMatriz" style="display: flex; gap: 10px;">
                         <button id="btnCancelarMatriz" class="btn-cancel" onclick="window.cancelarAlteracoesMatriz()">Cancelar Tudo</button>
                         <button id="btnSalvarPermissoes" class="btn-action" disabled>Gravar Nova Matriz</button>
@@ -97,7 +145,7 @@
 
             <div id="tab-usuarios" class="card-body">
                 <div id="gridUsuarios" style="display: grid; grid-template-columns: 320px 1fr; gap: 30px;">
-                    <div id="containerFormNovo" style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div id="containerFormNovo" style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: fit-content;">
                         <h3 style="font-size: 14px; margin-bottom: 15px;">Novo Acesso</h3>
                         <form id="formNovoUsuario">
                             <div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:700;">NOME COMPLETO</label><input type="text" id="addNome" style="width:100%; padding:8px;" required></div>
@@ -136,7 +184,7 @@
             </div>
 
         </div>
-    </div>
+    </main>
 
     <script type="module">
         import { DBHandler, supabaseClient } from '../bd-treinamentos/db-handler.js';
@@ -155,7 +203,6 @@
             popularFiltroTelasLogs();
         });
 
-        // --- PREPARAÇÃO DE DADOS ---
         function popularSelectRoles() {
             const s = document.getElementById('addRole');
             if (s) s.innerHTML = ROLES.map(r => `<option value="${r}">${r}</option>`).join('');
@@ -184,20 +231,24 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.tab-btn, .card-body').forEach(el => el.classList.remove('active'));
                     btn.classList.add('active');
-                    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+                    const target = document.getElementById('tab-' + btn.dataset.tab);
+                    if (target) target.classList.add('active');
+                    
                     if (btn.dataset.tab === 'usuarios') carregarUsuarios();
                     if (btn.dataset.tab === 'logs') { popularFiltroTelasLogs(); window.carregarLogs(); }
+                    if (btn.dataset.tab === 'permissoes') initMatrix();
                 };
             });
         }
 
         async function carregarStatus() {
-            const { count: u } = await supabaseClient.from('usuarios_sistema').select('*', { count: 'exact', head: true });
-            const el = document.getElementById('metaInfo');
-            if(el) el.innerHTML = `<div style="padding:15px; background:#eff6ff; border-radius:8px; border:1px solid #dbeafe; display:inline-block;"><span style="font-size:11px; color:#1d4ed8; font-weight:700;">STATUS: CONECTADO</span><br><strong style="font-size:20px;">${u || 0} Usuários Ativos</strong></div>`;
+            try {
+                const { count: u } = await supabaseClient.from('usuarios_sistema').select('*', { count: 'exact', head: true });
+                const el = document.getElementById('metaInfo');
+                if(el) el.innerHTML = `<div style="padding:15px; background:#eff6ff; border-radius:8px; border:1px solid #dbeafe; display:inline-block;"><span style="font-size:11px; color:#1d4ed8; font-weight:700;">STATUS: CONECTADO</span><br><strong style="font-size:20px;">${u || 0} Usuários Ativos</strong></div>`;
+            } catch(e) {}
         }
 
-        // --- LÓGICA DA MATRIZ COM AUDITORIA DE/PARA ---
         async function initMatrix() {
             const h = document.getElementById('headerRoles');
             const b = document.getElementById('permTableBody');
@@ -248,14 +299,12 @@
             const payload = [];
             const auditDiffs = [];
 
-            // 1. Calcula DE/PARA para o Log
             document.querySelectorAll('.matrix-cb').forEach(cb => {
                 const ac = originalMatrixState.find(a => a.modulo_id == cb.dataset.modulo && a.role == cb.dataset.role);
                 let orig = false;
                 if(cb.dataset.type === 'Visualizar') orig = !!ac;
                 if(cb.dataset.type === 'Editar') orig = ac?.pode_editar || false;
                 if(cb.dataset.type === 'Detalhes') orig = ac?.ver_detalhes || false;
-
                 if (cb.checked !== orig) {
                     const modLabel = modulosLabelMap[cb.dataset.modulo];
                     auditDiffs.push(`• [${modLabel}] Cargo ${cb.dataset.role} - ${cb.dataset.type}: ${orig?'Sim':'Não'} ➔ ${cb.checked?'Sim':'Não'}`);
@@ -264,7 +313,6 @@
 
             if (!confirm(`Confirmar gravação?\n\nAlterações:\n${auditDiffs.join('\n')}`)) return;
 
-            // 2. Monta novo Payload
             ROLES.forEach(role => {
                 document.querySelectorAll(`.matrix-cb[data-role="${role}"][data-type="Visualizar"]:checked`).forEach(cb => {
                     const mid = cb.dataset.modulo;
@@ -280,15 +328,14 @@
                 await supabaseClient.from('acesso_modulos').delete().neq('id', 0);
                 if (payload.length > 0) await supabaseClient.from('acesso_modulos').insert(payload);
                 await DBHandler.registrarLog(sess.user, "ATUALIZAR_MATRIZ", auditDiffs.join('\n'), "Administração");
-                alert("Matriz de permissões atualizada!"); initMatrix();
+                alert("Matriz salva!"); initMatrix();
             } catch (e) { alert("Erro ao salvar."); }
         };
 
-        // --- GESTÃO DE USUÁRIOS COM AUDITORIA DE/PARA ---
         async function carregarUsuarios() {
             const body = document.getElementById('listaUsuariosBody');
             if(!body) return;
-            body.innerHTML = '<tr><td colspan="4">Carregando lista...</td></tr>';
+            body.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
             const { data } = await supabaseClient.from('usuarios_sistema').select('*').order('nome');
             body.innerHTML = '';
             data.forEach(u => {
@@ -318,17 +365,15 @@
         window.salvarAlteracoesUsuarios = async () => {
             const dirty = Array.from(document.querySelectorAll('.user-role-select')).filter(s => s.value !== s.dataset.original);
             const sess = JSON.parse(localStorage.getItem('rh_session'));
-            const auditLogs = [];
+            const auditLogs = dirty.map(s => `• Usuário: ${s.dataset.nome} | Cargo: ${s.dataset.original} ➔ ${s.value}`);
 
-            dirty.forEach(s => auditLogs.push(`• Usuário: ${s.dataset.nome} | Cargo: ${s.dataset.original} ➔ ${s.value}`));
-
-            if (!confirm(`Gravar mudanças de cargo?\n\n${auditLogs.join('\n')}`)) return;
+            if (!confirm(`Gravar mudanças?\n\n${auditLogs.join('\n')}`)) return;
 
             for (const s of dirty) {
                 await supabaseClient.from('usuarios_sistema').update({ role: s.value }).eq('id', s.dataset.id);
             }
             await DBHandler.registrarLog(sess.user, "ALTERAR_CARGO", auditLogs.join('\n'), "Administração");
-            alert("Cargos salvos!"); carregarUsuarios();
+            alert("Sucesso!"); carregarUsuarios();
         };
 
         document.getElementById('formNovoUsuario').onsubmit = async (e) => {
@@ -337,21 +382,20 @@
             const u = { nome: document.getElementById('addNome').value, username: document.getElementById('addLogin').value, password: document.getElementById('addSenha').value, role: document.getElementById('addRole').value };
             const { error } = await supabaseClient.from('usuarios_sistema').insert([u]);
             if (!error) { 
-                await DBHandler.registrarLog(sess.user, "CRIAR_USUARIO", `Novo Acesso:\nNome: ${u.nome}\nLogin: ${u.username}\nCargo: ${u.role}`, "Administração");
+                await DBHandler.registrarLog(sess.user, "CRIAR_USUARIO", `Nome: ${u.nome}\nLogin: ${u.username}\nCargo: ${u.role}`, "Administração");
                 alert("Criado!"); e.target.reset(); carregarUsuarios(); 
             } else alert(error.message);
         };
 
         window.removerUser = async (id, nome) => {
-            if (confirm(`Excluir permanentemente ${nome}?`)) {
+            if (confirm(`Excluir ${nome}?`)) {
                 const sess = JSON.parse(localStorage.getItem('rh_session'));
                 await supabaseClient.from('usuarios_sistema').delete().eq('id', id);
-                await DBHandler.registrarLog(sess.user, "EXCLUIR_USUARIO", `Acesso removido para: ${nome}`, "Administração");
+                await DBHandler.registrarLog(sess.user, "EXCLUIR_USUARIO", `Removido: ${nome}`, "Administração");
                 carregarUsuarios();
             }
         };
 
-        // --- CARGA DE LOGS ---
         window.carregarLogs = async () => {
             const body = document.getElementById('listaLogsBody');
             if(!body) return;
@@ -359,7 +403,7 @@
             const dataFim = document.getElementById('logDateFim').value;
             const telaFiltro = document.getElementById('logFilterTela').value;
 
-            body.innerHTML = '<tr><td colspan="5">Buscando histórico...</td></tr>';
+            body.innerHTML = '<tr><td colspan="5">Buscando...</td></tr>';
             let query = supabaseClient.from('logs_sistema').select('*');
             if (dataInicio) query = query.gte('created_at', `${dataInicio}T00:00:00`);
             if (dataFim) query = query.lte('created_at', `${dataFim}T23:59:59`);
@@ -368,15 +412,10 @@
             const { data, error } = await query.order('created_at', { ascending: false }).limit(200);
             if (error) { body.innerHTML = `<tr><td colspan="5">Erro: ${error.message}</td></tr>`; return; }
             
-            body.innerHTML = data.length ? '' : '<tr><td colspan="5">Nenhum registro encontrado para este filtro.</td></tr>';
+            body.innerHTML = data.length ? '' : '<tr><td colspan="5">Sem registros.</td></tr>';
             data?.forEach(l => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="text-align:left; color:#64748b">${new Date(l.created_at).toLocaleString()}</td>
-                    <td><span class="role-badge" style="background:#f1f5f9; color:#475569">${l.usuario}</span></td>
-                    <td><strong>${l.acao}</strong></td>
-                    <td class="log-details-cell">${l.detalhes || '-'}</td>
-                    <td><small>${l.tela || '-'}</small></td>`;
+                tr.innerHTML = `<td style="text-align:left; color:#64748b">${new Date(l.created_at).toLocaleString()}</td><td><span class="role-badge" style="background:#f1f5f9; color:#475569">${l.usuario}</span></td><td><strong>${l.acao}</strong></td><td class="log-details-cell">${l.detalhes || '-'}</td><td><small>${l.tela || '-'}</small></td>`;
                 body.appendChild(tr);
             });
         };
