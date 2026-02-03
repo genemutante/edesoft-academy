@@ -831,7 +831,10 @@ window.gerarCertificado = (id) => {
 
     const nomeColaborador = item.colaboradores?.nome || "Colaborador";
     const nomeCurso = item.treinamentos?.nome || "Curso de Especialização";
+    
+    // CARGA HORÁRIA: Preparado para o banco, usando 40h como padrão fictício
     const cargaHoraria = item.treinamentos?.carga_horaria || "40"; 
+    
     const dataEmissao = item.data_homologacao 
         ? new Date(item.data_homologacao).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) 
         : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -853,122 +856,65 @@ window.gerarCertificado = (id) => {
                     --text-muted: #64748b; 
                 }
 
-                /* Garante que o body ocupe tudo e centralize o canvas */
                 body { 
-                    margin: 0; 
-                    padding: 0; 
-                    display: flex; 
-                    justify-content: center; 
-                    align-items: center; 
-                    min-height: 100vh; 
-                    background: #333; 
+                    margin: 0; padding: 0; display: flex; justify-content: center; 
+                    align-items: center; min-height: 100vh; background: #222; 
                     font-family: 'Montserrat', sans-serif; 
                 }
 
-                /* Canvas com tamanho fixo A4 Paisagem */
                 .cert-canvas { 
-                    width: 297mm; 
-                    height: 210mm; 
-                    background: var(--primary-dark); 
-                    position: relative; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; /* Centraliza a white-card horizontalmente */
-                    overflow: hidden; 
-                    box-sizing: border-box; 
+                    width: 297mm; height: 210mm; background: var(--primary-dark); 
+                    position: relative; display: flex; align-items: center; 
+                    justify-content: center; overflow: hidden; box-sizing: border-box; 
                 }
 
-                /* Fundo de grade sutil */
                 .cert-canvas::before { 
-                    content: ""; 
-                    position: absolute; 
-                    inset: 0; 
+                    content: ""; position: absolute; inset: 0; 
                     background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0); 
                     background-size: 35px 35px; 
                 }
 
-                /* Título Externo no Topo */
                 .outer-title { 
-                    position: absolute;
-                    top: 40px;
-                    color: white; 
-                    font-weight: 900; 
-                    font-size: 56px; 
-                    text-transform: uppercase; 
-                    letter-spacing: 12px; 
-                    margin: 0;
-                    z-index: 2; 
+                    position: absolute; top: 45px; color: white; font-weight: 900; 
+                    font-size: 56px; text-transform: uppercase; letter-spacing: 12px; z-index: 2; 
                 }
 
-                /* Cartão Branco Centralizado */
                 .content-card { 
-                    width: 86%; 
-                    height: 65%; 
-                    background: white; 
-                    position: relative; 
-                    display: flex; 
-                    flex-direction: column; 
-                    align-items: center; 
-                    justify-content: space-between; /* Distribui conteúdo internamente */
-                    padding: 60px 80px; 
-                    box-sizing: border-box; 
-                    z-index: 2; 
+                    width: 86%; height: 60%; background: white; position: relative; 
+                    display: flex; flex-direction: column; align-items: center; 
+                    justify-content: space-between; padding: 60px 80px; box-sizing: border-box; z-index: 2; 
                 }
 
-                /* Borda dourada interna */
                 .content-card::after { 
-                    content: ""; 
-                    position: absolute; 
-                    top: 15px; left: 15px; right: 15px; bottom: 15px; 
-                    border: 1.5px solid var(--accent-gold); 
-                    pointer-events: none; 
+                    content: ""; position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; 
+                    border: 1px solid var(--accent-gold); pointer-events: none; 
                 }
 
                 .student-name { 
-                    font-family: 'Pinyon Script', cursive; 
-                    font-size: 82px; 
-                    color: var(--primary-dark); 
-                    margin: 10px 0; 
+                    font-family: 'Pinyon Script', cursive; font-size: 84px; 
+                    color: var(--primary-dark); margin: 10px 0; 
                 }
 
                 .course-name { 
-                    display: block; 
-                    font-weight: 700; 
-                    color: var(--primary-dark); 
-                    font-size: 26px; 
-                    text-transform: uppercase; 
-                    margin-top: 10px; 
+                    display: block; font-weight: 700; color: var(--primary-dark); 
+                    font-size: 28px; text-transform: uppercase; margin-top: 10px; 
                 }
 
-                .cert-footer { 
-                    width: 100%; 
-                    display: flex; 
-                    justify-content: space-between; 
-                    align-items: flex-end; 
-                }
-
+                .cert-footer { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; }
                 .info-block { width: 250px; text-align: left; }
                 .info-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
                 .info-value { font-size: 15px; font-weight: 600; color: var(--primary-dark); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
 
-                .seal-container { width: 100px; height: 100px; }
+                .seal-container { width: 110px; height: 110px; }
 
-                .platform-signature { text-align: right; width: 250px; }
-                .platform-name { font-weight: 900; font-size: 18px; color: var(--primary-dark); letter-spacing: 1px; margin-bottom: 4px; }
+                .platform-signature { text-align: right; width: 300px; }
+                .platform-name { font-weight: 900; font-size: 20px; color: var(--primary-dark); letter-spacing: 1px; margin-bottom: 4px; }
                 .platform-badge { font-size: 10px; color: var(--text-muted); line-height: 1.4; border-right: 4px solid var(--accent-gold); padding-right: 12px; }
 
-                /* CSS DE IMPRESSÃO - O PONTO CHAVE */
                 @media print { 
                     body { background: white; } 
-                    @page { 
-                        size: A4 landscape; 
-                        margin: 0; /* Remove margens do navegador (Data, URL, etc) */
-                    } 
-                    .cert-canvas { 
-                        -webkit-print-color-adjust: exact; 
-                        width: 297mm; 
-                        height: 210mm;
-                    } 
+                    @page { size: A4 landscape; margin: 0; } 
+                    .cert-canvas { -webkit-print-color-adjust: exact; width: 297mm; height: 210mm; } 
                 }
             </style>
         </head>
@@ -976,16 +922,16 @@ window.gerarCertificado = (id) => {
             <div class="cert-canvas">
                 <h1 class="outer-title">Certificado</h1>
                 <div class="content-card">
-                    <span style="font-weight:700; color:var(--text-muted); text-transform:uppercase; font-size:13px; letter-spacing:4px;">A Edesoft Academy confere a</span>
+                    <span style="font-weight:700; color:var(--text-muted); text-transform:uppercase; font-size:14px; letter-spacing:4px;">Certificamos que</span>
                     
                     <div class="student-name">${nomeColaborador}</div>
                     
                     <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                        <p style="color:var(--text-muted); font-size:18px; line-height:1.6; max-width:700px; margin:0 auto;">
-                            o presente título por ter demonstrado excelência técnica e concluído com êxito os requisitos do curso:
+                        <p style="color:var(--text-muted); font-size:19px; line-height:1.6; max-width:750px; margin:0 auto;">
+                            concluiu com êxito o treinamento de capacitação em:
                             <span class="course-name">${nomeCurso}</span>
-                            <span style="font-size: 14px; font-weight: 600; color: var(--accent-gold); margin-top: 10px; display: block;">
-                                CARGA HORÁRIA TOTAL: ${cargaHoraria} HORAS
+                            <span style="font-size: 15px; font-weight: 700; color: var(--accent-gold); margin-top: 12px; display: block; letter-spacing: 1px;">
+                                CARGA HORÁRIA: ${cargaHoraria} HORAS
                             </span>
                         </p>
                     </div>
@@ -999,9 +945,9 @@ window.gerarCertificado = (id) => {
                         <div class="seal-container">
                             <svg viewBox="0 0 100 100">
                                 <circle cx="50" cy="50" r="45" fill="none" stroke="#c5a059" stroke-width="2"/>
-                                <path id="tp" fill="none" d="M 50,50 m -33,0 a 33,33 0 1,1 66,0 a 33,33 0 1,1 -66,0" />
+                                <path id="txtP" fill="none" d="M 50,50 m -33,0 a 33,33 0 1,1 66,0 a 33,33 0 1,1 -66,0" />
                                 <text font-size="6.5" font-weight="700" fill="#c5a059">
-                                    <textPath xlink:href="#tp">EDESOFT ACADEMY • OFFICIAL VERIFIED DOCUMENT •</textPath>
+                                    <textPath xlink:href="#txtP">EDESOFT ACADEMY • OFFICIAL VERIFIED DOCUMENT •</textPath>
                                 </text>
                                 <path d="M42 50 L48 56 L58 44" fill="none" stroke="#c5a059" stroke-width="3" stroke-linecap="round"/>
                             </svg>
@@ -1010,9 +956,9 @@ window.gerarCertificado = (id) => {
                         <div class="platform-signature">
                             <div class="platform-name">EDESOFT ACADEMY</div>
                             <div class="platform-badge">
-                                Emitido via <strong>Plataforma Academy</strong>.<br>
-                                Autenticidade garantida por registros internos.<br>
-                                ID: ${hashUnico}
+                                Documento emitido pela <strong>Plataforma Academy</strong>.<br>
+                                Autenticidade validada via registros digitais.<br>
+                                <strong>Código: ${hashUnico}</strong>
                             </div>
                         </div>
                     </div>
@@ -1025,13 +971,13 @@ window.gerarCertificado = (id) => {
         </html>
     `);
     janelaCertificado.document.close();
-};;
-
+};
         
         
     </script>
 </body>
 </html>
+
 
 
 
