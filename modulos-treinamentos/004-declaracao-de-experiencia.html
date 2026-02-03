@@ -59,6 +59,14 @@
     font-size: 14px;
     background: #f1f5f9;
 }
+.filter-inner {
+    max-width: 720px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
 
 
         /* TABELA */
@@ -121,7 +129,12 @@
 
 <div id="view-lista">
 
-    <div class="filter-bar">
+
+
+
+<div class="filter-bar">
+  <div class="filter-inner">
+        <div class="filter-bar">
         <div class="filter-group">
             <label>Pesquisar Colaborador ou Curso</label>
             <input type="text" id="searchBox" class="search-input" placeholder="Buscar colaborador ou curso..." onkeyup="window.filtrar()">
@@ -138,7 +151,11 @@
 
         <button class="btn btn-outline" onclick="window.limparFiltros()">LIMPAR</button>
     </div>
+  </div>
+</div>
 
+
+    
     <div class="table-container">
         <table id="homologTable">
             <thead>
@@ -210,5 +227,6 @@ window.carregarLista();
 
 </body>
 </html>
+
 
 
