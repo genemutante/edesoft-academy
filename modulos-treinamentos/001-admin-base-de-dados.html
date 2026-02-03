@@ -11,105 +11,123 @@
             --primary: #4f46e5;
             --primary-hover: #4338ca;
             --danger: #ef4444;
+            --danger-hover: #dc2626;
             --success: #10b981;
-            --bg-gray: #f1f5f9;
+            --bg-gray: #f8fafc;
             --text-main: #0f172a;
-            --border-color: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --input-height: 38px;
         }
 
-        /* --- RESET & ESTRUTURA 100% FIXA --- */
+        /* --- RESET & LAYOUT --- */
         * { box-sizing: border-box; }
         html, body { 
-            height: 100vh; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column; 
-            background-color: var(--bg-gray); 
-            font-family: 'Inter', sans-serif; 
+            height: 100vh; margin: 0; padding: 0; overflow: hidden; 
+            display: flex; flex-direction: column; 
+            background-color: var(--bg-gray); font-family: 'Inter', sans-serif; 
+            color: var(--text-main);
         }
 
         .top-bar { 
-            flex-shrink: 0; 
-            height: 56px; 
-            background: #ffffff; 
+            flex-shrink: 0; height: 56px; background: #ffffff; 
             border-bottom: 1px solid var(--border-color); 
-            display: flex; 
-            align-items: center; 
-            padding: 0 24px; 
-            z-index: 100; 
+            display: flex; align-items: center; padding: 0 24px; z-index: 100; 
         }
-        .top-bar h1 { font-size: 14px; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
+        .top-bar h1 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
 
         .main-workspace { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column;
-            padding: 20px; 
-            overflow: hidden; 
-            align-items: center;
+            flex: 1; display: flex; flex-direction: column; padding: 24px; 
+            overflow: hidden; align-items: center;
         }
 
         .admin-card { 
-            background: #ffffff; 
-            width: 100%; 
-            max-width: 1300px; 
-            height: 100%; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-color); 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
-            display: flex;
-            flex-direction: column; 
-            overflow: hidden; 
+            background: #ffffff; width: 100%; max-width: 1300px; height: 100%; 
+            border-radius: 12px; border: 1px solid var(--border-color); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            display: flex; flex-direction: column; overflow: hidden; 
         }
         
+        /* --- NAVEGAÇÃO --- */
         .tabs-header { 
-            flex-shrink: 0; 
-            display: flex; 
-            background: #f8fafc; 
-            border-bottom: 1px solid #e2e8f0; 
-            padding: 0 12px; 
+            flex-shrink: 0; display: flex; background: #ffffff; 
+            border-bottom: 1px solid var(--border-color); padding: 0 12px; 
         }
-        .tab-btn { padding: 14px 20px; border: none; background: none; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #eff6ff; }
+        .tab-btn { 
+            padding: 16px 20px; border: none; background: none; 
+            font-size: 13px; font-weight: 600; color: var(--text-muted); 
+            cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; 
+        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-        .card-body { 
-            flex: 1; 
-            padding: 24px; 
-            display: none; 
-            overflow-y: auto; 
-            background: #fff;
-        }
+        .card-body { flex: 1; padding: 24px; display: none; overflow-y: auto; }
         .card-body.active { display: block; animation: fadeIn 0.2s ease-out; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        .matrix-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px; }
-        .perm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .perm-table th { background: #f8fafc; padding: 12px; text-align: center; color: #475569; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
-        .perm-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: center; }
-        .perm-table td:first-child { text-align: left; font-weight: 600; color: #1e293b; font-size: 12px; padding-left: 15px; }
+        /* --- PADRONIZAÇÃO DE BOTÕES --- */
+        .btn-action, .btn-secondary, .btn-danger, .btn-cancel {
+            height: var(--input-height);
+            padding: 0 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            gap: 8px;
+        }
 
-        .filter-bar { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; align-items: flex-end; gap: 15px; }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; }
-        .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .filter-input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #fff; }
+        .btn-action { background: var(--primary); color: white; }
+        .btn-action:hover { background: var(--primary-hover); }
+        .btn-action:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
 
-        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        .btn-action:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
-        .btn-cancel { background: #fff; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: none; }
-        
-        /* Botão Secundário para Senha */
-        .btn-secondary { background: none; border: 1px solid #cbd5e1; color: #64748b; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; margin-right: 5px; }
-        .btn-secondary:hover { background: #f8fafc; color: var(--primary); border-color: var(--primary); }
+        .btn-secondary { background: #ffffff; border-color: var(--border-color); color: var(--text-muted); }
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: #f5f3ff; }
 
-        .check-ver { accent-color: var(--primary) !important; width: 16px; height: 16px; }
-        .check-editar { accent-color: var(--danger) !important; width: 16px; height: 16px; }
-        .check-detalhes { accent-color: var(--success) !important; width: 16px; height: 16px; }
-        .highlight-change { background-color: #eef2ff !important; border: 1px solid var(--primary) !important; }
-        .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #e0e7ff; color: #4338ca; text-transform: uppercase; }
-        .log-details-cell { text-align: left !important; font-size: 10px !important; white-space: pre-line !important; color: #475569; }
+        .btn-danger { background: #fff1f2; color: var(--danger); border-color: #fecdd3; }
+        .btn-danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .btn-cancel { background: transparent; color: var(--text-muted); display: none; }
+
+        /* --- PADRONIZAÇÃO DE INPUTS & SELECTS --- */
+        input[type="text"], input[type="password"], input[type="date"], select {
+            height: var(--input-height);
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--text-main);
+            background: #ffffff;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+
+        /* --- TABELAS --- */
+        .matrix-container { border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; }
+        .perm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .perm-table th { 
+            background: #f8fafc; padding: 14px 12px; text-align: center; 
+            color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .perm-table td { padding: 12px; border-bottom: 1px solid var(--border-color); text-align: center; }
+        .perm-table td:first-child { text-align: left; font-weight: 600; padding-left: 20px; }
+        .perm-table tr:last-child td { border-bottom: none; }
+        .perm-table tr:hover td { background-color: #fcfdfe; }
+
+        /* --- LOGS --- */
+        .filter-bar { background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 24px; display: flex; align-items: flex-end; gap: 16px; }
+        .log-details-cell { text-align: left !important; font-size: 11px !important; white-space: pre-line !important; color: var(--text-muted); line-height: 1.5; }
+        .highlight-change { background-color: #eff6ff !important; border-color: var(--primary) !important; }
+        .role-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #475569; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -131,10 +149,10 @@
             <div id="tab-status" class="card-body active"><div id="metaInfo"></div></div>
 
             <div id="tab-permissoes" class="card-body">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div style="font-size: 12px; color: #64748b;">Configure o acesso. Células azuis indicam alterações pendentes.</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="font-size: 13px; color: var(--text-muted);">Configure o acesso global. Células azuis indicam alterações pendentes.</div>
                     <div id="areaAcoesMatriz" style="display: flex; gap: 10px;">
-                        <button id="btnCancelarMatriz" class="btn-cancel" onclick="window.cancelarAlteracoesMatriz()">Cancelar Tudo</button>
+                        <button id="btnCancelarMatriz" class="btn-cancel" onclick="window.cancelarAlteracoesMatriz()">Descartar</button>
                         <button id="btnSalvarPermissoes" class="btn-action" disabled>Gravar Nova Matriz</button>
                     </div>
                 </div>
@@ -142,45 +160,45 @@
             </div>
 
             <div id="tab-usuarios" class="card-body">
-                <div id="gridUsuarios" style="display: grid; grid-template-columns: 320px 1fr; gap: 30px;">
-                    <div id="containerFormNovo" style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: fit-content;">
-                        <h3 style="font-size: 14px; margin-bottom: 15px;">Novo Acesso</h3>
+                <div id="gridUsuarios" style="display: grid; grid-template-columns: 320px 1fr; gap: 32px;">
+                    <div id="containerFormNovo" style="background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); height: fit-content; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h3 style="font-size: 15px; margin-bottom: 20px; font-weight: 700;">Novo Acesso</h3>
                         <form id="formNovoUsuario">
-                            <div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:700;">NOME COMPLETO</label><input type="text" id="addNome" style="width:100%; padding:8px;" required></div>
-                            <div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:700;">LOGIN / USERNAME</label><input type="text" id="addLogin" style="width:100%; padding:8px;" required></div>
-                            <div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:700;">SENHA TEMPORÁRIA</label><input type="password" id="addSenha" style="width:100%; padding:8px;" required></div>
-                            <div style="margin-bottom:20px;"><label style="font-size:10px; font-weight:700;">CARGO (ROLE)</label><select id="addRole" style="width:100%; padding:8px;"></select></div>
+                            <div style="margin-bottom:12px;"><label>NOME COMPLETO</label><input type="text" id="addNome" required></div>
+                            <div style="margin-bottom:12px;"><label>LOGIN / USERNAME</label><input type="text" id="addLogin" required></div>
+                            <div style="margin-bottom:12px;"><label>SENHA TEMPORÁRIA</label><input type="password" id="addSenha" required></div>
+                            <div style="margin-bottom:20px;"><label>CARGO (ROLE)</label><select id="addRole"></select></div>
                             <button type="submit" class="btn-action" style="width: 100%;">Criar Colaborador</button>
                         </form>
                     </div>
                     <div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3 style="font-size: 14px;">Colaboradores Registrados</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="font-size: 15px; font-weight: 700;">Colaboradores Registrados</h3>
                             <div id="areaAcoesUsuarios" style="display: flex; gap: 10px;">
-                                <button id="btnCancelarUsuarios" class="btn-cancel" onclick="window.cancelarAlteracoesUsuarios()">Descartar Mudanças</button>
+                                <button id="btnCancelarUsuarios" class="btn-cancel" onclick="window.cancelarAlteracoesUsuarios()">Descartar</button>
                                 <button id="btnSalvarUsuarios" class="btn-action" disabled onclick="window.salvarAlteracoesUsuarios()">Salvar Cargos</button>
                             </div>
                         </div>
-                        <div class="matrix-container"><table class="perm-table"><thead><tr><th style="text-align:left; padding-left:15px;">Nome</th><th>Login</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="listaUsuariosBody"></tbody></table></div>
+                        <div class="matrix-container"><table class="perm-table"><thead><tr><th style="text-align:left; padding-left:20px;">Nome</th><th>Login</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="listaUsuariosBody"></tbody></table></div>
                     </div>
                 </div>
             </div>
 
             <div id="tab-logs" class="card-body">
                 <div class="filter-bar">
-                    <div class="filter-group"><label>De</label><input type="date" id="logDateInicio" class="filter-input"></div>
-                    <div class="filter-group"><label>Até</label><input type="date" id="logDateFim" class="filter-input"></div>
-                    <div class="filter-group">
-                        <label>Filtrar por Tela Existente</label>
-                        <select id="logFilterTela" class="filter-input" style="min-width: 220px;">
-                            <option value="">Carregando telas...</option>
-                        </select>
+                    <div style="display: flex; gap: 12px;">
+                        <div class="filter-group"><label>De</label><input type="date" id="logDateInicio"></div>
+                        <div class="filter-group"><label>Até</label><input type="date" id="logDateFim"></div>
                     </div>
-                    <button class="btn-action" onclick="window.carregarLogs()" style="height: 35px;">Consultar Auditoria</button>
+                    <div class="filter-group" style="flex:1;">
+                        <label>Filtrar por Tela Existente</label>
+                        <select id="logFilterTela"><option value="">Carregando histórico...</option></select>
+                    </div>
+                    <button class="btn-action" onclick="window.carregarLogs()">Consultar Auditoria</button>
                 </div>
                 <div class="matrix-container">
                     <table class="perm-table">
-                        <thead><tr><th style="text-align:left; padding-left:15px;">Data/Hora</th><th>Usuário</th><th>Ação</th><th style="text-align:left;">Detalhes da Alteração</th><th>Tela</th></tr></thead>
+                        <thead><tr><th style="text-align:left; padding-left:20px;">Data/Hora</th><th>Usuário</th><th>Ação</th><th style="text-align:left;">Detalhes</th><th>Tela</th></tr></thead>
                         <tbody id="listaLogsBody"></tbody>
                     </table>
                 </div>
@@ -206,75 +224,52 @@
             popularFiltroTelasLogs();
         });
 
-        // --- FILTROS DE LOG DINÂMICOS ---
         async function popularFiltroTelasLogs() {
             const select = document.getElementById('logFilterTela');
             if (!select) return;
-
             try {
                 const { data, error } = await supabaseClient.from('logs_sistema').select('tela');
                 if (error) throw error;
                 const telasEncontradas = [...new Set(data.map(l => l.tela).filter(t => t))].sort();
-                
-                if (telasEncontradas.length === 0) {
-                    select.innerHTML = '<option value="">Sem registros no log</option>';
-                    return;
-                }
-                select.innerHTML = telasEncontradas.map(t => `<option value="${t}">${t}</option>`).join('');
-            } catch (err) {
-                select.innerHTML = '<option value="">Erro ao carregar</option>';
-            }
+                select.innerHTML = telasEncontradas.length ? telasEncontradas.map(t => `<option value="${t}">${t}</option>`).join('') : '<option value="">Sem registros</option>';
+            } catch (err) { select.innerHTML = '<option value="">Erro ao carregar</option>'; }
         }
 
         window.carregarLogs = async () => {
             const body = document.getElementById('listaLogsBody');
-            const dataInicio = document.getElementById('logDateInicio').value;
-            const dataFim = document.getElementById('logDateFim').value;
-            const telaSelecionada = document.getElementById('logFilterTela').value;
+            const d1 = document.getElementById('logDateInicio').value;
+            const d2 = document.getElementById('logDateFim').value;
+            const tela = document.getElementById('logFilterTela').value;
 
-            if (!telaSelecionada) {
-                body.innerHTML = '<tr><td colspan="5">Selecione uma tela para filtrar.</td></tr>';
-                return;
-            }
+            if (!tela) { body.innerHTML = '<tr><td colspan="5">Selecione uma tela para filtrar.</td></tr>'; return; }
 
             body.innerHTML = '<tr><td colspan="5">Buscando histórico...</td></tr>';
-            let query = supabaseClient.from('logs_sistema').select('*').eq('tela', telaSelecionada);
-
-            if (dataInicio) query = query.gte('created_at', `${dataInicio}T00:00:00`);
-            if (dataFim) query = query.lte('created_at', `${dataFim}T23:59:59`);
+            let query = supabaseClient.from('logs_sistema').select('*').eq('tela', tela);
+            if (d1) query = query.gte('created_at', `${d1}T00:00:00`);
+            if (d2) query = query.lte('created_at', `${d2}T23:59:59`);
 
             const { data, error } = await query.order('created_at', { ascending: false }).limit(200);
-
             if (error) { body.innerHTML = `<tr><td colspan="5">Erro: ${error.message}</td></tr>`; return; }
             
-            body.innerHTML = data.length ? '' : '<tr><td colspan="5">Nenhum registro encontrado.</td></tr>';
+            body.innerHTML = data.length ? '' : '<tr><td colspan="5">Sem registros encontrados.</td></tr>';
             data?.forEach(l => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td style="text-align:left; color:#64748b">${new Date(l.created_at).toLocaleString()}</td><td><span class="role-badge" style="background:#f1f5f9; color:#475569">${l.usuario}</span></td><td><strong>${l.acao}</strong></td><td class="log-details-cell">${l.detalhes || '-'}</td><td><small>${l.tela}</small></td>`;
+                tr.innerHTML = `<td>${new Date(l.created_at).toLocaleString()}</td><td><span class="role-badge">${l.usuario}</span></td><td><strong>${l.acao}</strong></td><td class="log-details-cell">${l.detalhes || '-'}</td><td><small>${l.tela}</small></td>`;
                 body.appendChild(tr);
             });
         };
 
-        // --- GESTÃO DE SENHAS ---
         window.redefinirSenha = async (id, nome) => {
             const novaSenha = prompt(`Digite a nova senha para ${nome}:`);
-            if (!novaSenha || novaSenha.length < 4) {
-                if (novaSenha !== null) alert("Senha muito curta (mínimo 4 caracteres).");
-                return;
-            }
-
-            if (!confirm(`Confirmar a alteração de senha de ${nome}?`)) return;
-
+            if (!novaSenha || novaSenha.length < 4) { if (novaSenha !== null) alert("Mínimo 4 caracteres."); return; }
+            if (!confirm(`Confirmar alteração de senha de ${nome}?`)) return;
             try {
                 const sess = JSON.parse(localStorage.getItem('rh_session'));
                 const { error } = await supabaseClient.from('usuarios_sistema').update({ password: novaSenha }).eq('id', id);
                 if (error) throw error;
-
-                await DBHandler.registrarLog(sess.user, "REDEFINIR_SENHA", `Senha alterada para o usuário: ${nome}`, "Administração");
-                alert("Senha redefinida com sucesso!");
-            } catch (e) {
-                alert("Erro ao redefinir senha: " + e.message);
-            }
+                await DBHandler.registrarLog(sess.user, "REDEFINIR_SENHA", `Senha alterada para: ${nome}`, "Administração");
+                alert("Sucesso!");
+            } catch (e) { alert("Erro: " + e.message); }
         };
 
         function popularSelectRoles() {
@@ -284,10 +279,8 @@
 
         function setarDatasIniciais() {
             const h = new Date(); const p = new Date(); p.setDate(h.getDate() - 30);
-            const elF = document.getElementById('logDateFim');
-            const elI = document.getElementById('logDateInicio');
-            if(elF) elF.value = h.toISOString().split('T')[0];
-            if(elI) elI.value = p.toISOString().split('T')[0];
+            document.getElementById('logDateFim').value = h.toISOString().split('T')[0];
+            document.getElementById('logDateInicio').value = p.toISOString().split('T')[0];
         }
 
         function configurarAbas() {
@@ -295,9 +288,7 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.tab-btn, .card-body').forEach(el => el.classList.remove('active'));
                     btn.classList.add('active');
-                    const target = document.getElementById('tab-' + btn.dataset.tab);
-                    if (target) target.classList.add('active');
-                    
+                    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
                     if (btn.dataset.tab === 'usuarios') carregarUsuarios();
                     if (btn.dataset.tab === 'logs') { popularFiltroTelasLogs(); window.carregarLogs(); }
                     if (btn.dataset.tab === 'permissoes') initMatrix();
@@ -306,25 +297,19 @@
         }
 
         async function carregarStatus() {
-            try {
-                const { count: u } = await supabaseClient.from('usuarios_sistema').select('*', { count: 'exact', head: true });
-                const el = document.getElementById('metaInfo');
-                if(el) el.innerHTML = `<div style="padding:15px; background:#eff6ff; border-radius:8px; border:1px solid #dbeafe; display:inline-block;"><span style="font-size:11px; color:#1d4ed8; font-weight:700;">STATUS: CONECTADO</span><br><strong style="font-size:20px;">${u || 0} Usuários Ativos</strong></div>`;
-            } catch(e) {}
+            const { count: u } = await supabaseClient.from('usuarios_sistema').select('*', { count: 'exact', head: true });
+            document.getElementById('metaInfo').innerHTML = `<div style="padding:16px; background:#eff6ff; border-radius:10px; border:1px solid #dbeafe; display:inline-block;"><strong style="font-size:18px;">${u || 0} Usuários Ativos</strong></div>`;
         }
 
         async function initMatrix() {
             const h = document.getElementById('headerRoles');
             const b = document.getElementById('permTableBody');
-            if(!h || !b) return;
-            h.innerHTML = '<th>Módulo do Sistema</th>';
-            ROLES.forEach(r => { h.innerHTML += `<th colspan="3" style="border-left: 1px solid #e2e8f0; width: 180px;">${r}<br><span style="font-size:8px; color:#94a3b8">VER | EDITAR | DETALHES</span></th>`; });
-
+            h.innerHTML = '<th>Módulo</th>';
+            ROLES.forEach(r => { h.innerHTML += `<th colspan="3" style="border-left: 1px solid var(--border-color);">${r}</th>`; });
             const { data: mods } = await supabaseClient.from('modulos_sistema').select('*').order('ordem');
             const { data: acc } = await supabaseClient.from('acesso_modulos').select('*');
             originalMatrixState = acc;
             b.innerHTML = '';
-            
             mods.forEach(m => {
                 modulosLabelMap[m.id] = m.label;
                 const tr = document.createElement('tr');
@@ -351,68 +336,42 @@
                 cb.parentElement.classList.toggle('highlight-change', isDirty);
                 if (isDirty) dirty = true;
             });
-            const s = document.getElementById('btnSalvarPermissoes');
-            const c = document.getElementById('btnCancelarMatriz');
-            if(s) s.disabled = !dirty; if(c) c.style.display = dirty ? 'block' : 'none';
+            document.getElementById('btnSalvarPermissoes').disabled = !dirty;
+            document.getElementById('btnCancelarMatriz').style.display = dirty ? 'block' : 'none';
         };
-
-        window.cancelarAlteracoesMatriz = () => initMatrix();
 
         document.getElementById('btnSalvarPermissoes').onclick = async () => {
             const sess = JSON.parse(localStorage.getItem('rh_session'));
             const payload = [];
             const auditDiffs = [];
-
             document.querySelectorAll('.matrix-cb').forEach(cb => {
                 const ac = originalMatrixState.find(a => a.modulo_id == cb.dataset.modulo && a.role == cb.dataset.role);
-                let orig = false;
-                if(cb.dataset.type === 'Visualizar') orig = !!ac;
-                if(cb.dataset.type === 'Editar') orig = ac?.pode_editar || false;
-                if(cb.dataset.type === 'Detalhes') orig = ac?.ver_detalhes || false;
-                if (cb.checked !== orig) {
-                    const modLabel = modulosLabelMap[cb.dataset.modulo];
-                    auditDiffs.push(`• [${modLabel}] Cargo ${cb.dataset.role} - ${cb.dataset.type}: ${orig?'Sim':'Não'} ➔ ${cb.checked?'Sim':'Não'}`);
+                let orig = (cb.dataset.type === 'Visualizar') ? !!ac : (cb.dataset.type === 'Editar') ? ac?.pode_editar : ac?.ver_detalhes;
+                if (cb.checked !== !!orig) {
+                    auditDiffs.push(`• [${modulosLabelMap[cb.dataset.modulo]}] ${cb.dataset.role} - ${cb.dataset.type}: ${orig?'Sim':'Não'} ➔ ${cb.checked?'Sim':'Não'}`);
                 }
             });
-
-            if (!confirm(`Confirmar gravação?\n\nAlterações:\n${auditDiffs.join('\n')}`)) return;
-
+            if (!confirm(`Salvar?\n\n${auditDiffs.join('\n')}`)) return;
             ROLES.forEach(role => {
                 document.querySelectorAll(`.matrix-cb[data-role="${role}"][data-type="Visualizar"]:checked`).forEach(cb => {
                     const mid = cb.dataset.modulo;
-                    payload.push({
-                        role, modulo_id: parseInt(mid),
-                        pode_editar: document.querySelector(`.matrix-cb[data-modulo="${mid}"][data-role="${role}"][data-type="Editar"]`).checked,
-                        ver_detalhes: document.querySelector(`.matrix-cb[data-modulo="${mid}"][data-role="${role}"][data-type="Detalhes"]`).checked
-                    });
+                    payload.push({ role, modulo_id: parseInt(mid), pode_editar: document.querySelector(`.matrix-cb[data-modulo="${mid}"][data-role="${role}"][data-type="Editar"]`).checked, ver_detalhes: document.querySelector(`.matrix-cb[data-modulo="${mid}"][data-role="${role}"][data-type="Detalhes"]`).checked });
                 });
             });
-
-            try {
-                await supabaseClient.from('acesso_modulos').delete().neq('id', 0);
-                if (payload.length > 0) await supabaseClient.from('acesso_modulos').insert(payload);
-                await DBHandler.registrarLog(sess.user, "ATUALIZAR_MATRIZ", auditDiffs.join('\n'), "Administração");
-                alert("Matriz salva!"); initMatrix();
-            } catch (e) { alert("Erro ao salvar."); }
+            await supabaseClient.from('acesso_modulos').delete().neq('id', 0);
+            if (payload.length > 0) await supabaseClient.from('acesso_modulos').insert(payload);
+            await DBHandler.registrarLog(sess.user, "ATUALIZAR_MATRIZ", auditDiffs.join('\n'), "Administração");
+            alert("Salvo!"); initMatrix();
         };
 
         async function carregarUsuarios() {
             const body = document.getElementById('listaUsuariosBody');
-            if(!body) return;
-            body.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
             const { data } = await supabaseClient.from('usuarios_sistema').select('*').order('nome');
             body.innerHTML = '';
             data.forEach(u => {
                 const opt = ROLES.map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('');
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${u.nome}</strong></td>
-                    <td><code>${u.username}</code></td>
-                    <td><select class="user-role-select" data-id="${u.id}" data-original="${u.role}" data-nome="${u.nome}" onchange="window.verificarAlteracoesUsuarios()">${opt}</select></td>
-                    <td>
-                        <button class="btn-secondary" onclick="window.redefinirSenha('${u.id}', '${u.nome}')">Senha</button>
-                        <button class="btn-danger" onclick="window.removerUser('${u.id}', '${u.nome}')">Excluir</button>
-                    </td>`;
+                tr.innerHTML = `<td><strong>${u.nome}</strong></td><td><code>${u.username}</code></td><td><select class="user-role-select" data-id="${u.id}" data-original="${u.role}" onchange="window.verificarAlteracoesUsuarios()">${opt}</select></td><td><button class="btn-secondary" onclick="window.redefinirSenha('${u.id}', '${u.nome}')">Senha</button><button class="btn-danger" onclick="window.removerUser('${u.id}', '${u.nome}')">Excluir</button></td>`;
                 body.appendChild(tr);
             });
             window.verificarAlteracoesUsuarios();
@@ -426,24 +385,15 @@
                 s.classList.toggle('highlight-change', isDirty);
                 if (isDirty) dirty = true;
             });
-            const s = document.getElementById('btnSalvarUsuarios');
-            const c = document.getElementById('btnCancelarUsuarios');
-            if(s) s.disabled = !dirty; if(c) c.style.display = dirty ? 'block' : 'none';
+            document.getElementById('btnSalvarUsuarios').disabled = !dirty;
+            document.getElementById('btnCancelarUsuarios').style.display = dirty ? 'block' : 'none';
         };
-
-        window.cancelarAlteracoesUsuarios = () => carregarUsuarios();
 
         window.salvarAlteracoesUsuarios = async () => {
             const dirty = Array.from(document.querySelectorAll('.user-role-select')).filter(s => s.value !== s.dataset.original);
             const sess = JSON.parse(localStorage.getItem('rh_session'));
-            const auditLogs = dirty.map(s => `• Usuário: ${s.dataset.nome} | Cargo: ${s.dataset.original} ➔ ${s.value}`);
-
-            if (!confirm(`Gravar mudanças?\n\n${auditLogs.join('\n')}`)) return;
-
-            for (const s of dirty) {
-                await supabaseClient.from('usuarios_sistema').update({ role: s.value }).eq('id', s.dataset.id);
-            }
-            await DBHandler.registrarLog(sess.user, "ALTERAR_CARGO", auditLogs.join('\n'), "Administração");
+            for (const s of dirty) { await supabaseClient.from('usuarios_sistema').update({ role: s.value }).eq('id', s.dataset.id); }
+            await DBHandler.registrarLog(sess.user, "ALTERAR_CARGO", `Atualização de cargos efetuada`, "Administração");
             alert("Sucesso!"); carregarUsuarios();
         };
 
@@ -452,10 +402,7 @@
             const sess = JSON.parse(localStorage.getItem('rh_session'));
             const u = { nome: document.getElementById('addNome').value, username: document.getElementById('addLogin').value, password: document.getElementById('addSenha').value, role: document.getElementById('addRole').value };
             const { error } = await supabaseClient.from('usuarios_sistema').insert([u]);
-            if (!error) { 
-                await DBHandler.registrarLog(sess.user, "CRIAR_USUARIO", `Nome: ${u.nome}\nLogin: ${u.username}\nCargo: ${u.role}`, "Administração");
-                alert("Criado!"); e.target.reset(); carregarUsuarios(); 
-            } else alert(error.message);
+            if (!error) { await DBHandler.registrarLog(sess.user, "CRIAR_USUARIO", `Nome: ${u.nome}`, "Administração"); alert("Criado!"); e.target.reset(); carregarUsuarios(); }
         };
 
         window.removerUser = async (id, nome) => {
@@ -469,13 +416,8 @@
 
         function verificarModoLeitura() {
             if (new URLSearchParams(window.location.search).get('readonly') === 'true') {
-                document.getElementById('areaAcoesMatriz')?.remove();
-                document.getElementById('containerFormNovo')?.remove();
-                document.getElementById('areaAcoesUsuarios')?.remove();
-                const grid = document.getElementById('gridUsuarios');
-                if (grid) { grid.style.gridTemplateColumns = '1fr'; grid.style.gap = '0'; }
                 const obs = new MutationObserver(() => {
-                    document.querySelectorAll('input, select').forEach(el => el.disabled = true);
+                    document.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
                     document.querySelectorAll('.btn-danger, .btn-secondary').forEach(el => el.remove());
                 });
                 obs.observe(document.body, { childList: true, subtree: true });
