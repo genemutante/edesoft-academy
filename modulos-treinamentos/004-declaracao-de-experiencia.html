@@ -635,11 +635,11 @@ function renderizarTabela(lista) {
             <td style="text-align: right; white-space: nowrap;">
                 <button class="btn-action btn-view" title="Visualizar" onclick="window.abrirFormulario(${item.id}, true)">👁️</button>
                 
-                <button class="btn-action" title="Gerar Certificado" 
-                        style="background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5;" 
-                        onclick="window.gerarCertificado(${item.id})">
-                    📜
-                </button>
+<button class="btn-action" 
+        style="background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1;" 
+        onclick="${item.atividade_externa === 'NOTORIO' ? `window.gerarAtestado(${item.id})` : `window.gerarCertificado(${item.id})`}">
+    ${item.atividade_externa === 'NOTORIO' ? '⚖️' : '📜'}
+</button>
 
                 ${session.role === 'ADMIN' ? `
                     <button class="btn-action btn-edit" onclick="window.abrirFormulario(${item.id}, false)">✏️</button>
@@ -972,11 +972,129 @@ window.gerarCertificado = (id) => {
     `);
     janelaCertificado.document.close();
 };
-        
+
+
+
+window.gerarAtestado = (id) => {
+    const item = DADOS_LISTA.find(i => i.id === id);
+    if (!item) return alert("Registro não encontrado.");
+
+    const nomeColaborador = item.colaboradores?.nome || "Colaborador";
+    const nomeCurso = item.treinamentos?.nome || "Competência Técnica";
+    const dataEmissao = item.data_homologacao 
+        ? new Date(item.data_homologacao).toLocaleDateString('pt-BR') 
+        : new Date().toLocaleDateString('pt-BR');
+    
+    // Justificativa baseada no campo observações (onde salvamos a justificativa do RH)
+    const justificativa = item.observacoes || "Validação de competência baseada em histórico profissional e evidências de desempenho prático.";
+    const aprovador = item.instrutor || "Conselho Técnico Edesoft";
+
+    const janelaAtestado = window.open('', '_blank');
+    
+    janelaAtestado.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Atestado de Notório Saber - ${nomeColaborador}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Crimson+Pro:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+            <style>
+                body { margin: 0; padding: 0; background: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Crimson Pro', serif; }
+                
+                /* CANVAS A4 PAISAGEM - ESTILO PAPEL TIMBRADO */
+                .atestado-canvas { 
+                    width: 297mm; height: 210mm; background: #fff; position: relative; 
+                    display: flex; flex-direction: column; padding: 60px 100px; box-sizing: border-box; 
+                    border: 20px solid #f8fafc; outline: 1px solid #cbd5e1;
+                }
+
+                /* Moldura clássica dupla */
+                .atestado-canvas::after {
+                    content: ""; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+                    border: 2px solid #1e293b; pointer-events: none;
+                }
+
+                .header { text-align: center; margin-bottom: 40px; }
+                .header h1 { font-family: 'Playfair Display', serif; font-size: 42px; color: #1e293b; text-transform: uppercase; margin: 0; letter-spacing: 2px; }
+                .header p { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #64748b; margin-top: 10px; letter-spacing: 5px; text-transform: uppercase; }
+
+                .content { flex: 1; text-align: justify; color: #1e293b; font-size: 20px; line-height: 1.8; }
+                .content b { color: #000; }
+
+                .justificativa-box { 
+                    background: #f8fafc; border: 1px dashed #cbd5e1; padding: 20px; 
+                    margin: 30px 0; font-size: 16px; font-style: italic; color: #475569;
+                }
+
+                .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; }
+                
+                .signature-area { text-align: center; width: 300px; }
+                .signature-line { border-top: 1px solid #1e293b; margin-top: 10px; padding-top: 10px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; }
+
+                /* Selo Seco (Estilo Cartório) */
+                .dry-seal {
+                    width: 120px; height: 120px; border: 2px solid #e2e8f0; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    font-family: 'Montserrat'; font-size: 8px; text-align: center; color: #cbd5e1;
+                    text-transform: uppercase; transform: rotate(-15deg);
+                }
+
+                @media print { 
+                    body { background: white; } 
+                    @page { size: A4 landscape; margin: 0; } 
+                    .atestado-canvas { border: none; outline: none; -webkit-print-color-adjust: exact; } 
+                }
+            </style>
+        </head>
+        <body onload="window.print()">
+            <div class="atestado-canvas">
+                <div class="header">
+                    <h1>Atestado de Notório Saber</h1>
+                    <p>Reconhecimento de Competência Profissional</p>
+                </div>
+
+                <div class="content">
+                    A instituição <b>EDESOFT ACADEMY</b>, no uso de suas atribuições técnicas e pedagógicas, atesta para os devidos fins que 
+                    <b>${nomeColaborador.toUpperCase()}</b> demonstrou, através de rigorosa avaliação de seu histórico profissional e evidências práticas, 
+                    plena proficiência e domínio na área de <b>${nomeCurso}</b>.
+                    
+                    <div class="justificativa-box">
+                        <b>Parecer Técnico:</b> "${justificativa}"
+                    </div>
+
+                    Este documento possui equivalência plena à certificação do referido curso nesta plataforma, isentando o profissional de obrigatoriedades acadêmicas sobre o tema e validando seu conhecimento como <b>Notório Saber</b>.
+                </div>
+
+                <div class="footer">
+                    <div class="dry-seal">
+                        Edesoft Academy<br>Corporate Validation<br>Est. 2001
+                    </div>
+
+                    <div style="text-align: center; font-size: 14px;">
+                        Emitido em ${dataEmissao}<br>
+                        São Paulo - SP
+                    </div>
+
+                    <div class="signature-area">
+                        <div style="font-family: 'Playfair Display'; font-size: 22px;">${aprovador}</div>
+                        <div class="signature-line">VALIDADOR RESPONSÁVEL</div>
+                    </div>
+                </div>
+                
+                <div style="position: absolute; bottom: 30px; left: 100px; font-size: 10px; color: #94a3b8; font-family: monospace;">
+                    Cod. Autenticidade: ${btoa(hashUnico).substring(0, 20).toUpperCase()}
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    janelaAtestado.document.close();
+};        
         
     </script>
 </body>
 </html>
+
 
 
 
