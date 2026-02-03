@@ -46,27 +46,20 @@
         .perm-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; text-align: center; vertical-align: middle; }
         .perm-table td:first-child { text-align: left; font-weight: 600; color: #1e293b; font-size: 12px; padding-left: 15px; }
 
-        /* --- CHECKBOXES COLORIDOS --- */
-        .check-ver { accent-color: var(--primary) !important; width: 16px; height: 16px; cursor: pointer; }
-        .check-editar { accent-color: var(--danger) !important; width: 16px; height: 16px; cursor: pointer; }
-        .check-detalhes { accent-color: var(--success) !important; width: 16px; height: 16px; cursor: pointer; }
+        /* --- FILTROS LOG --- */
+        .filter-bar { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; align-items: flex-end; gap: 15px; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .filter-input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #fff; }
 
-        /* --- BOTÕES --- */
-        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s; }
-        .btn-action:hover:not(:disabled) { background: var(--primary-hover); }
-        .btn-action:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
-
-        .btn-cancel { background: #fff; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: none; }
-        .btn-cancel:hover { background: #f8fafc; }
-        .btn-danger { background: none; border: none; color: var(--danger); font-size: 11px; font-weight: 700; cursor: pointer; }
-
-        /* --- FORMULÁRIOS --- */
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; transition: border 0.2s; }
-        .input-group input:focus { border-color: var(--primary); }
-
+        /* --- COMPONENTES --- */
+        .check-ver { accent-color: var(--primary) !important; width: 16px; height: 16px; }
+        .check-editar { accent-color: var(--danger) !important; width: 16px; height: 16px; }
+        .check-detalhes { accent-color: var(--success) !important; width: 16px; height: 16px; }
         .highlight-change { background-color: #eef2ff !important; }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .btn-action:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+        .btn-cancel { background: #fff; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: none; }
         .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #e0e7ff; color: #4338ca; text-transform: uppercase; }
     </style>
 </head>
@@ -86,24 +79,17 @@
                 <button class="tab-btn" data-tab="logs">Logs de Auditoria</button>
             </nav>
 
-            <div id="tab-status" class="card-body active">
-                <div id="metaInfo"></div>
-            </div>
+            <div id="tab-status" class="card-body active"><div id="metaInfo"></div></div>
 
             <div id="tab-permissoes" class="card-body">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div style="font-size: 12px; color: #64748b;">Configure os níveis de acesso por cargo. Células azuis indicam alterações pendentes.</div>
-                    <div id="areaAcoesMatriz" style="display: flex; gap: 10px;">
+                    <div style="font-size: 12px; color: #64748b;">Ajustes na matriz exigem gravação global.</div>
+                    <div style="display: flex; gap: 10px;">
                         <button id="btnCancelarMatriz" class="btn-cancel" onclick="window.cancelarAlteracoesMatriz()">Cancelar</button>
                         <button id="btnSalvarPermissoes" class="btn-action" disabled>Gravar Matriz de Acesso</button>
                     </div>
                 </div>
-                <div class="matrix-container">
-                    <table class="perm-table">
-                        <thead><tr id="headerRoles"><th>Módulo</th></tr></thead>
-                        <tbody id="permTableBody"></tbody>
-                    </table>
-                </div>
+                <div class="matrix-container"><table class="perm-table"><thead id="headerRoles"></thead><tbody id="permTableBody"></tbody></table></div>
             </div>
 
             <div id="tab-usuarios" class="card-body">
@@ -111,65 +97,45 @@
                     <div id="containerFormNovo" style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
                         <h3 style="font-size: 14px; margin-bottom: 15px;">Novo Acesso</h3>
                         <form id="formNovoUsuario">
-                            <div class="input-group"><label>Nome Completo</label><input type="text" id="addNome" required></div>
-                            <div class="input-group"><label>Login</label><input type="text" id="addLogin" required></div>
-                            <div class="input-group"><label>Senha Inicial</label><input type="password" id="addSenha" required></div>
-                            <div class="input-group">
-                                <label>Cargo</label>
-                                <select id="addRole">
-                                    <option value="COLABORADOR">COLABORADOR</option>
-                                    <option value="GESTOR">GESTOR</option>
-                                    <option value="RH_OPERACIONAL">RH OPERACIONAL</option>
-                                    <option value="TD_COORD">COORDENADOR T&D</option>
-                                    <option value="AUDITOR">AUDITOR</option>
-                                    <option value="ADMIN" selected>ADMINISTRADOR</option>
-                                </select>
-                            </div>
+                            <div style="margin-bottom: 10px;"><label style="font-size:11px; font-weight:700;">NOME</label><input type="text" id="addNome" style="width:100%; padding:8px;" required></div>
+                            <div style="margin-bottom: 10px;"><label style="font-size:11px; font-weight:700;">LOGIN</label><input type="text" id="addLogin" style="width:100%; padding:8px;" required></div>
+                            <div style="margin-bottom: 10px;"><label style="font-size:11px; font-weight:700;">SENHA</label><input type="password" id="addSenha" style="width:100%; padding:8px;" required></div>
+                            <div style="margin-bottom: 20px;"><label style="font-size:11px; font-weight:700;">CARGO</label><select id="addRole" style="width:100%; padding:8px;"></select></div>
                             <button type="submit" class="btn-action" style="width: 100%;">Criar Usuário</button>
                         </form>
                     </div>
-
-                    <div id="containerTabelaUsuarios">
+                    <div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h3 style="font-size: 14px;">Usuários Registrados</h3>
-                            <div id="areaAcoesUsuarios" style="display: flex; gap: 10px;">
+                            <div style="display: flex; gap: 10px;">
                                 <button id="btnCancelarUsuarios" class="btn-cancel" onclick="window.cancelarAlteracoesUsuarios()">Cancelar</button>
                                 <button id="btnSalvarUsuarios" class="btn-action" disabled onclick="window.salvarAlteracoesUsuarios()">Gravar Alterações</button>
                             </div>
                         </div>
-                        <div class="matrix-container">
-                            <table class="perm-table">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align: left; padding-left: 15px;">Nome</th>
-                                        <th>Login</th>
-                                        <th>Cargo</th>
-                                        <th>Ação</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="listaUsuariosBody"></tbody>
-                            </table>
-                        </div>
+                        <div class="matrix-container"><table class="perm-table"><thead><tr><th style="text-align:left; padding-left:15px;">Nome</th><th>Login</th><th>Cargo</th><th>Ação</th></tr></thead><tbody id="listaUsuariosBody"></tbody></table></div>
                     </div>
                 </div>
             </div>
 
             <div id="tab-logs" class="card-body">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="font-size: 14px;">Logs de Auditoria</h3>
-                    <button class="btn-action" onclick="window.carregarLogs()" style="padding: 6px 15px;">Atualizar Histórico</button>
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Início</label>
+                        <input type="date" id="logDateInicio" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Fim</label>
+                        <input type="date" id="logDateFim" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Filtrar por Tela</label>
+                        <select id="logFilterTela" class="filter-input" style="width: 200px;"></select>
+                    </div>
+                    <button class="btn-action" onclick="window.carregarLogs()" style="height: 35px;">Filtrar Histórico</button>
                 </div>
                 <div class="matrix-container">
                     <table class="perm-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align: left; padding-left: 15px;">Data/Hora</th>
-                                <th>Usuário</th>
-                                <th>Ação</th>
-                                <th style="text-align: left;">Detalhes</th>
-                                <th>Tela</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th style="text-align:left; padding-left:15px;">Data/Hora</th><th>Usuário</th><th>Ação</th><th style="text-align:left;">Detalhes</th><th>Tela</th></tr></thead>
                         <tbody id="listaLogsBody"></tbody>
                     </table>
                 </div>
@@ -189,9 +155,33 @@
             carregarStatus();
             initMatrix();
             verificarModoLeitura();
+            popularSelectRoles();
+            popularFiltroTelas();
+            setarDatasIniciais();
         });
 
-        // --- NAVEGAÇÃO ---
+        function popularSelectRoles() {
+            const select = document.getElementById('addRole');
+            select.innerHTML = ROLES.map(r => `<option value="${r}">${r}</option>`).join('');
+        }
+
+        function setarDatasIniciais() {
+            const hoje = new Date();
+            const trintaDiasAtras = new Date();
+            trintaDiasAtras.setDate(hoje.getDate() - 30);
+            
+            document.getElementById('logDateFim').value = hoje.toISOString().split('T')[0];
+            document.getElementById('logDateInicio').value = trintaDiasAtras.toISOString().split('T')[0];
+        }
+
+        async function popularFiltroTelas() {
+            const { data } = await supabaseClient.from('modulos_sistema').select('label').order('label');
+            const select = document.getElementById('logFilterTela');
+            // Adicionamos as telas fixas e as do banco
+            const telas = ['Administração', 'Login', ...data.map(m => m.label)];
+            select.innerHTML = telas.map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
         function configurarAbas() {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.onclick = () => {
@@ -199,7 +189,6 @@
                     btn.classList.add('active');
                     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
                     if (btn.dataset.tab === 'usuarios') carregarUsuarios();
-                    if (btn.dataset.tab === 'permissoes') initMatrix();
                     if (btn.dataset.tab === 'logs') window.carregarLogs();
                 };
             });
@@ -211,83 +200,66 @@
             document.getElementById('metaInfo').innerHTML = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"><div style="padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #dbeafe;"><span style="display:block; font-size:11px; color:#1d4ed8; font-weight:700;">USUÁRIOS ATIVOS</span><strong style="font-size:24px;">${u || 0}</strong></div><div style="padding: 15px; background: #f0fdf4; border-radius: 8px; border: 1px solid #dcfce7;"><span style="display:block; font-size:11px; color:#15803d; font-weight:700;">MÓDULOS NO SISTEMA</span><strong style="font-size:24px;">${m || 0}</strong></div></div>`;
         }
 
-        // --- MATRIZ (V|E|D) ---
+        // --- MATRIZ ---
         async function initMatrix() {
             const header = document.getElementById('headerRoles');
             const body = document.getElementById('permTableBody');
             header.innerHTML = '<th>Módulo</th>';
             ROLES.forEach(r => { header.innerHTML += `<th colspan="3" style="border-left: 1px solid #e2e8f0; width: 180px;">${r}<br><span style="font-size:8px; color:#94a3b8">VER | EDITAR | DETALHES</span></th>`; });
 
-            const { data: modulos } = await supabaseClient.from('modulos_sistema').select('*').order('ordem');
-            const { data: acessos } = await supabaseClient.from('acesso_modulos').select('*');
-            
-            originalMatrixState = acessos;
+            const { data: mods } = await supabaseClient.from('modulos_sistema').select('*').order('ordem');
+            const { data: acc } = await supabaseClient.from('acesso_modulos').select('*');
+            originalMatrixState = acc;
             body.innerHTML = '';
 
-            modulos.forEach(mod => {
+            mods.forEach(m => {
                 const tr = document.createElement('tr');
-                let html = `<td><strong>${mod.label}</strong></td>`;
+                let html = `<td><strong>${m.label}</strong></td>`;
                 ROLES.forEach(role => {
-                    const ac = acessos.find(a => a.modulo_id === mod.id && a.role === role);
-                    html += `
-                        <td style="border-left: 1px solid #f1f5f9;">
-                            <input type="checkbox" class="check-ver matrix-cb" data-modulo="${mod.id}" data-role="${role}" data-type="ver" ${ac ? 'checked' : ''} onchange="window.verificarAlteracoesMatriz()">
-                        </td>
-                        <td>
-                            <input type="checkbox" class="check-editar matrix-cb" data-modulo="${mod.id}" data-role="${role}" data-type="editar" ${ac?.pode_editar ? 'checked' : ''} onchange="window.verificarAlteracoesMatriz()">
-                        </td>
-                        <td>
-                            <input type="checkbox" class="check-detalhes matrix-cb" data-modulo="${mod.id}" data-role="${role}" data-type="detalhes" ${ac?.ver_detalhes ? 'checked' : ''} onchange="window.verificarAlteracoesMatriz()">
-                        </td>`;
+                    const ac = acc.find(a => a.modulo_id === m.id && a.role === role);
+                    html += `<td style="border-left: 1px solid #f1f5f9;"><input type="checkbox" class="matrix-cb" data-modulo="${m.id}" data-role="${role}" data-type="ver" ${ac ? 'checked' : ''} onchange="window.verificarAlteracoesMatriz()"></td><td><input type="checkbox" class="matrix-cb" data-modulo="${m.id}" data-role="${role}" data-type="editar" ${ac?.pode_editar ? 'checked' : ''} onchange="window.verificarAlteracoesMatriz()"></td><td><input type="checkbox" class="matrix-cb" data-modulo="${m.id}" data-role="${role}" data-type="detalhes" ${ac?.ver_detalhes ? 'checked' : ''} onchange="window.verificarAlteracoesMatriz()"></td>`;
                 });
-                tr.innerHTML = html;
-                body.appendChild(tr);
+                tr.innerHTML = html; body.appendChild(tr);
             });
             window.verificarAlteracoesMatriz();
         }
 
         window.verificarAlteracoesMatriz = () => {
             const cbs = document.querySelectorAll('.matrix-cb');
-            let mudou = false;
+            let dirty = false;
             cbs.forEach(cb => {
-                const acOrig = originalMatrixState.find(a => a.modulo_id == cb.dataset.modulo && a.role == cb.dataset.role);
-                let origVal = false;
-                if(cb.dataset.type === 'ver') origVal = !!acOrig;
-                if(cb.dataset.type === 'editar') origVal = acOrig?.pode_editar || false;
-                if(cb.dataset.type === 'detalhes') origVal = acOrig?.ver_detalhes || false;
-
-                const dirty = cb.checked !== origVal;
-                cb.parentElement.classList.toggle('highlight-change', dirty);
-                if (dirty) mudou = true;
+                const ac = originalMatrixState.find(a => a.modulo_id == cb.dataset.modulo && a.role == cb.dataset.role);
+                let orig = false;
+                if(cb.dataset.type === 'ver') orig = !!ac;
+                if(cb.dataset.type === 'editar') orig = ac?.pode_editar || false;
+                if(cb.dataset.type === 'detalhes') orig = ac?.ver_detalhes || false;
+                const isDirty = cb.checked !== orig;
+                cb.parentElement.classList.toggle('highlight-change', isDirty);
+                if (isDirty) dirty = true;
             });
-            document.getElementById('btnSalvarPermissoes').disabled = !mudou;
-            document.getElementById('btnCancelarMatriz').style.display = mudou ? 'block' : 'none';
+            document.getElementById('btnSalvarPermissoes').disabled = !dirty;
+            document.getElementById('btnCancelarMatriz').style.display = dirty ? 'block' : 'none';
         };
 
         window.cancelarAlteracoesMatriz = () => initMatrix();
 
         document.getElementById('btnSalvarPermissoes').onclick = async () => {
-            if (!confirm("Confirmar atualização da matriz?")) return;
-            const session = JSON.parse(localStorage.getItem('rh_session'));
+            const sess = JSON.parse(localStorage.getItem('rh_session'));
             const payload = [];
             ROLES.forEach(role => {
-                document.querySelectorAll(`.check-ver[data-role="${role}"]:checked`).forEach(cb => {
+                document.querySelectorAll(`.matrix-cb[data-role="${role}"][data-type="ver"]:checked`).forEach(cb => {
                     const modId = cb.dataset.modulo;
                     payload.push({
                         role, modulo_id: parseInt(modId),
-                        pode_editar: document.querySelector(`.check-editar[data-modulo="${modId}"][data-role="${role}"]`).checked,
-                        ver_detalhes: document.querySelector(`.check-detalhes[data-modulo="${modId}"][data-role="${role}"]`).checked
+                        pode_editar: document.querySelector(`.matrix-cb[data-modulo="${modId}"][data-role="${role}"][data-type="editar"]`).checked,
+                        ver_detalhes: document.querySelector(`.matrix-cb[data-modulo="${modId}"][data-role="${role}"][data-type="detalhes"]`).checked
                     });
                 });
             });
-
-            try {
-                await supabaseClient.from('acesso_modulos').delete().neq('id', 0);
-                if (payload.length > 0) await supabaseClient.from('acesso_modulos').insert(payload);
-                await DBHandler.registrarLog(session.user, "ATUALIZAR_MATRIZ", "Atualização global de permissões", "Administração");
-                alert("Matriz Salva!");
-                initMatrix();
-            } catch (e) { alert("Erro ao salvar."); }
+            await supabaseClient.from('acesso_modulos').delete().neq('id', 0);
+            if (payload.length > 0) await supabaseClient.from('acesso_modulos').insert(payload);
+            await DBHandler.registrarLog(sess.user, "ATUALIZAR_MATRIZ", "Alterou permissões do sistema", "Administração");
+            alert("Matriz Salva!"); initMatrix();
         };
 
         // --- USUÁRIOS ---
@@ -297,8 +269,8 @@
             const { data } = await supabaseClient.from('usuarios_sistema').select('*').order('nome');
             body.innerHTML = '';
             data.forEach(u => {
-                const tr = document.createElement('tr');
                 const opt = ROLES.map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('');
+                const tr = document.createElement('tr');
                 tr.innerHTML = `<td><strong>${u.nome}</strong></td><td><code>${u.username}</code></td><td><select class="user-role-select" data-id="${u.id}" data-original="${u.role}" data-nome="${u.nome}" onchange="window.verificarAlteracoesUsuarios()">${opt}</select></td><td><button class="btn-danger" onclick="window.removerUser('${u.id}', '${u.nome}')">Excluir</button></td>`;
                 body.appendChild(tr);
             });
@@ -307,55 +279,73 @@
 
         window.verificarAlteracoesUsuarios = () => {
             const sels = document.querySelectorAll('.user-role-select');
-            let mudou = false;
+            let dirty = false;
             sels.forEach(s => {
-                const dirty = s.value !== s.dataset.original;
-                s.classList.toggle('highlight-change', dirty);
-                if (dirty) mudou = true;
+                const isDirty = s.value !== s.dataset.original;
+                s.classList.toggle('highlight-change', isDirty);
+                if (isDirty) dirty = true;
             });
-            document.getElementById('btnSalvarUsuarios').disabled = !mudou;
-            document.getElementById('btnCancelarUsuarios').style.display = mudou ? 'block' : 'none';
+            document.getElementById('btnSalvarUsuarios').disabled = !dirty;
+            document.getElementById('btnCancelarUsuarios').style.display = dirty ? 'block' : 'none';
         };
 
         window.cancelarAlteracoesUsuarios = () => carregarUsuarios();
 
         window.salvarAlteracoesUsuarios = async () => {
             const dirty = Array.from(document.querySelectorAll('.user-role-select')).filter(s => s.value !== s.dataset.original);
-            if (!confirm(`Gravar ${dirty.length} alteração(ões)?`)) return;
-            const session = JSON.parse(localStorage.getItem('rh_session'));
+            const sess = JSON.parse(localStorage.getItem('rh_session'));
             for (const s of dirty) {
                 await supabaseClient.from('usuarios_sistema').update({ role: s.value }).eq('id', s.dataset.id);
-                await DBHandler.registrarLog(session.user, "ALTERAR_CARGO", `${s.dataset.nome}: ${s.dataset.original} -> ${s.value}`, "Administração");
+                await DBHandler.registrarLog(sess.user, "ALTERAR_CARGO", `${s.dataset.nome}: ${s.dataset.original} -> ${s.value}`, "Administração");
             }
-            alert("Sucesso!"); carregarUsuarios();
+            alert("Cargos atualizados!"); carregarUsuarios();
         };
 
         document.getElementById('formNovoUsuario').onsubmit = async (e) => {
             e.preventDefault();
-            const session = JSON.parse(localStorage.getItem('rh_session'));
+            const sess = JSON.parse(localStorage.getItem('rh_session'));
             const u = { nome: document.getElementById('addNome').value, username: document.getElementById('addLogin').value, password: document.getElementById('addSenha').value, role: document.getElementById('addRole').value };
             const { error } = await supabaseClient.from('usuarios_sistema').insert([u]);
             if (!error) { 
-                await DBHandler.registrarLog(session.user, "CRIAR_USUARIO", `Criou acesso para ${u.nome}`, "Administração");
+                await DBHandler.registrarLog(sess.user, "CRIAR_USUARIO", `Criou acesso para ${u.nome}`, "Administração");
                 alert("Criado!"); e.target.reset(); carregarUsuarios(); 
             } else alert(error.message);
         };
 
         window.removerUser = async (id, nome) => {
             if (confirm(`Excluir ${nome}?`)) {
-                const session = JSON.parse(localStorage.getItem('rh_session'));
+                const sess = JSON.parse(localStorage.getItem('rh_session'));
                 await supabaseClient.from('usuarios_sistema').delete().eq('id', id);
-                await DBHandler.registrarLog(session.user, "EXCLUIR_USUARIO", `Removeu acesso de ${nome}`, "Administração");
+                await DBHandler.registrarLog(sess.user, "EXCLUIR_USUARIO", `Removeu ${nome}`, "Administração");
                 carregarUsuarios();
             }
         };
 
-        // --- LOGS ---
+        // --- LOGS COM FILTRO DE PERÍODO E TELA ---
         window.carregarLogs = async () => {
             const body = document.getElementById('listaLogsBody');
-            body.innerHTML = '<tr><td colspan="5">Buscando...</td></tr>';
-            const { data } = await supabaseClient.from('logs_sistema').select('*').order('created_at', { ascending: false }).limit(50);
-            body.innerHTML = '';
+            const dataInicio = document.getElementById('logDateInicio').value;
+            const dataFim = document.getElementById('logDateFim').value;
+            const telaFiltro = document.getElementById('logFilterTela').value;
+
+            body.innerHTML = '<tr><td colspan="5">Buscando histórico filtrado...</td></tr>';
+
+            // Criamos a query base
+            let query = supabaseClient.from('logs_sistema').select('*');
+
+            // Aplicamos os filtros de período (considerando início e fim do dia)
+            if (dataInicio) query = query.gte('created_at', `${dataInicio}T00:00:00`);
+            if (dataFim) query = query.lte('created_at', `${dataFim}T23:59:59`);
+            
+            // Aplicamos o filtro obrigatório de tela
+            query = query.eq('tela', telaFiltro);
+
+            const { data, error } = await query.order('created_at', { ascending: false }).limit(200);
+
+            if (error) { body.innerHTML = `<tr><td colspan="5">Erro: ${error.message}</td></tr>`; return; }
+            
+            body.innerHTML = data.length ? '' : '<tr><td colspan="5">Nenhum registro encontrado para este período nesta tela.</td></tr>';
+            
             data?.forEach(l => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td style="text-align:left; color:#64748b">${new Date(l.created_at).toLocaleString()}</td><td><span class="role-badge" style="background:#f1f5f9; color:#475569">${l.usuario}</span></td><td><strong>${l.acao}</strong></td><td style="text-align:left; font-size:10px;">${l.detalhes}</td><td><small>${l.tela || '-'}</small></td>`;
@@ -363,7 +353,6 @@
             });
         };
 
-        // --- MODO LEITURA ---
         function verificarModoLeitura() {
             if (new URLSearchParams(window.location.search).get('readonly') === 'true') {
                 document.getElementById('areaAcoesMatriz')?.remove();
