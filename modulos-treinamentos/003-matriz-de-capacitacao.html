@@ -214,40 +214,103 @@ html, body {
 </head>
 <body>
 
-<header class="page-header">
-        <div style="display: flex; align-items: center;">
-            <div class="header-brand">MATRIZ DE CAPACITAÇÃO</div>
-            <div id="viewerWarning" class="viewer-badge">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>Modo Leitura</span>
-            </div>
-        </div>
+<header class="page-header" style="
+    flex-shrink: 0;
+    height: 56px !important;
+    min-height: 56px !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 0 1.5rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    z-index: 100;
+">
+    <div style="display: flex; align-items: center; margin: 0; padding: 0;">
+        <div class="header-brand" style="
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #4f46e5 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        ">MATRIZ DE CAPACITAÇÃO</div>
         
-        <div style="display: flex; align-items: center; gap: 24px;">
-            <div class="header-legend">
-                <div class="legend-item">
-                    <span class="status-dot O legend-dot"></span>
-                    <span>Obrigatório</span>
-                </div>
-                <div class="legend-item">
-                    <span class="status-dot R legend-dot"></span>
-                    <span>Recomendável</span>
-                </div>
+        <div id="viewerWarning" class="viewer-badge" style="
+            display: none; 
+            align-items: center; 
+            gap: 6px;
+            background-color: #f1f5f9; 
+            color: #64748b; 
+            border: 1px solid #e2e8f0;
+            font-size: 10px; 
+            font-weight: 600; 
+            padding: 2px 10px; 
+            border-radius: 100px;
+            margin-left: 16px;
+        ">
+            <svg xmlns="http://www.w3.org/2000/svg" style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Modo Leitura</span>
+        </div>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 24px;">
+        <div class="header-legend" style="display: flex; gap: 16px; align-items: center;">
+            <div class="legend-item" style="display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">
+                <span class="status-dot O legend-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444;"></span>
+                <span>Obrigatório</span>
             </div>
-
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <button class="btn-new-course admin-only" onclick="abrirModalCargo()" style="background-color: #334155; border-color: #334155;" title="Adicionar novo cargo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span>Novo Cargo</span>
-                </button>
-
-                <button class="btn-new-course admin-only" onclick="abrirModalTreinamento()" title="Adicionar novo treinamento">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    <span>Novo Curso</span>
-                </button>
+            <div class="legend-item" style="display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">
+                <span class="status-dot R legend-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: #3b82f6;"></span>
+                <span>Recomendável</span>
             </div>
         </div>
-    </header>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn-new-course admin-only" onclick="abrirModalCargo()" style="
+                background-color: #f1f5f9; 
+                color: #475569; 
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                padding: 0 12px;
+                height: 32px;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            " title="Adicionar novo cargo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>Novo Cargo</span>
+            </button>
+
+            <button class="btn-new-course admin-only" onclick="abrirModalTreinamento()" style="
+                background-color: #4f46e5; 
+                color: #ffffff; 
+                border: none;
+                border-radius: 6px;
+                padding: 0 12px;
+                height: 32px;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            " title="Adicionar novo treinamento">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Novo Curso</span>
+            </button>
+        </div>
+    </div>
+</header>
 
     <nav class="filter-bar">
         <div class="filter-group-left">
@@ -520,6 +583,7 @@ html, body {
 
 </body>
 </html>
+
 
 
 
