@@ -42,30 +42,25 @@
     text-rendering: optimizeLegibility;
 }
 
+.brand-minimal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none !important;
+    color: #ffffff !important;
+    padding-right: 16px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1); /* Borda mais discreta */
+}
+
 .brand-minimal span {
     display: block;
-    line-height: 1;          /* Mantém as linhas próximas */
-    color: #ffffff !important;
+    line-height: 1;          /* Espaçamento bem curto entre as linhas */
+    font-size: 11px;         /* Tamanho padrão de subsistemas */
+    font-weight: 800;        /* Peso Extra Bold para o estilo da imagem */
+    letter-spacing: 0.05em;  /* Espaçamento leve entre letras */
     text-transform: uppercase;
+    color: #ffffff !important;
     font-family: 'Inter', sans-serif;
-    text-decoration: none !important;
-}
-
-/* Primeira Linha (Edesoft) */
-.brand-minimal span b {
-    display: block;
-    font-size: 13px;         /* Um pouco maior */
-    font-weight: 800;        /* Bem negrito */
-    letter-spacing: 0.02em;
-}
-
-/* Segunda Linha (Academy) */
-.brand-minimal span small {
-    display: block;
-    font-size: 10px;         /* Menor que a primeira */
-    font-weight: 400;        /* Sem negrito (Normal) */
-    letter-spacing: 0.1em;   /* Mais espaçada para dar elegância */
-    opacity: 0.9;            /* Leve transparência para suavizar */
 }
 
 .brand-logo {
@@ -81,7 +76,10 @@
     color: #ffffff;
     flex-shrink: 0;
 }
-
+        .brand-logo {
+            background: var(--primary); width: 28px; height: 28px;
+            border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
 
         .module-switcher {
             display: flex; align-items: center; gap: 8px; background: #1e293b;
@@ -357,8 +355,6 @@ select option {
     </script>
 </body>
 </html>
-
-
 
 
 
