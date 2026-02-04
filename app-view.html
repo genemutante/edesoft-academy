@@ -45,9 +45,31 @@
 /* Garante que o container do logo e texto estejam bem alinhados */
 .brand-minimal {
     display: flex;
-    align-items: center; /* Centraliza verticalmente o ícone com o bloco de texto */
+    align-items: center;
     gap: 8px;
-    height: 100%;        /* Ocupa a altura total disponível */
+    text-decoration: none !important; /* Remove o sublinhado nativo do link */
+    color: #ffffff !important;        /* Garante que o texto seja sempre branco */
+    font-weight: 700;
+    font-size: 14px;
+    padding-right: 16px;
+    border-right: 1px solid var(--header-border);
+}
+
+/* Garante que o estado de "visitado" ou "hover" não mude a cor nem adicione sublinhado */
+.brand-minimal:hover, 
+.brand-minimal:visited, 
+.brand-minimal:active {
+    text-decoration: none !important;
+    color: #ffffff !important;
+}
+
+.brand-minimal span {
+    display: block;
+    line-height: 1.1;
+    font-size: 11px;
+    text-transform: uppercase;
+    /* Certificando que o span herda o branco do pai */
+    color: #ffffff; 
 }
         .brand-logo {
             background: var(--primary); width: 28px; height: 28px;
@@ -328,6 +350,7 @@ select option {
     </script>
 </body>
 </html>
+
 
 
 
