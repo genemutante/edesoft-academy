@@ -347,8 +347,29 @@ async buscarHomologacaoPorId(id) {
     if (error) throw error;
     return data;
 }
+
+
+// =========================
+    // 9) TREINAMENTOS (CATÁLOGO)
+    // =========================
+    async listarTreinamentos() {
+        const { data, error } = await supabaseClient
+            .from("treinamentos")
+            .select("*")
+            .order("trilha", { ascending: true })
+            .order("subtrilha", { ascending: true })
+            .order("ordem_curso_modulo", { ascending: true });
+
+        if (error) {
+            console.error("Erro ao buscar treinamentos:", error);
+            throw error;
+        }
+        return data;
+    },
+    
     
 };
+
 
 
 
