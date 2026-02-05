@@ -148,24 +148,23 @@ function preencherOpcoesSubtrilha(trilha) {
   });
 }
 
+// No seu app.js, ajuste a função aplicarFiltros assim:
 function aplicarFiltros() {
-  const trilha = document.getElementById("filtro-trilha").value;
-  const sub = document.getElementById("filtro-subtrilha").value;
-  const status = document.getElementById("filtro-status").value;
-  const busca = normalizarTexto(document.getElementById("filtro-busca").value);
+  const filtrados = obterCursosFiltrados();
+  
+  console.log("1. Filtros aplicados. Chamando renderização...");
+  try {
+    renderCursos(filtrados);
+  } catch (e) {
+    console.error("❌ Erro na renderCursos:", e);
+  }
 
-  const filtrados = cursos.filter((c) => {
-    if (trilha && c.trilha !== trilha) return false;
-    if (sub && c.subtrilha !== sub) return false;
-    if (status && (c.status || "").toUpperCase() !== status.toUpperCase()) return false;
-    if (busca) {
-      const texto = normalizarTexto(c.nome) + " " + normalizarTexto(c.descricao);
-      if (!texto.includes(busca)) return false;
-    }
-    return true;
-  });
-  renderCursos(filtrados);
-  atualizarResumo(filtrados);
+  console.log("2. Chamando atualização do resumo...");
+  try {
+    atualizarResumo(filtrados);
+  } catch (e) {
+    console.error("❌ Erro na atualizarResumo:", e);
+  }
 }
 
 // --- Inicialização ---
@@ -207,3 +206,4 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
   preencherOpcoesSubtrilha("");
   aplicarFiltros();
 });
+
