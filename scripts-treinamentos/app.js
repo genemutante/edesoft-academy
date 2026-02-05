@@ -164,6 +164,20 @@ function atualizarResumo(lista) {
 }
 
 
+
+// --- Funções de Filtro ---
+function preencherOpcoesTrilha() {
+  const select = document.getElementById("filtro-trilha");
+  if (!select) return;
+  const trilhas = [...new Set(cursos.map((c) => c.trilha))].filter(Boolean).sort();
+  select.innerHTML = '<option value="">Todas as Trilhas</option>';
+  trilhas.forEach((t) => {
+    const opt = document.createElement("option");
+    opt.value = t; opt.textContent = t;
+    select.appendChild(opt);
+  });
+}
+
 function preencherOpcoesSubtrilha(trilhaSelecionada) {
   const select = document.getElementById("filtro-subtrilha");
   select.innerHTML = '<option value="">Todas as Subtrilhas</option>';
@@ -276,6 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
   filtroBusca.addEventListener("input", aplicarFiltros);
   btnLimpar.addEventListener("click", limparFiltros);
 });
+
 
 
 
