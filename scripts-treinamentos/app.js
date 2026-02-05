@@ -112,13 +112,21 @@ function renderCursos(lista) {
 }
 
 // --- Dashboard / Resumo ---
-// --- Resumo com Log de Auditoria ---
+// --- Resumo com Logs de Auditoria ---
 function atualizarResumo(lista) {
-  // Cálculos de Status (com proteção para maiúsculas/minúsculas)
+  // Log 1: Verificar se a lista chegou e como são os objetos
+  console.log("🔍 Dados recebidos no Resumo:", lista);
+
   const total = lista.length;
-  const disponiveis = lista.filter((c) => (c.status || "").toUpperCase() === "DISPONÍVEL").length;
-  const emDev = lista.filter((c) => (c.status || "").toUpperCase() === "EM DESENVOLVIMENTO").length;
-  const backlog = lista.filter((c) => (c.status || "").toUpperCase() === "BACKLOG").length;
+  
+  // Log 2: Verificar o que existe dentro do campo status do primeiro item
+  if (lista.length > 0) {
+      console.log("📌 Exemplo de Status no banco:", `"${lista[0].status}"`);
+  }
+
+  const disponiveis = lista.filter((c) => c.status === "DISPONÍVEL").length;
+  const emDev = lista.filter((c) => c.status === "EM DESENVOLVIMENTO").length;
+  const backlog = lista.filter((c) => c.status === "BACKLOG").length;
 
   // Soma aulas
   const totalAulas = lista.reduce((acc, c) => {
@@ -134,26 +142,17 @@ function atualizarResumo(lista) {
     return acc + m;
   }, 0);
 
-  // --- LOG PARA O CONSOLE ---
-  console.group("📊 Auditoria do Dashboard");
-  console.log("Total de Cursos:", total);
-  console.log("Status:", { Disponíveis: disponiveis, "Em Dev": emDev, Backlog: backlog });
-  console.log("Métricas:", { "Total Aulas": totalAulas, "Total Minutos": totalMinutos });
-  console.log("Tempo Formatado:", formatarDuracao(totalMinutos));
+  // --- LOG FINAL DE CONFERÊNCIA ---
+  console.group("📊 Resultados do Processamento");
+  console.log("Contagem:", { total, disponiveis, emDev, backlog });
+  console.log("Cálculos:", { totalAulas, totalMinutos });
   console.groupEnd();
 
   // Atualiza os elementos na tela
-  if (document.getElementById("resumo-total")) 
-      document.getElementById("resumo-total").textContent = total;
-  
-  if (document.getElementById("resumo-disponivel")) 
-      document.getElementById("resumo-disponivel").textContent = disponiveis;
-  
-  if (document.getElementById("resumo-em-dev")) 
-      document.getElementById("resumo-em-dev").textContent = emDev;
-  
-  if (document.getElementById("resumo-backlog")) 
-      document.getElementById("resumo-backlog").textContent = backlog;
+  document.getElementById("resumo-total").textContent = total;
+  document.getElementById("resumo-disponivel").textContent = disponiveis;
+  document.getElementById("resumo-em-dev").textContent = emDev;
+  document.getElementById("resumo-backlog").textContent = backlog;
   
   const aulasEl = document.getElementById("total-aulas");
   if (aulasEl) aulasEl.textContent = totalAulas;
@@ -163,6 +162,7 @@ function atualizarResumo(lista) {
     tempoEl.textContent = formatarDuracao(totalMinutos);
   }
 }
+
 
 function preencherOpcoesSubtrilha(trilhaSelecionada) {
   const select = document.getElementById("filtro-subtrilha");
@@ -276,6 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
   filtroBusca.addEventListener("input", aplicarFiltros);
   btnLimpar.addEventListener("click", limparFiltros);
 });
+
 
 
 
