@@ -113,42 +113,49 @@ function renderCursos(lista) {
 
 // --- Dashboard / Resumo ---
 function atualizarResumo(lista) {
+  // Garantimos que os filtros funcionem independente de como o texto vem do banco (MAIÚSCULO)
   const total = lista.length;
-  const disponiveis = lista.filter((c) => c.status === "DISPONÍVEL").length;
-  const emDev = lista.filter((c) => c.status === "EM DESENVOLVIMENTO").length;
-  const backlog = lista.filter((c) => c.status === "BACKLOG").length;
+  const disponiveis = lista.filter((c) => (c.status || "").toUpperCase() === "DISPONÍVEL").length;
+  const emDev = lista.filter((c) => (c.status || "").toUpperCase() === "EM DESENVOLVIMENTO").length;
+  const backlog = lista.filter((c) => (c.status || "").toUpperCase() === "BACKLOG").length;
 
-  // Soma aulas
+  // Soma de aulas (usando o campo mapeado quantidadeAulas)
   const totalAulas = lista.reduce((acc, c) => {
     const q = Number(c.quantidadeAulas);
-    if (isNaN(q) || q <= 0) return acc;
-    return acc + q;
+    return (isNaN(q) || q <= 0) ? acc : acc + q;
   }, 0);
 
-  // --- NOVO: Soma Minutos Totais ---
+  // Soma de minutos totais
   const totalMinutos = lista.reduce((acc, c) => {
     const m = Number(c.duracaoMinutos);
-    if (isNaN(m) || m <= 0) return acc;
-    return acc + m;
+    return (isNaN(m) || m <= 0) ? acc : acc + m;
   }, 0);
 
-  // Atualiza os elementos na tela
-  document.getElementById("resumo-total").textContent = total;
-  document.getElementById("resumo-disponivel").textContent = disponiveis;
-  document.getElementById("resumo-em-dev").textContent = emDev;
-  document.getElementById("resumo-backlog").textContent = backlog;
+  // --- ATUALIZAÇÃO DOS ELEMENTOS NA TELA ---
   
+  // IDs principais (Conforme seu HTML)
+  if (document.getElementById("resumo-total")) 
+      document.getElementById("resumo-total").textContent = total;
+  
+  if (document.getElementById("resumo-disponivel")) 
+      document.getElementById("resumo-disponivel").textContent = disponiveis;
+  
+  if (document.getElementById("resumo-em-dev")) 
+      document.getElementById("resumo-em-dev").textContent = emDev;
+  
+  if (document.getElementById("resumo-backlog")) 
+      document.getElementById("resumo-backlog").textContent = backlog;
+
+  // IDs de métricas específicas
   const aulasEl = document.getElementById("total-aulas");
   if (aulasEl) aulasEl.textContent = totalAulas;
 
-  // --- NOVO: Atualiza o card de tempo ---
   const tempoEl = document.getElementById("resumo-tempo");
   if (tempoEl) {
-    // Usa sua função formatarDuracao existente para exibir bonito (ex: 10 h 30 min)
+    // Usa sua função formatarDuracao para exibir: "10 h 30 min"
     tempoEl.textContent = formatarDuracao(totalMinutos);
   }
 }
-
 
 // --- Filtros ---
 function preencherOpcoesTrilha() {
@@ -277,6 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
   filtroBusca.addEventListener("input", aplicarFiltros);
   btnLimpar.addEventListener("click", limparFiltros);
 });
+
 
 
 
