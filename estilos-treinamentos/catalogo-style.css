@@ -807,81 +807,19 @@ footer.page-footer {
   max-width: 700px;
 }
 
-/* ============================================================
-   TRANSFORMAÇÃO: BARRA DE FERRAMENTAS CLARA (Região Vermelha)
-   ============================================================ */
-
+/* --- TOOLBAR --- */
 .toolbar {
-  /* 1. Fundo Branco Sólido para máximo contraste com o cabeçalho escuro acima */
-  background-color: #ffffff; 
-  
-  /* 2. Bordas e Sombras para definição */
-  border: 1px solid #e2e8f0; /* Borda cinza bem suave */
-  border-radius: 8px; /* Cantos levemente arredondados */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Sombra leve para "descolar" do fundo */
-  
-  /* 3. Ajustes de Espaçamento */
-  margin-top: 10px; 
-  padding: 1rem 1.5rem;
-  
-  /* Mantém o layout flexível */
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-/* --- Ajuste Obrigatório dos Textos (Inversão de Cor) --- */
-
-/* Labels (Trilha, Subtrilha, Status) agora precisam ser escuros */
-.toolbar label {
-  color: #475569; /* Cinza Escuro (Slate 600) */
-  font-weight: 600;
-  font-size: 0.85rem;
-  margin-bottom: 4px;
-  display: block;
-}
-
-/* Inputs e Selects: Fundo cinza claro com texto escuro */
-.toolbar select, 
-.toolbar input {
-  background-color: #f8fafc; /* Fundo "Gelo" */
-  border: 1px solid #cbd5e1; /* Borda cinza média */
-  color: #1e293b; /* Texto Quase Preto */
-  border-radius: 6px;
-  padding: 8px 12px;
-  transition: all 0.2s;
-}
-
-/* Destaque ao clicar nos campos */
-.toolbar select:focus, 
-.toolbar input:focus {
-  background-color: #ffffff;
-  border-color: #3b82f6; /* Azul ao focar */
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Ícone da Lupa (Busca) */
-.toolbar-search svg {
-  stroke: #64748b; /* Cor do ícone cinza */
-}
-
-/* (Opcional) Botão de Limpar Filtros mais visível */
-.btn-reset {
-  background-color: #fff1f2; /* Vermelho muito claro */
-  color: #e11d48; /* Texto Vermelho */
-  border: 1px solid #fda4af;
-  border-radius: 6px;
+  gap: 10px;
+  margin-top: 8px; 
   padding: 8px;
-  cursor: pointer;
-}
-.btn-reset:hover {
-  background-color: #ffe4e6;
+  border-top: 1px solid rgba(255, 255, 255, 0.08); 
 }
 
-
+.toolbar-search { flex: 1; position: relative; min-width: 200px; }
+.toolbar-filters { display: flex; gap: 12px; }
+.select-wrapper { display: flex; flex-direction: column; position: relative; }
 
 /* 1. LABEL LIMPO (SEM FUNDO, LETRA CLARA) */
 .select-wrapper label {
@@ -1017,8 +955,6 @@ footer.page-footer {
   .toolbar-filters { flex-direction: column; width: 100%; }
   .btn-reset { width: 100%; }
 }
-
-
 
 
 
