@@ -928,5 +928,74 @@ footer.page-footer {
   .btn-reset { width: 100%; }
 }
 
+/* ==========================================================================
+   🚨 CORREÇÃO FINAL DE CONTRASTE (Cole no final do arquivo catalogo-style.css)
+   ========================================================================== */
+
+/* 1. Garante que a barra de ferramentas tenha espaço e alinhamento */
+.toolbar {
+  margin-top: 32px !important; /* Espaço extra para o label não cortar */
+  padding-top: 12px !important;
+  background-color: #ffffff !important; /* Fundo Branco Puro */
+  align-items: flex-end !important; /* Alinha inputs pela base */
+  border: 1px solid #e2e8f0 !important; /* Borda sutil */
+}
+
+/* 2. O PROBLEMA PRINCIPAL: A cor dos Labels "Trilha", "Subtrilha" */
+.select-wrapper label {
+  position: absolute;
+  top: -24px !important; /* Joga o texto para fora do input */
+  left: 2px;
+  
+  /* A COR MÁGICA: Cinza Escuro para ler no fundo branco */
+  color: #64748b !important; 
+  
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent !important;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* 3. Quando clica no campo, o label fica AZUL */
+.select-wrapper:focus-within label {
+  color: #2563eb !important; /* Azul Premium */
+}
+
+/* 4. Os campos (Inputs e Selects) - Fundo "Gelo" para destacar do branco */
+.toolbar .select-wrapper select,
+.toolbar .toolbar-search input {
+  background-color: #f8fafc !important; /* Fundo Cinza Gelo */
+  border: 1px solid #cbd5e1 !important; /* Borda definida */
+  color: #1e293b !important; /* Texto digitado ESCURO */
+  border-radius: 8px !important;
+  box-shadow: none !important; /* Remove sombras antigas */
+}
+
+/* 5. Efeito ao passar o mouse ou clicar no campo */
+.toolbar .select-wrapper select:hover,
+.toolbar .toolbar-search input:hover {
+  background-color: #ffffff !important;
+  border-color: #94a3b8 !important;
+}
+
+.toolbar .select-wrapper select:focus,
+.toolbar .toolbar-search input:focus {
+  background-color: #ffffff !important;
+  border-color: #2563eb !important; /* Borda Azul ao digitar */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important; /* Brilho azul suave */
+  outline: none !important;
+}
+
+/* 6. Correção do Ícone da Lupa */
+.search-icon {
+  color: #64748b !important; /* Lupa cinza */
+  z-index: 10;
+}
+.toolbar-search:focus-within .search-icon {
+  color: #2563eb !important; /* Lupa azul quando focado */
+}
 
 
