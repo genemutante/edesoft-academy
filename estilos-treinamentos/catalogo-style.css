@@ -761,7 +761,7 @@ footer.page-footer {
   color: var(--header-text);
   
   border-radius: 0 0 24px 24px;
-  padding: 15px 20px;     
+  padding: 8px 20px;     
   margin: 0 -24px 32px;
   box-shadow: 0 15px 40px -10px rgba(15, 23, 42, 0.6); 
   border: none;
@@ -954,4 +954,5 @@ footer.page-footer {
   .toolbar-filters { flex-direction: column; width: 100%; }
   .btn-reset { width: 100%; }
 }
+
 
