@@ -783,7 +783,7 @@ footer.page-footer {
 }
 .brand-identity { display: flex; align-items: center; gap: 12px; }
 .app-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #ffffff;
   letter-spacing: -0.02em;
@@ -811,9 +811,9 @@ footer.page-footer {
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 15px; 
-  padding: 15px;
+  gap: 10px;
+  margin-top: 8px; 
+  padding: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.08); 
 }
 
@@ -955,6 +955,7 @@ footer.page-footer {
   .toolbar-filters { flex-direction: column; width: 100%; }
   .btn-reset { width: 100%; }
 }
+
 
 
 
