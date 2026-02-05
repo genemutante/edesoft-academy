@@ -77,7 +77,7 @@ h1, h2, h3, .card-titulo {
 /* CABEÇALHO PRINCIPAL ------------------------------------------- */
 
 header.topbar {
-  margin-bottom: 24px;
+  margin-bottom: 0px;
 }
 
 .topbar-title-row {
@@ -954,5 +954,6 @@ footer.page-footer {
   .toolbar-filters { flex-direction: column; width: 100%; }
   .btn-reset { width: 100%; }
 }
+
 
 
