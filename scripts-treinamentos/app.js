@@ -23,73 +23,92 @@ function normalizarTexto(str) {
 }
 
 // --- Renderização Principal ---
+// --- A SUA FUNÇÃO ORIGINAL (Ajustada para o Banco) ---
 function renderCursos(lista) {
-  const container = document.getElementById("lista-cursos");
-  container.innerHTML = "";
+    const container = document.getElementById("lista-cursos");
+    container.innerHTML = "";
 
-  if (!lista.length) {
-    const vazio = document.createElement("div");
-    vazio.className = "lista-cursos-vazia";
-    vazio.innerHTML =
-      "<strong>Nenhum curso encontrado.</strong><br/>Ajuste os filtros ou limpe a busca para ver mais resultados.";
-    container.appendChild(vazio);
-    return;
-  }
+    if (!lista.length) {
+        container.innerHTML = `<div class="lista-cursos-vazia"><strong>Nenhum curso encontrado.</strong></div>`;
+        return;
+    }
 
-  // A ordenação agora é prioritariamente feita pela coluna 'ordem_curso_modulo' vinda do banco
-  const listaOrdenada = [...lista].sort((a, b) => {
-    const trilhaA = (a.trilha || "").toUpperCase();
-    const trilhaB = (b.trilha || "").toUpperCase();
-    if (trilhaA !== trilhaB) return trilhaA.localeCompare(trilhaB);
+    // Ordenação Alfabética (Trilha > Subtrilha > Nome)
+    const listaOrdenada = [...lista].sort((a, b) => {
+        const t = (a.trilha || "").localeCompare(b.trilha || "");
+        if (t !== 0) return t;
+        const s = (a.subtrilha || "").localeCompare(b.subtrilha || "");
+        if (s !== 0) return s;
+        return (a.nome || "").localeCompare(b.nome || "");
+    });
 
-    const subA = (a.subtrilha || "").toUpperCase();
-    const subB = (b.subtrilha || "").toUpperCase();
-    if (subA !== subB) return subA.localeCompare(subB);
+    let trilhaAtual = null;
+    let subAtual = null;
 
-    // Se estiverem no mesmo módulo/subtrilha, usa a ordem definida
-    const ordemA = a.ordem_curso_modulo || 0;
-    const ordemB = b.ordem_curso_modulo || 0;
-    if (ordemA !== ordemB) return ordemA - ordemB;
+    listaOrdenada.forEach((curso) => {
+        // Cabeçalho de Trilha
+        if (curso.trilha !== trilhaAtual) {
+            trilhaAtual = curso.trilha;
+            subAtual = null;
+            const headerTrilha = document.createElement("div");
+            headerTrilha.className = "header-trilha";
+            headerTrilha.innerHTML = `<span>${trilhaAtual}</span><small>Trilha principal</small>`;
+            container.appendChild(headerTrilha);
+        }
 
-    return (a.nome || "").localeCompare(b.nome || "");
-  });
+        // Cabeçalho de Subtrilha
+        if (curso.subtrilha && curso.subtrilha !== subAtual) {
+            subAtual = curso.subtrilha;
+            const headerSub = document.createElement("div");
+            headerSub.className = "header-subtrilha";
+            headerSub.innerHTML = `<span>${subAtual}</span><small>Subtrilha</small>`;
+            container.appendChild(headerSub);
+        }
 
-  listaOrdenada.forEach((c) => {
-    const card = document.createElement("div");
-    card.className = "curso-card";
+        const qtdAulas = Number(curso.quantidadeAulas) || 0;
+        const temLink = Boolean(curso.link && curso.link.trim());
+        const podeAcessar = temLink && qtdAulas > 0;
 
-    // Lógica de cores baseada na trilha (opcional, pode ser vinda do campo 'cor' do banco)
-// Adicionamos (c.trilha || "") para garantir que nunca seja null
-const trilhaTexto = c.trilha || "Sem Trilha"; 
-const trilhaLimpa = normalizarTexto(trilhaTexto.includes("-") ? trilhaTexto.split("-")[1] : trilhaTexto);
-    card.setAttribute("data-trilha", trilhaLimpa);
+        const card = document.createElement("article");
+        card.className = "card-curso";
 
-    const labelStatus = c.status === "EM DESENVOLVIMENTO" ? "EM DEV" : c.status;
-    const statusClass = "status-" + normalizarTexto(c.status).replace(/\s+/g, "-");
+        const statusClass = curso.status
+            ? curso.status.toLowerCase().replace(/\s+/g, "-").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            : "indefinido";
+        
+        card.classList.add(`status-${statusClass}`);
 
-    // Regra: Se quantidadeAulas for 0, o botão fica desabilitado (Backlog)
-    const isDisabled = !c.quantidadeAulas || c.quantidadeAulas === 0;
-    const btnHtml = isDisabled
-      ? `<button class="btn-assistir btn-disabled" disabled title="Conteúdo em breve">Em breve</button>`
-      : `<a href="${c.link}" target="_blank" class="btn-assistir">Assistir agora</a>`;
-
-    card.innerHTML = `
-      <div class="curso-header">
-        <span class="curso-status ${statusClass}">${labelStatus}</span>
-        <span class="curso-duracao">${formatarDuracao(c.duracaoMinutos)}</span>
-      </div>
-      <div class="curso-info">
-        <p class="curso-trilha-label">${c.trilha}${c.subtrilha ? " • " + c.subtrilha : ""}</p>
-        <h3 class="curso-nome">${c.nome}</h3>
-        <p class="curso-desc">${c.descricao || ""}</p>
-      </div>
-      <div class="curso-footer">
-        <span class="curso-aulas">${c.quantidadeAulas || 0} aulas</span>
-        ${btnHtml}
-      </div>
-    `;
-    container.appendChild(card);
-  });
+        card.innerHTML = `
+            <header class="card-header">
+                <div class="card-trilhas">
+                    <span class="badge-trilha">${curso.trilha}</span>
+                    ${curso.subtrilha ? `<span class="badge-subtrilha">${curso.subtrilha}</span>` : ""}
+                </div>
+                <span class="badge-status ${statusClass}">${curso.status}</span>
+            </header>
+            <h2 class="card-titulo">${curso.nome}</h2>
+            <p class="card-descricao">${curso.descricao || ""}</p>
+            <div class="card-info">
+                <div class="info-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+                    <span>${qtdAulas} aula(s)</span>
+                </div>
+                <div class="info-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>${formatarDuracao(curso.duracaoMinutos)}</span>
+                </div>
+            </div>
+            <footer class="card-footer">
+                <button class="btn-link" ${podeAcessar ? `onclick="window.open('${curso.link}', '_blank')"` : "disabled"}>
+                    ${podeAcessar ? "Acessar curso" : "Em breve"}
+                </button>
+                <div class="pill-duracao">
+                    <strong>${curso.duracaoMinutos || 0}</strong> min
+                </div>
+            </footer>
+        `;
+        container.appendChild(card);
+    });
 }
 
 // --- Dashboard / Resumo ---
@@ -230,5 +249,6 @@ document.addEventListener("DOMContentLoaded", () => {
   filtroBusca.addEventListener("input", aplicarFiltros);
   btnLimpar.addEventListener("click", limparFiltros);
 });
+
 
 
