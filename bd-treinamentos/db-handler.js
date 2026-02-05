@@ -346,7 +346,7 @@ async buscarHomologacaoPorId(id) {
 
     if (error) throw error;
     return data;
-}
+},
 
 
 // =========================
@@ -369,6 +369,7 @@ async buscarHomologacaoPorId(id) {
     
     
 };
+
 
 
 
