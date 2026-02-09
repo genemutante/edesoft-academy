@@ -1,5 +1,5 @@
 /* =============================================================
-   APP.JS - Versão Consolidada com Logs de Auditoria
+   catalogo.JS - Versão Consolidada com Logs de Auditoria
    ============================================================= */
 
 let cursos = [];
@@ -233,4 +233,5 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
   preencherOpcoesSubtrilha("");
   aplicarFiltros();
 });
+
 
