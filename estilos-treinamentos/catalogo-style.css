@@ -1232,3 +1232,60 @@ footer.page-footer {
   font-weight: 700;
   color: #2563eb; /* Azul para destacar o número */
 }
+
+
+/* ==========================================================================
+   AJUSTE DE LAYOUT: Botão Acessar virou Ícone (Economia de Espaço)
+   ========================================================================== */
+
+/* Garante que o rodapé nunca quebre a linha */
+.card-footer {
+  flex-wrap: nowrap !important; 
+  gap: 8px; /* Espaço mínimo entre tempo e botões */
+}
+
+/* O tempo não pode encolher, mas se for muito longo, usa reticências */
+.pill-duracao {
+  flex-shrink: 0; 
+  white-space: nowrap;
+}
+
+/* Novo estilo para o botão "Acessar" quando for ícone */
+.btn-icon-acessar {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  
+  /* Tamanho fixo para ser um círculo perfeito */
+  width: 36px; 
+  height: 36px;
+  border-radius: 50%;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-icon-acessar:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Mantém o estilo "Em breve" como texto (pílula cinza), pois ícone seria confuso */
+.btn-disabled-text {
+  background: #e2e8f0;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0 12px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  cursor: default;
+  white-space: nowrap;
+}
