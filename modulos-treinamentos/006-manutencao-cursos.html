@@ -277,12 +277,31 @@
             <div style="display: flex; gap: 8px;">
                 <input type="url" id="curso-link" class="input-premium" placeholder="https://www.youtube.com/playlist?list=..." style="flex: 1;">
                 
-                <button type="button" id="btn-sync-youtube-rapido" style="display: flex; align-items: center; gap: 8px; padding: 0 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; cursor: pointer; color: #7f1d1d;" title="Sincronizar Aulas com esta Playlist">
+                <button type="button" id="btn-sync-youtube-rapido" class="btn-youtube-sync" title="Buscar dados da Playlist">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444;"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/></svg>
                     <span style="font-size: 0.8rem; font-weight: 600;">Sincronizar</span>
                 </button>
             </div>
-            <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px;">Cole o link da playlist e clique no botão para importar as aulas automaticamente (usando API fixa).</small>
+
+            <div class="sync-metadata" id="box-metadata-sync">
+                <div class="meta-item">
+                    <span class="meta-label">Aulas:</span>
+                    <span class="meta-value" id="meta-qtd-aulas">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Carga Horária:</span>
+                    <span class="meta-value" id="meta-tempo-total">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Última Sincronização:</span>
+                    <span class="meta-value" id="meta-data-sync">-</span>
+                </div>
+                <div class="meta-badge-pendente" id="badge-pendente" style="display: none;">
+                    Pendentes de Salvar
+                </div>
+            </div>
+            
+            <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px;">Cole o link da playlist e clique no botão para importar as aulas automaticamente.</small>
         </div>
 
         <div class="form-group">
@@ -300,7 +319,10 @@
 
     <div class="modal-footer">
       <button type="button" class="btn-secondary-full btn-close-modal-curso">Cancelar</button>
-      <button type="button" id="btn-salvar-curso" class="btn-save">Salvar Alterações</button>
+      
+      <button type="button" id="btn-salvar-curso" class="btn-save" disabled>
+          Salvar Alterações
+      </button>
     </div>
   </div>
 </div>
