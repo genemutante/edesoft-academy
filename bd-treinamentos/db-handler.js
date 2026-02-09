@@ -439,14 +439,57 @@ async buscarHomologacaoPorId(id) {
             .eq("id", id);
         
         if (error) throw error;
-    }
+    },
     
+// =========================
+    // 12) SALVAR CURSO COMPLETO (Transacional)
+    // =========================
+    async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
+        // 1. Salva/Atualiza o Curso (Tabela Pai)
+        const { data: cursoSalvo, error: erroCurso } = await supabaseClient
+            .from("treinamentos")
+            .upsert([dadosCurso])
+            .select()
+            .single();
+
+        if (erroCurso) throw erroCurso;
+
+        // 2. Se houver aulas pendentes (Sync foi feito), substitui as aulas
+        if (aulasPendentes && aulasPendentes.length > 0) {
+            const cursoId = cursoSalvo.id;
+
+            // Remove antigas
+            const { error: erroDelete } = await supabaseClient
+                .from("aulas_treinamentos")
+                .delete()
+                .eq("treinamento_id", cursoId);
+            
+            if (erroDelete) throw erroDelete;
+
+            // Prepara as novas com o ID correto do curso (caso seja curso novo)
+            const aulasParaInserir = aulasPendentes.map(a => ({
+                ...a,
+                treinamento_id: cursoId
+            }));
+
+            // Insere novas
+            const { error: erroInsert } = await supabaseClient
+                .from("aulas_treinamentos")
+                .insert(aulasParaInserir);
+
+            if (erroInsert) throw erroInsert;
+        }
+
+        return cursoSalvo;
+    },
+
     
 };
 
 
 // No final do ficheiro db-handler.js
 window.DBHandler = DBHandler;
+
 
 
 
