@@ -1185,3 +1185,50 @@ footer.page-footer {
     cursor: pointer; transition: all 0.2s;
 }
 .btn-icon-grade:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+
+
+
+/* ==========================================================================
+   AJUSTE: CARD COM TEXTO COMPLETO + BOTÃO DE AULAS NUMÉRADO
+   ========================================================================== */
+
+/* 1. LIBERAR O TEXTO DA DESCRIÇÃO */
+.card-descricao {
+  /* Remove o corte de linhas */
+  -webkit-line-clamp: unset !important; 
+  display: block !important;
+  overflow: visible !important;
+  height: auto !important;
+  
+  /* Garante que o texto respire */
+  margin-bottom: 16px !important;
+}
+
+/* 2. NOVO ESTILO DO BOTÃO DE GRADE (Agora com número) */
+.btn-icon-grade {
+  width: auto !important; /* Deixa crescer para caber o número */
+  padding: 6px 12px !important; /* Espaço interno */
+  border-radius: 999px !important; /* Formato Pílula */
+  gap: 8px; /* Espaço entre ícone e número */
+  
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn-icon-grade:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+/* Estilo do numerozinho dentro do botão */
+.grade-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2563eb; /* Azul para destacar o número */
+}
