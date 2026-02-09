@@ -74,9 +74,6 @@ function atualizarResumo(lista) {
 
 
 // --- Renderização do Catálogo ---
-
-
-
 function renderCursos(lista) {
   const container = document.getElementById("lista-cursos");
   container.innerHTML = "";
@@ -134,9 +131,17 @@ function renderCursos(lista) {
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/\s+/g, "-");
 
+    // === NOVO: Verifica se está oculto ===
+    // Se for false, é oculto. Se for null/undefined/true, exibe.
+    const isOculto = curso.exibir_catalogo === false;
+
     // --- HTML do Card ---
     const card = document.createElement("article");
     card.className = "card-curso";
+    
+    // Adiciona classe visual se for oculto (CSS .is-hidden)
+    if (isOculto) card.classList.add("is-hidden");
+
     card.setAttribute("data-status-text", curso.status || "Indefinido");
     if(statusClass) card.classList.add(`status-${statusClass}`);
 
@@ -161,6 +166,8 @@ function renderCursos(lista) {
       <header class="card-header">
         <div class="card-trilhas">
            ${curso.subtrilha ? `<span class="badge-subtrilha">${curso.subtrilha}</span>` : `<span class="badge-trilha">${curso.trilha || 'Geral'}</span>`}
+           
+           ${isOculto ? '<span class="badge-oculto">🔒 OCULTO</span>' : ''}
         </div>
         <span class="badge-status ${statusClass}">${curso.status || 'Rascunho'}</span>
       </header>
@@ -214,11 +221,14 @@ function renderCursos(lista) {
           if(typeof editarCurso === 'function') {
               editarCurso(id);
           } else {
-              console.error("Função editarCurso não encontrada. Verifique se o módulo de manutenção foi carregado.");
+              console.error("Função editarCurso não encontrada.");
           }
       });
   });
 }
+
+
+
 
 
 
@@ -250,26 +260,41 @@ function preencherOpcoesSubtrilha(trilha) {
 }
 
 function aplicarFiltros() {
-  const trilha = document.getElementById("filtro-trilha").value;
-  const sub = document.getElementById("filtro-subtrilha").value;
-  const status = document.getElementById("filtro-status").value;
-  const busca = normalizarTexto(document.getElementById("filtro-busca").value);
+  const termo = normalizarTexto(document.getElementById("filtro-busca").value);
+  const trilhaSel = document.getElementById("filtro-trilha").value;
+  const subSel = document.getElementById("filtro-subtrilha").value;
+  const statusSel = document.getElementById("filtro-status").value;
+  
+  // NOVO: Checkbox "Mostrar Ocultos"
+  const verOcultos = document.getElementById("filtro-ver-ocultos").checked;
 
   const filtrados = cursos.filter((c) => {
-    if (trilha && c.trilha !== trilha) return false;
-    if (sub && c.subtrilha !== sub) return false;
-    if (status && (c.status || "").toUpperCase() !== status.toUpperCase()) return false;
-    if (busca) {
-      const texto = normalizarTexto(c.nome) + " " + normalizarTexto(c.descricao);
-      if (!texto.includes(busca)) return false;
-    }
-    return true;
+    // 1. Filtro de Exibição (Regra de Ouro)
+    // Se o curso está marcado como oculto (false) E o checkbox "Ver Ocultos" não está marcado -> Esconde
+    if (c.exibir_catalogo === false && !verOcultos) return false;
+
+    // ... (restante dos filtros iguais) ...
+    const matchBusca = normalizarTexto(c.nome).includes(termo) || 
+                       normalizarTexto(c.descricao).includes(termo);
+    const matchTrilha = !trilhaSel || c.trilha === trilhaSel;
+    const matchSub = !subSel || c.subtrilha === subSel;
+    const matchStatus = !statusSel || (c.status || "").toUpperCase() === statusSel;
+
+    return matchBusca && matchTrilha && matchSub && matchStatus;
   });
+
   renderCursos(filtrados);
   atualizarResumo(filtrados);
 }
 
-// --- Inicialização ---
+// Adicione o listener para o checkbox
+document.getElementById("filtro-ver-ocultos").addEventListener("change", aplicarFiltros);
+
+
+
+
+
+
 // --- Inicialização ---
 async function inicializarApp() {
   console.log("🚀 Iniciando App...");
@@ -708,4 +733,5 @@ function atualizarDatalistTrilhas() {
         datalist.appendChild(opt);
     });
 }
+
 
