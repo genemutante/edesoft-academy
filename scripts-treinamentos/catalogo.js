@@ -945,14 +945,6 @@ if(btnSyncRapido) {
     });
 }
 
-// Função Auxiliar de Tempo (Caso não tenha sido declarada antes)
-// Se já existir no seu arquivo, pode remover esta duplicata.
-function parseIsoDuration(iso) {
-    const match = iso.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-    if(!match) return 0;
-    const hours = (parseInt(match[1]) || 0);
-    const minutes = (parseInt(match[2]) || 0);
-    return (hours * 60) + minutes;
-}
+
 
 
