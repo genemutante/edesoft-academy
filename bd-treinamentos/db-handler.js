@@ -391,7 +391,7 @@ async buscarHomologacaoPorId(id) {
             .delete()
             .eq("id", id);
         if (error) throw error;
-    }
+    },
     
 
     // =========================
@@ -424,6 +424,7 @@ async buscarHomologacaoPorId(id) {
 
 // No final do ficheiro db-handler.js
 window.DBHandler = DBHandler;
+
 
 
 
