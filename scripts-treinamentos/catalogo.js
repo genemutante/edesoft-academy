@@ -519,3 +519,59 @@ btnSalvarSync.addEventListener("click", async () => {
 });
 
 
+/* =============================================================
+   MODAL DE VISUALIZAÇÃO DE AULAS
+   ============================================================= */
+const modalAulas = document.getElementById("modal-lista-aulas");
+const listaAulasUl = document.getElementById("lista-aulas-container");
+
+// Fechar modal
+document.querySelectorAll(".btn-close-modal-aulas").forEach(btn => {
+    btn.addEventListener("click", () => {
+        modalAulas.style.display = "none";
+    });
+});
+
+function abrirModalAulas(id) {
+    // 1. Acha o curso na memória
+    const curso = cursos.find(c => c.id == id);
+    if (!curso) return;
+
+    // 2. Preenche Header
+    document.getElementById("modal-titulo-curso").textContent = curso.nome;
+    document.getElementById("modal-qtd-aulas").textContent = `${curso.quantidadeAulas} aulas`;
+    document.getElementById("modal-tempo-total").textContent = formatarDuracao(curso.duracaoMinutos);
+
+    // 3. Renderiza Lista
+    listaAulasUl.innerHTML = "";
+    
+    // Ordena por ordem (caso venha bagunçado do banco)
+    const aulasOrdenadas = (curso.aulas || []).sort((a, b) => a.ordem - b.ordem);
+
+    if (aulasOrdenadas.length === 0) {
+        listaAulasUl.innerHTML = `<li style="padding:20px; text-align:center; color:#94a3b8;">Nenhuma aula cadastrada.</li>`;
+    } else {
+        aulasOrdenadas.forEach((aula, index) => {
+            const li = document.createElement("li");
+            li.className = "aula-item";
+            li.innerHTML = `
+                <div class="aula-ordem">${index + 1}</div>
+                <div class="aula-info">
+                    <span class="aula-titulo">${aula.titulo}</span>
+                    <span class="aula-tempo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${aula.duracao_minutos} min
+                    </span>
+                </div>
+                ${aula.link_video ? `
+                <a href="${aula.link_video}" target="_blank" class="btn-ver-video" title="Assistir Aula">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </a>` : ''}
+            `;
+            listaAulasUl.appendChild(li);
+        });
+    }
+
+    // 4. Mostra Modal
+    modalAulas.style.display = "flex";
+}
