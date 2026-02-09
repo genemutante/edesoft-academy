@@ -265,15 +265,16 @@ function aplicarFiltros() {
   const subSel = document.getElementById("filtro-subtrilha").value;
   const statusSel = document.getElementById("filtro-status").value;
   
-  // NOVO: Checkbox "Mostrar Ocultos"
-  const verOcultos = document.getElementById("filtro-ver-ocultos").checked;
+  // NOVO: Lê o checkbox "Mostrar Ocultos" da toolbar
+  const elVerOcultos = document.getElementById("filtro-ver-ocultos");
+  const verOcultos = elVerOcultos ? elVerOcultos.checked : false;
 
   const filtrados = cursos.filter((c) => {
-    // 1. Filtro de Exibição (Regra de Ouro)
-    // Se o curso está marcado como oculto (false) E o checkbox "Ver Ocultos" não está marcado -> Esconde
+    // --- REGRA DE OURO (Ocultação) ---
+    // Se curso.exibir_catalogo for false E o usuário não marcou "ver ocultos" -> Esconde.
     if (c.exibir_catalogo === false && !verOcultos) return false;
 
-    // ... (restante dos filtros iguais) ...
+    // Filtros normais
     const matchBusca = normalizarTexto(c.nome).includes(termo) || 
                        normalizarTexto(c.descricao).includes(termo);
     const matchTrilha = !trilhaSel || c.trilha === trilhaSel;
@@ -287,10 +288,11 @@ function aplicarFiltros() {
   atualizarResumo(filtrados);
 }
 
-// Adicione o listener para o checkbox
-document.getElementById("filtro-ver-ocultos").addEventListener("change", aplicarFiltros);
-
-
+// Listener para o checkbox da Toolbar (cole logo abaixo da função)
+const checkOcultos = document.getElementById("filtro-ver-ocultos");
+if(checkOcultos) {
+    checkOcultos.addEventListener("change", aplicarFiltros);
+}
 
 
 
@@ -631,21 +633,24 @@ const btnExcluirCurso = document.getElementById("btn-excluir-curso");
 const areaDelete = document.getElementById("area-delete");
 
 // 1. Abrir Modal para NOVO curso
+// A) Botão NOVO CURSO (Reseta o form e o Switch)
 if(btnNovoCurso) {
     btnNovoCurso.addEventListener("click", () => {
         formCurso.reset();
-        document.getElementById("curso-exibir").checked = true; // Padrão ligado
-        document.getElementById("curso-id").value = ""; // Limpa ID
+        document.getElementById("curso-id").value = ""; 
         document.getElementById("modal-curso-titulo").textContent = "Novo Curso";
-        areaDelete.style.display = "none"; // Esconde botão de excluir
-        modalCurso.style.display = "flex";
+        areaDelete.style.display = "none";
         
-        // Sugestão de Trilhas (Datalist)
+        // PADRÃO: Novo curso já nasce Exibido (Switch Ligado)
+        document.getElementById("curso-exibir").checked = true;
+
+        modalCurso.style.display = "flex";
         atualizarDatalistTrilhas();
     });
 }
 
 // 2. Abrir Modal para EDITAR curso
+// B) Função EDITAR CURSO (Carrega os dados e a posição do Switch)
 function editarCurso(id) {
     const curso = cursos.find(c => c.id == id);
     if (!curso) return;
@@ -658,17 +663,19 @@ function editarCurso(id) {
     document.getElementById("curso-link").value = curso.link || "";
     document.getElementById("curso-descricao").value = curso.descricao || "";
 
-   // Configura o Switch (se for null/undefined, assume true)
+    // LÓGICA DO SWITCH:
+    // Se for false, desmarca. Se for null/undefined/true, marca.
     document.getElementById("curso-exibir").checked = (curso.exibir_catalogo !== false);
-   
+
     document.getElementById("modal-curso-titulo").textContent = "Editar Curso";
-    areaDelete.style.display = "block"; // Mostra botão de excluir
+    areaDelete.style.display = "block";
     
     atualizarDatalistTrilhas();
     modalCurso.style.display = "flex";
 }
 
 // 3. Salvar (Create/Update)
+// C) Botão SALVAR (Lê o Switch e manda pro banco)
 btnSalvarCurso.addEventListener("click", async () => {
     const id = document.getElementById("curso-id").value;
     const nome = document.getElementById("curso-nome").value;
@@ -682,11 +689,12 @@ btnSalvarCurso.addEventListener("click", async () => {
         subtrilha: document.getElementById("curso-subtrilha").value,
         link: document.getElementById("curso-link").value,
         descricao: document.getElementById("curso-descricao").value,
+        
+        // IMPORTANTE: Pega o valor booleano do Switch
         exibir_catalogo: document.getElementById("curso-exibir").checked
     };
 
-    // Se tiver ID, adiciona ao payload para virar Update
-    if(id) payload.id = id;
+    if(id) payload.id = id; // Se tem ID, é update
 
     btnSalvarCurso.innerText = "Salvando...";
     btnSalvarCurso.disabled = true;
@@ -694,7 +702,10 @@ btnSalvarCurso.addEventListener("click", async () => {
     try {
         await DBHandler.salvarCurso(payload);
         modalCurso.style.display = "none";
-        inicializarApp(); // Recarrega tudo
+        
+        // Recarrega para ver a mudança (se ocultou, o curso deve sumir da lista principal)
+        inicializarApp(); 
+        
         alert("Curso salvo com sucesso!");
     } catch (e) {
         console.error(e);
@@ -738,6 +749,7 @@ function atualizarDatalistTrilhas() {
         datalist.appendChild(opt);
     });
 }
+
 
 
 
