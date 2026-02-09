@@ -169,9 +169,70 @@
     </footer>
 
   </div> <!-- fechamento correto da .page -->
+
+
+<div id="modal-youtube" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Sincronizar Playlist do YouTube</h2>
+      <button class="btn-close-modal">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Selecione o Curso para Atualizar</label>
+        <select id="yt-curso-selecionado" class="input-premium">
+            <option value="">Carregando cursos...</option>
+        </select>
+        <small style="color: #ef4444; margin-top: 5px; display:block;">⚠️ Atenção: Isso substituirá todas as aulas atuais deste curso pelas da playlist.</small>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex: 1;">
+            <label>YouTube API Key</label>
+            <input type="password" id="yt-api-key" class="input-premium" placeholder="Cole sua chave API aqui...">
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label>ID da Playlist ou URL Completa</label>
+            <input type="text" id="yt-playlist-id" class="input-premium" placeholder="Ex: PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG">
+        </div>
+      </div>
+
+      <button id="btn-buscar-videos" class="btn-primary-full">
+         🔍 Buscar Vídeos na Playlist
+      </button>
+
+      <div id="yt-preview-area" style="margin-top: 20px; display: none;">
+         <h3 style="font-size: 0.9rem; margin-bottom: 10px;">Preview (<span id="yt-total-videos">0</span> vídeos encontrados)</h3>
+         <div class="preview-table-wrapper">
+             <table class="preview-table">
+                 <thead>
+                     <tr>
+                         <th>#</th>
+                         <th>Título</th>
+                         <th>Duração</th>
+                         <th>Link</th>
+                     </tr>
+                 </thead>
+                 <tbody id="yt-lista-videos">
+                     </tbody>
+             </table>
+         </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <span id="yt-status-msg" class="status-msg"></span>
+      <button id="btn-salvar-sincronizacao" class="btn-save" disabled>
+          💾 Salvar e Atualizar Aulas
+      </button>
+    </div>
+  </div>
+</div>
   
 </body>
 </html>
+
 
 
 
