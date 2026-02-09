@@ -838,5 +838,121 @@ document.getElementById("btn-toggle-trilha").addEventListener("click", () => {
 });
 
 
+/* =============================================================
+   MÓDULO SYNC YOUTUBE RÁPIDO (DENTRO DA EDIÇÃO)
+   ============================================================= */
+
+const YOUTUBE_API_KEY_FIXA = "AIzaSyAJyCenPXn41mbjieW6wTzeaFPYFX5Xrzo";
+const btnSyncRapido = document.getElementById("btn-sync-youtube-rapido");
+
+if(btnSyncRapido) {
+    btnSyncRapido.addEventListener("click", async () => {
+        const cursoId = document.getElementById("curso-id").value;
+        const linkUrl = document.getElementById("curso-link").value;
+        
+        // 1. Validações Iniciais
+        if (!cursoId) {
+            alert("⚠️ Por favor, salve o curso pela primeira vez antes de sincronizar as aulas.");
+            return;
+        }
+
+        if (!linkUrl || !linkUrl.includes("list=")) {
+            alert("⚠️ O link informado não parece ser uma Playlist do YouTube válida (deve conter 'list=').");
+            return;
+        }
+
+        // 2. Extrai o ID da Playlist
+        const playlistId = linkUrl.split("list=")[1].split("&")[0];
+
+        // 3. Confirmação de Segurança
+        if(!confirm("⚠️ ATENÇÃO:\n\nIsso irá APAGAR todas as aulas atuais deste curso e cadastrar as aulas da Playlist informada.\n\nDeseja continuar?")) {
+            return;
+        }
+
+        // 4. Feedback Visual (Loading)
+        const textoOriginal = btnSyncRapido.innerHTML;
+        btnSyncRapido.innerHTML = `⏳ Buscando...`;
+        btnSyncRapido.disabled = true;
+
+        try {
+            let videos = [];
+            let nextPageToken = "";
+            
+            // --- Loop de Busca (Paginação do YouTube) ---
+            do {
+                const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${YOUTUBE_API_KEY_FIXA}&pageToken=${nextPageToken}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) throw new Error("YouTube diz: " + data.error.message);
+
+                // Coleta IDs para buscar duração exata
+                const videoIds = data.items.map(item => item.contentDetails.videoId).join(",");
+                
+                // Busca detalhes (Duração)
+                const urlDetails = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${YOUTUBE_API_KEY_FIXA}`;
+                const respDetails = await fetch(urlDetails);
+                const dataDetails = await respDetails.json();
+
+                // Monta array de objetos
+                const pageVideos = dataDetails.items.map(item => ({
+                    titulo: item.snippet.title,
+                    link_video: `https://www.youtube.com/watch?v=${item.id}`,
+                    descricao: item.snippet.description ? item.snippet.description.substring(0, 200) + "..." : "",
+                    duracao_minutos: parseIsoDuration(item.contentDetails.duration),
+                    ordem: 0 
+                }));
+
+                videos = [...videos, ...pageVideos];
+                nextPageToken = data.nextPageToken || ""; // Garante string vazia se undefined
+
+            } while (nextPageToken);
+
+            // --- 5. Salvar no Banco ---
+            if(videos.length === 0) {
+                throw new Error("Nenhum vídeo encontrado nesta playlist.");
+            }
+
+            btnSyncRapido.innerHTML = `💾 Salvando...`;
+
+            // Prepara payload final
+            const payload = videos.map((v, index) => ({
+                treinamento_id: cursoId,
+                titulo: v.titulo,
+                descricao: v.descricao,
+                link_video: v.link_video,
+                duracao_minutos: v.duracao_minutos,
+                ordem: index + 1
+            }));
+
+            // Chama o DB Handler existente
+            await DBHandler.sincronizarAulasPorPlaylist(cursoId, payload);
+
+            // Sucesso!
+            alert(`✅ Sucesso! ${videos.length} aulas foram importadas da playlist.`);
+            
+            // Atualiza a aplicação (recalcula totais e cards)
+            inicializarApp();
+
+        } catch (error) {
+            console.error(error);
+            alert("❌ Erro ao sincronizar: " + error.message);
+        } finally {
+            // Restaura botão
+            btnSyncRapido.innerHTML = textoOriginal;
+            btnSyncRapido.disabled = false;
+        }
+    });
+}
+
+// Função Auxiliar de Tempo (Caso não tenha sido declarada antes)
+// Se já existir no seu arquivo, pode remover esta duplicata.
+function parseIsoDuration(iso) {
+    const match = iso.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+    if(!match) return 0;
+    const hours = (parseInt(match[1]) || 0);
+    const minutes = (parseInt(match[2]) || 0);
+    return (hours * 60) + minutes;
+}
 
 
