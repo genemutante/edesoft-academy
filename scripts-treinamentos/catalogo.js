@@ -567,4 +567,118 @@ function abrirModalAulas(id) {
     modalAulas.style.display = "flex";
 }
 
+/* =============================================================
+   MÓDULO DE MANUTENÇÃO (CRUD CURSOS)
+   ============================================================= */
+
+const modalCurso = document.getElementById("modal-curso");
+const formCurso = document.getElementById("form-curso");
+const btnNovoCurso = document.getElementById("btn-novo-curso");
+const btnSalvarCurso = document.getElementById("btn-salvar-curso");
+const btnExcluirCurso = document.getElementById("btn-excluir-curso");
+const areaDelete = document.getElementById("area-delete");
+
+// 1. Abrir Modal para NOVO curso
+if(btnNovoCurso) {
+    btnNovoCurso.addEventListener("click", () => {
+        formCurso.reset();
+        document.getElementById("curso-id").value = ""; // Limpa ID
+        document.getElementById("modal-curso-titulo").textContent = "Novo Curso";
+        areaDelete.style.display = "none"; // Esconde botão de excluir
+        modalCurso.style.display = "flex";
+        
+        // Sugestão de Trilhas (Datalist)
+        atualizarDatalistTrilhas();
+    });
+}
+
+// 2. Abrir Modal para EDITAR curso
+function editarCurso(id) {
+    const curso = cursos.find(c => c.id == id);
+    if (!curso) return;
+
+    document.getElementById("curso-id").value = curso.id;
+    document.getElementById("curso-nome").value = curso.nome;
+    document.getElementById("curso-status").value = (curso.status || "DISPONÍVEL").toUpperCase();
+    document.getElementById("curso-trilha").value = curso.trilha;
+    document.getElementById("curso-subtrilha").value = curso.subtrilha || "";
+    document.getElementById("curso-link").value = curso.link || "";
+    document.getElementById("curso-descricao").value = curso.descricao || "";
+
+    document.getElementById("modal-curso-titulo").textContent = "Editar Curso";
+    areaDelete.style.display = "block"; // Mostra botão de excluir
+    
+    atualizarDatalistTrilhas();
+    modalCurso.style.display = "flex";
+}
+
+// 3. Salvar (Create/Update)
+btnSalvarCurso.addEventListener("click", async () => {
+    const id = document.getElementById("curso-id").value;
+    const nome = document.getElementById("curso-nome").value;
+    
+    if(!nome) { alert("O nome do curso é obrigatório."); return; }
+
+    const payload = {
+        nome: nome,
+        status: document.getElementById("curso-status").value,
+        trilha: document.getElementById("curso-trilha").value || "Geral",
+        subtrilha: document.getElementById("curso-subtrilha").value,
+        link: document.getElementById("curso-link").value,
+        descricao: document.getElementById("curso-descricao").value
+    };
+
+    // Se tiver ID, adiciona ao payload para virar Update
+    if(id) payload.id = id;
+
+    btnSalvarCurso.innerText = "Salvando...";
+    btnSalvarCurso.disabled = true;
+
+    try {
+        await DBHandler.salvarCurso(payload);
+        modalCurso.style.display = "none";
+        inicializarApp(); // Recarrega tudo
+        alert("Curso salvo com sucesso!");
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao salvar: " + e.message);
+    } finally {
+        btnSalvarCurso.innerText = "Salvar Alterações";
+        btnSalvarCurso.disabled = false;
+    }
+});
+
+// 4. Excluir
+btnExcluirCurso.addEventListener("click", async () => {
+    const id = document.getElementById("curso-id").value;
+    if(!id) return;
+
+    if(confirm("Tem certeza? Isso apagará o curso e TODO o histórico de aulas vinculado a ele.")) {
+        try {
+            await DBHandler.excluirCurso(id);
+            modalCurso.style.display = "none";
+            inicializarApp();
+        } catch (e) {
+            alert("Erro ao excluir: " + e.message);
+        }
+    }
+});
+
+// Fechar Modal
+document.querySelectorAll(".btn-close-modal-curso").forEach(btn => {
+    btn.addEventListener("click", () => modalCurso.style.display = "none");
+});
+
+// Auxiliar: Preenche o <datalist> para autocomplete de trilhas
+function atualizarDatalistTrilhas() {
+    const datalist = document.getElementById("lista-trilhas");
+    datalist.innerHTML = "";
+    // Pega trilhas únicas dos cursos existentes
+    const trilhasUnicas = [...new Set(cursos.map(c => c.trilha))];
+    trilhasUnicas.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        datalist.appendChild(opt);
+    });
+}
 
