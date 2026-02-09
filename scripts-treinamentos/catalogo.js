@@ -250,4 +250,203 @@ document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
 });
 
 
+/* =============================================================
+   MÓDULO YOUTUBE SYNC
+   ============================================================= */
+
+const modalYouTube = document.getElementById("modal-youtube");
+const btnAbrirYoutube = document.getElementById("btn-modal-youtube");
+const btnFecharModal = document.querySelector(".btn-close-modal");
+const selectCursoYT = document.getElementById("yt-curso-selecionado");
+const inputApiKey = document.getElementById("yt-api-key");
+const inputPlaylistId = document.getElementById("yt-playlist-id");
+const btnBuscarVideos = document.getElementById("btn-buscar-videos");
+const btnSalvarSync = document.getElementById("btn-salvar-sincronizacao");
+const areaPreview = document.getElementById("yt-preview-area");
+const tbodyPreview = document.getElementById("yt-lista-videos");
+
+let videosEncontrados = []; // Armazena temporariamente os vídeos buscados
+
+// 1. Abrir Modal e Carregar Cursos
+if(btnAbrirYoutube) {
+    btnAbrirYoutube.addEventListener("click", () => {
+        modalYouTube.style.display = "flex";
+        carregarCursosNoSelect();
+        
+        // Tenta recuperar API Key salva anteriormente
+        const savedKey = localStorage.getItem("yt_api_key");
+        if(savedKey) inputApiKey.value = savedKey;
+    });
+}
+
+// 2. Fechar Modal
+if(btnFecharModal) {
+    btnFecharModal.addEventListener("click", () => {
+        modalYouTube.style.display = "none";
+        videosEncontrados = [];
+        areaPreview.style.display = "none";
+    });
+}
+
+// 3. Popular Combo de Cursos
+function carregarCursosNoSelect() {
+    selectCursoYT.innerHTML = '<option value="">Selecione um curso...</option>';
+    // Usa a variável global 'cursos' que já está carregada na memória
+    cursos.forEach(c => {
+        const option = document.createElement("option");
+        option.value = c.id;
+        option.textContent = `${c.trilha} - ${c.nome}`;
+        // Se o curso tiver link, tenta extrair o ID da playlist pra ajudar
+        if(c.link && c.link.includes("list=")) {
+            option.dataset.playlist = c.link.split("list=")[1];
+        }
+        selectCursoYT.appendChild(option);
+    });
+}
+
+// Ao selecionar curso, preenche o ID da playlist se tiver
+selectCursoYT.addEventListener("change", (e) => {
+    const selectedOpt = selectCursoYT.options[selectCursoYT.selectedIndex];
+    if(selectedOpt.dataset.playlist) {
+        inputPlaylistId.value = selectedOpt.dataset.playlist;
+    }
+});
+
+// 4. Buscar Vídeos (Lógica portada do seu HTML)
+btnBuscarVideos.addEventListener("click", async () => {
+    const apiKey = inputApiKey.value.trim();
+    let playlistId = inputPlaylistId.value.trim();
+    const statusMsg = document.getElementById("yt-status-msg");
+
+    if (!apiKey || !playlistId) {
+        alert("Por favor, preencha a API Key e o ID da Playlist.");
+        return;
+    }
+
+    // Limpa URL se o usuário colou o link inteiro
+    if(playlistId.includes("list=")) {
+        playlistId = playlistId.split("list=")[1].split("&")[0];
+    }
+
+    // Salva API Key para facilitar próxima vez
+    localStorage.setItem("yt_api_key", apiKey);
+
+    statusMsg.textContent = "⏳ Buscando dados no YouTube...";
+    statusMsg.style.color = "blue";
+    btnBuscarVideos.disabled = true;
+    tbodyPreview.innerHTML = "";
+    
+    try {
+        let videos = [];
+        let nextPageToken = "";
+        
+        // Loop para pegar paginação (caso tenha mais de 50 vídeos)
+        do {
+            const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}&pageToken=${nextPageToken}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error.message);
+
+            // Coleta IDs dos vídeos para buscar duração
+            const videoIds = data.items.map(item => item.contentDetails.videoId).join(",");
+            
+            // Busca detalhes (Duração)
+            const urlDetails = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${apiKey}`;
+            const respDetails = await fetch(urlDetails);
+            const dataDetails = await respDetails.json();
+
+            // Mescla informações
+            const pageVideos = dataDetails.items.map(item => ({
+                titulo: item.snippet.title,
+                link_video: `https://www.youtube.com/watch?v=${item.id}`,
+                descricao: item.snippet.description ? item.snippet.description.substring(0, 200) + "..." : "",
+                duracao_minutos: parseIsoDuration(item.contentDetails.duration),
+                ordem: 0 // Será ajustado no loop final
+            }));
+
+            videos = [...videos, ...pageVideos];
+            nextPageToken = data.nextPageToken;
+
+        } while (nextPageToken);
+
+        videosEncontrados = videos; // Guarda na variável global
+        renderPreview(videos);
+        
+        statusMsg.textContent = `✅ ${videos.length} vídeos encontrados!`;
+        statusMsg.style.color = "green";
+        btnSalvarSync.disabled = false;
+        areaPreview.style.display = "block";
+
+    } catch (error) {
+        console.error(error);
+        statusMsg.textContent = "❌ Erro: " + error.message;
+        statusMsg.style.color = "red";
+    } finally {
+        btnBuscarVideos.disabled = false;
+    }
+});
+
+// 5. Renderizar Preview
+function renderPreview(lista) {
+    document.getElementById("yt-total-videos").textContent = lista.length;
+    let html = "";
+    lista.forEach((v, index) => {
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${v.titulo}</td>
+                <td>${v.duracao_minutos} min</td>
+                <td><a href="${v.link_video}" target="_blank">Link</a></td>
+            </tr>
+        `;
+    });
+    tbodyPreview.innerHTML = html;
+}
+
+// 6. Converter ISO 8601 (PT1H2M) para Minutos Inteiros
+function parseIsoDuration(iso) {
+    const match = iso.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+    const hours = (parseInt(match[1]) || 0);
+    const minutes = (parseInt(match[2]) || 0);
+    // Segundos ignorados para cálculo de aulas, mas arredondamos se > 30s se quiser
+    return (hours * 60) + minutes;
+}
+
+// 7. Salvar no Banco
+btnSalvarSync.addEventListener("click", async () => {
+    const cursoId = selectCursoYT.value;
+    if(!cursoId) return;
+
+    const statusMsg = document.getElementById("yt-status-msg");
+    statusMsg.textContent = "💾 Salvando no banco...";
+    btnSalvarSync.disabled = true;
+
+    try {
+        // Prepara o array final com o ID do curso e Ordem sequencial
+        const payload = videosEncontrados.map((v, index) => ({
+            treinamento_id: cursoId,
+            titulo: v.titulo,
+            descricao: v.descricao,
+            link_video: v.link_video,
+            duracao_minutos: v.duracao_minutos,
+            ordem: index + 1
+        }));
+
+        await DBHandler.sincronizarAulasPorPlaylist(cursoId, payload);
+
+        alert("Sucesso! Aulas atualizadas.");
+        modalYouTube.style.display = "none";
+        
+        // Recarrega a aplicação para atualizar os cards e totais
+        inicializarApp(); 
+
+    } catch (error) {
+        console.error(error);
+        statusMsg.textContent = "Erro ao salvar: " + error.message;
+        alert("Erro ao salvar no banco. Veja o console.");
+    } finally {
+        btnSalvarSync.disabled = false;
+    }
+});
 
