@@ -417,13 +417,37 @@ async buscarHomologacaoPorId(id) {
         return data;
     },
 
+// =========================
+    // 11) MANUTENÇÃO DE CURSOS (CRUD)
+    // =========================
+    async salvarCurso(payload) {
+        // O Supabase entende upsert: se tiver ID atualiza, se não tiver cria
+        const { data, error } = await supabaseClient
+            .from("treinamentos")
+            .upsert([payload])
+            .select()
+            .single();
 
+        if (error) throw error;
+        return data;
+    },
+
+    async excluirCurso(id) {
+        const { error } = await supabaseClient
+            .from("treinamentos")
+            .delete()
+            .eq("id", id);
+        
+        if (error) throw error;
+    }
+    
     
 };
 
 
 // No final do ficheiro db-handler.js
 window.DBHandler = DBHandler;
+
 
 
 
