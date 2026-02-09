@@ -1375,3 +1375,28 @@ input:checked + .slider:before {
     margin-left: auto;
 }
 
+
+/* Botão de Sync Rápido no Modal */
+.btn-youtube-sync {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    background: #fef2f2; /* Vermelho YouTube bem claro */
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-youtube-sync:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+    transform: translateY(-1px);
+}
+
+.btn-youtube-sync:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(100%);
+}
