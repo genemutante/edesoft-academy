@@ -838,38 +838,54 @@ document.getElementById("btn-toggle-trilha").addEventListener("click", () => {
 });
 
 
-/* =============================================================
-   MÓDULO SYNC YOUTUBE RÁPIDO (DENTRO DA EDIÇÃO)
-   ============================================================= */
-
-const YOUTUBE_API_KEY_FIXA = "AIzaSyAJyCenPXn41mbjieW6wTzeaFPYFX5Xrzo";
+// =============================================================
+// 5. MÓDULO: SYNC YOUTUBE (RÁPIDO) - VERSÃO ROBUSTA
+// =============================================================
 const btnSyncRapido = document.getElementById("btn-sync-youtube-rapido");
 
 if(btnSyncRapido) {
     btnSyncRapido.addEventListener("click", async () => {
         const cursoId = document.getElementById("curso-id").value;
-        const linkUrl = document.getElementById("curso-link").value;
+        // .trim() remove espaços em branco antes ou depois que causam erro
+        const linkUrl = document.getElementById("curso-link").value.trim();
         
-        // 1. Validações Iniciais
         if (!cursoId) {
-            alert("⚠️ Por favor, salve o curso pela primeira vez antes de sincronizar as aulas.");
+            alert("⚠️ Salve o curso primeiro para gerar um ID.");
             return;
         }
 
-        if (!linkUrl || !linkUrl.includes("list=")) {
-            alert("⚠️ O link informado não parece ser uma Playlist do YouTube válida (deve conter 'list=').");
+        // --- NOVA LÓGICA DE EXTRAÇÃO DE ID MAIS FORTE ---
+        let playlistId = "";
+        try {
+            // Tenta usar a API nativa de URL do navegador
+            // Funciona para: https://www.youtube.com/watch?v=VIDEO&list=ID_DA_LISTA&index=1
+            // Funciona para: https://youtube.com/playlist?list=ID_DA_LISTA
+            if (linkUrl.includes("http")) {
+                const urlObj = new URL(linkUrl);
+                playlistId = urlObj.searchParams.get("list");
+            } else if (linkUrl.includes("list=")) {
+                // Caso o usuário cole só o finalzinho
+                playlistId = linkUrl.split("list=")[1].split("&")[0];
+            } else {
+                // Caso o usuário cole direto o ID (ex: PLx0sYbCq...)
+                playlistId = linkUrl;
+            }
+        } catch (e) {
+            console.warn("Falha na extração inteligente, tentando método bruto.");
+            if (linkUrl.includes("list=")) {
+                playlistId = linkUrl.split("list=")[1].split("&")[0];
+            }
+        }
+
+        if (!playlistId) {
+            alert("⚠️ Não foi possível identificar o ID da Playlist neste link.\nCertifique-se que o link contém '?list=...'");
             return;
         }
 
-        // 2. Extrai o ID da Playlist
-        const playlistId = linkUrl.split("list=")[1].split("&")[0];
+        console.log("🆔 ID Extraído:", playlistId); // Veja no Console (F12) se o ID parece correto
 
-        // 3. Confirmação de Segurança
-        if(!confirm("⚠️ ATENÇÃO:\n\nIsso irá APAGAR todas as aulas atuais deste curso e cadastrar as aulas da Playlist informada.\n\nDeseja continuar?")) {
-            return;
-        }
+        if(!confirm(`⚠️ ATENÇÃO: Isso APAGARÁ as aulas atuais e importará da Playlist (ID: ${playlistId}). Continuar?`)) return;
 
-        // 4. Feedback Visual (Loading)
         const textoOriginal = btnSyncRapido.innerHTML;
         btnSyncRapido.innerHTML = `⏳ Buscando...`;
         btnSyncRapido.disabled = true;
@@ -878,23 +894,32 @@ if(btnSyncRapido) {
             let videos = [];
             let nextPageToken = "";
             
-            // --- Loop de Busca (Paginação do YouTube) ---
             do {
                 const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${YOUTUBE_API_KEY_FIXA}&pageToken=${nextPageToken}`;
+                
                 const response = await fetch(url);
                 const data = await response.json();
 
-                if (data.error) throw new Error("YouTube diz: " + data.error.message);
+                // Tratamento de Erro Específico do YouTube
+                if (data.error) {
+                    if (data.error.code === 404) {
+                        throw new Error("Playlist não encontrada. Verifique se ela é PÚBLICA ou NÃO LISTADA (Privada não funciona).");
+                    }
+                    throw new Error("YouTube API: " + data.error.message);
+                }
 
-                // Coleta IDs para buscar duração exata
                 const videoIds = data.items.map(item => item.contentDetails.videoId).join(",");
                 
-                // Busca detalhes (Duração)
+                // Se a playlist tiver itens deletados ou privados, videoIds pode vir vazio
+                if (!videoIds) {
+                    nextPageToken = data.nextPageToken || "";
+                    continue; 
+                }
+
                 const urlDetails = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${YOUTUBE_API_KEY_FIXA}`;
                 const respDetails = await fetch(urlDetails);
                 const dataDetails = await respDetails.json();
 
-                // Monta array de objetos
                 const pageVideos = dataDetails.items.map(item => ({
                     titulo: item.snippet.title,
                     link_video: `https://www.youtube.com/watch?v=${item.id}`,
@@ -902,20 +927,13 @@ if(btnSyncRapido) {
                     duracao_minutos: parseIsoDuration(item.contentDetails.duration),
                     ordem: 0 
                 }));
-
                 videos = [...videos, ...pageVideos];
-                nextPageToken = data.nextPageToken || ""; // Garante string vazia se undefined
-
+                nextPageToken = data.nextPageToken || "";
             } while (nextPageToken);
 
-            // --- 5. Salvar no Banco ---
-            if(videos.length === 0) {
-                throw new Error("Nenhum vídeo encontrado nesta playlist.");
-            }
+            if(videos.length === 0) throw new Error("A playlist existe mas não retornou vídeos (verifique se os vídeos são públicos).");
 
             btnSyncRapido.innerHTML = `💾 Salvando...`;
-
-            // Prepara payload final
             const payload = videos.map((v, index) => ({
                 treinamento_id: cursoId,
                 titulo: v.titulo,
@@ -925,20 +943,14 @@ if(btnSyncRapido) {
                 ordem: index + 1
             }));
 
-            // Chama o DB Handler existente
             await DBHandler.sincronizarAulasPorPlaylist(cursoId, payload);
-
-            // Sucesso!
-            alert(`✅ Sucesso! ${videos.length} aulas foram importadas da playlist.`);
-            
-            // Atualiza a aplicação (recalcula totais e cards)
+            alert(`✅ Sucesso! ${videos.length} aulas importadas.`);
             inicializarApp();
 
         } catch (error) {
             console.error(error);
-            alert("❌ Erro ao sincronizar: " + error.message);
+            alert("❌ Erro: " + error.message);
         } finally {
-            // Restaura botão
             btnSyncRapido.innerHTML = textoOriginal;
             btnSyncRapido.disabled = false;
         }
