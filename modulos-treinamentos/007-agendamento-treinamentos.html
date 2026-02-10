@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendamento de Treinamentos</title>
-    <link rel="stylesheet" href="catalogo-style.css"> 
+    <link rel="stylesheet" href="../estilos-treinamentos/catalogo-style.css">
     <style>
         /* Estilos específicos para esta tela de agendamento */
         .layout-agendamento {
@@ -129,8 +129,9 @@
     </main>
 
     <script type="module">
-        import "./module-guard.js"; // Mantém sua segurança
-        import { DBHandler } from "./db-handler.js";
+        import "../scripts-treinamentos/module-guard.js"; // Mantém sua segurança
+        import { DBHandler } from "../bd-treinamentos/db-handler.js";
+       
 
         // --- Elementos do DOM ---
         const formAgendamento = document.getElementById('form-agendamento');
@@ -270,3 +271,4 @@
     </script>
 </body>
 </html>
+
