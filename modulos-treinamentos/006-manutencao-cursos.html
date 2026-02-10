@@ -226,14 +226,16 @@
     </div>
     
     <div class="modal-body">
-      <form id="form-curso">
-        <input type="hidden" id="curso-id"> <div class="form-row" style="align-items: center;">
-            <div class="form-group" style="flex: 3;">
+<form id="form-curso">
+        <input type="hidden" id="curso-id">
+        
+        <div class="form-row">
+            <div class="form-group" style="flex: 4;">
                 <label>Nome do Curso</label>
-                <input type="text" id="curso-nome" class="input-premium" required placeholder="Ex: Onboarding Institucional">
+                <input type="text" id="curso-nome" class="input-premium" required placeholder="Ex: Liderança Ágil" autocomplete="off">
             </div>
             
-            <div class="form-group" style="flex: 1;">
+            <div class="form-group" style="flex: 1.5; min-width: 140px;">
                 <label>Status</label>
                 <select id="curso-status" class="input-premium">
                     <option value="DISPONÍVEL">Disponível</option>
@@ -242,8 +244,8 @@
                 </select>
             </div>
 
-            <div class="form-group" style="flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; margin-left: 8px;">
-                <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 4px;">Exibir?</label>
+            <div class="form-group toggle-wrapper" style="flex: 0 0 auto;">
+                <label style="font-size: 0.75rem; color: #64748b;">Exibir?</label>
                 <label class="switch">
                     <input type="checkbox" id="curso-exibir" checked>
                     <span class="slider round"></span>
@@ -256,11 +258,11 @@
                 <label>Trilha</label>
                 <div style="display: flex; gap: 8px;">
                     <div class="select-wrapper" style="flex: 1;" id="box-select-trilha">
-                        <select id="curso-trilha-select" class="input-premium">
-                            </select>
+                        <select id="curso-trilha-select" class="input-premium"></select>
                     </div>
-                    <input type="text" id="curso-trilha-input" class="input-premium" style="display: none; flex: 1;" placeholder="Digite o nome da nova trilha...">
-                    <button type="button" id="btn-toggle-trilha" class="btn-icon-editar" title="Criar nova trilha" style="border-radius: 8px;">
+                    <input type="text" id="curso-trilha-input" class="input-premium" style="display: none; flex: 1;" placeholder="Nova trilha...">
+                    
+                    <button type="button" id="btn-toggle-trilha" class="btn-icon-editar" title="Criar/Selecionar" style="border-radius: 8px; flex-shrink: 0;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
                     </button>
                 </div>
@@ -273,49 +275,49 @@
         </div>
 
         <div class="form-group">
-            <label>Link Externo / Playlist (YouTube)</label>
+            <label>Link da Playlist (YouTube)</label>
             <div style="display: flex; gap: 8px;">
-                <input type="url" id="curso-link" class="input-premium" placeholder="https://www.youtube.com/playlist?list=..." style="flex: 1;">
+                <input type="url" id="curso-link" class="input-premium" placeholder="Cole a URL da playlist aqui..." style="flex: 1;">
                 
                 <button type="button" id="btn-sync-youtube-rapido" class="btn-youtube-sync" title="Buscar dados da Playlist">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444;"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/></svg>
-                    <span style="font-size: 0.8rem; font-weight: 600;">Sincronizar</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444;"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/></svg>
+                    <span style="font-size: 0.85rem; font-weight: 600;">Sincronizar</span>
                 </button>
             </div>
 
             <div class="sync-metadata" id="box-metadata-sync">
                 <div class="meta-item">
                     <span class="meta-label">Aulas:</span>
-                    <span class="meta-value" id="meta-qtd-aulas">-</span>
+                    <span class="meta-value" id="meta-qtd-aulas">0</span>
                 </div>
-                <div class="meta-item">
-                    <span class="meta-label">Carga Horária:</span>
-                    <span class="meta-value" id="meta-tempo-total">-</span>
+                <div style="width: 1px; height: 12px; background: #cbd5e1;"></div> <div class="meta-item">
+                    <span class="meta-label">Tempo:</span>
+                    <span class="meta-value" id="meta-tempo-total">0 min</span>
                 </div>
-                <div class="meta-item">
-                    <span class="meta-label">Última Sincronização:</span>
-                    <span class="meta-value" id="meta-data-sync">-</span>
+                <div style="width: 1px; height: 12px; background: #cbd5e1;"></div> <div class="meta-item" style="flex: 1;">
+                    <span class="meta-label">Sync:</span>
+                    <span class="meta-value" id="meta-data-sync">Nunca</span>
                 </div>
+                
                 <div class="meta-badge-pendente" id="badge-pendente" style="display: none;">
-                    Pendentes de Salvar
+                    Pendentes
                 </div>
             </div>
-            
-            <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px;">Cole o link da playlist e clique no botão para importar as aulas automaticamente.</small>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="flex-grow: 1;">
             <label>Descrição</label>
-            <textarea id="curso-descricao" class="input-premium" rows="3" placeholder="Resumo do que será aprendido..."></textarea>
+            <textarea id="curso-descricao" class="input-premium" rows="3" placeholder="Resumo do conteúdo do curso..."></textarea>
         </div>
 
-        <div id="area-delete" style="margin-top: 10px; display: none;">
-            <button type="button" id="btn-excluir-curso" style="color: #ef4444; background: none; border: none; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
-                Excluir este curso permanentemente
+        <div id="area-delete" style="display: none; text-align: right; margin-top: -5px;">
+            <button type="button" id="btn-excluir-curso" style="color: #ef4444; background: none; border: none; font-size: 0.75rem; cursor: pointer; text-decoration: underline;">
+                Excluir curso
             </button>
         </div>
       </form>
-    </div>
+
+  </div>
 
     <div class="modal-footer">
       <button type="button" class="btn-secondary-full btn-close-modal-curso">Cancelar</button>
@@ -329,3 +331,4 @@
 
 </body>
 </html>
+
