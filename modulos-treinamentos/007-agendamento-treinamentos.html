@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento em Massa | Enterprise</title>
+    <title>Agendamento | Enterprise</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         /* =================================================================
-           RESET E LAYOUT DE APLICAÇÃO (FULLSCREEN)
+           RESET E LAYOUT
            ================================================================= */
         * { box-sizing: border-box; outline: none; }
 
@@ -21,8 +21,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f1f5f9;
             color: #1e293b;
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
         }
 
         /* =================================================================
@@ -35,197 +34,107 @@
             display: flex;
             align-items: center;
             padding: 0 24px;
-            gap: 16px;
+            gap: 20px;
             flex-shrink: 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.03);
             z-index: 10;
         }
 
         .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 150px;
+            display: flex; flex-direction: column; gap: 4px; flex: 1; max-width: 400px;
         }
 
         .control-group label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;
         }
 
-        /* Inputs e Selects da Toolbar */
-        .input-toolbar {
-            height: 36px;
+        /* Inputs e Botões da Toolbar */
+        .input-toolbar, .btn-fake-input {
+            height: 38px;
             padding: 0 12px;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
             font-size: 0.9rem;
             color: #1e293b;
             background: #f8fafc;
-            cursor: pointer;
-            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: all 0.2s; width: 100%;
         }
-        .input-toolbar:hover { background: #fff; border-color: #94a3b8; }
-        .input-toolbar:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); background: #fff; }
+        .input-toolbar:hover, .btn-fake-input:hover { background: #fff; border-color: #94a3b8; }
+        .input-toolbar:focus { border-color: #2563eb; background: #fff; }
 
-        /* Botões de Abertura de Modal (Fake Inputs) */
-        .btn-modal-trigger {
-            height: 36px;
-            padding: 0 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #334155;
-            transition: all 0.2s;
+        .badge-count {
+            background: #e2e8f0; color: #475569; font-size: 0.75rem;
+            padding: 2px 8px; border-radius: 4px; font-weight: 600;
         }
-        .btn-modal-trigger:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
-        .btn-modal-trigger span.badge-count {
-            background: #e2e8f0;
-            color: #475569;
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        .btn-modal-trigger.active span.badge-count { background: #dbeafe; color: #2563eb; }
+        .btn-fake-input.active .badge-count { background: #dbeafe; color: #2563eb; }
 
         /* Botão de Ação Principal */
         .btn-action-main {
-            height: 40px;
-            padding: 0 24px;
-            background: #0f172a;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-left: auto; /* Empurra para a direita */
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            height: 42px; padding: 0 24px;
+            background: #0f172a; color: #fff;
+            border: none; border-radius: 6px;
+            font-weight: 600; font-size: 0.95rem;
+            cursor: pointer; margin-left: auto;
+            display: flex; align-items: center; gap: 10px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
         }
         .btn-action-main:hover { background: #1e293b; transform: translateY(-1px); }
         .btn-action-main:active { transform: translateY(0); }
+        .btn-action-main:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
 
         /* =================================================================
-           2. GRID DE AGENDAMENTOS (PRINCIPAL)
+           2. GRID DE AGENDAMENTOS
            ================================================================= */
         .grid-container {
-            flex: 1;
-            overflow: hidden;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
+            flex: 1; overflow: hidden; padding: 24px;
+            display: flex; flex-direction: column;
         }
 
-        .grid-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
-        }
-        .grid-header h2 { font-size: 1.1rem; color: #1e293b; margin: 0; }
-
-        .data-grid {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
+        .grid-wrapper {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+            overflow: hidden; display: flex; flex-direction: column; flex: 1;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
-        .grid-scroll {
-            flex: 1;
-            overflow-y: auto;
-        }
+        .grid-scroll { flex: 1; overflow-y: auto; }
 
         table { width: 100%; border-collapse: collapse; text-align: left; }
         thead { position: sticky; top: 0; background: #f8fafc; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        th { padding: 12px 16px; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
+        th { padding: 14px 16px; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
         tr:hover { background: #f8fafc; }
         
-        .status-badge {
-            padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-        }
-        .status-agendado { background: #eff6ff; color: #2563eb; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; background: #eff6ff; color: #2563eb; }
 
         /* =================================================================
-           3. MODAIS GRANDES (SELEÇÃO)
+           3. MODAIS (Layout Padronizado)
            ================================================================= */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(2px);
-            z-index: 100;
-            display: none;
-            align-items: center;
-            justify-content: center;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px);
+            z-index: 100; display: none; align-items: center; justify-content: center;
         }
 
-        .modal-large {
-            width: 800px;
-            max-width: 95vw;
-            height: 80vh;
-            background: #fff;
-            border-radius: 12px;
+        .modal-card {
+            width: 800px; max-width: 95vw; height: 85vh;
+            background: #fff; border-radius: 12px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            display: flex; flex-direction: column; overflow: hidden;
             animation: modalFadeIn 0.2s ease-out;
         }
-
         @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
         .modal-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex; justify-content: space-between; align-items: center;
-            background: #fff;
+            padding: 16px 24px; border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center; background: #fff;
         }
         .modal-header h3 { margin: 0; font-size: 1.1rem; color: #0f172a; }
 
-        .modal-search-bar {
-            padding: 12px 24px;
-            border-bottom: 1px solid #f1f5f9;
-            background: #f8fafc;
-        }
-        .input-search {
-            width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;
-        }
-
-        .modal-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
-        }
-
-        .selection-list {
-            list-style: none; padding: 0; margin: 0;
-        }
-        .selection-item {
-            display: flex; align-items: center; padding: 12px 24px;
-            border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.1s;
-        }
-        .selection-item:hover { background: #eff6ff; }
-        .selection-item input { margin-right: 12px; width: 18px; height: 18px; cursor: pointer; }
-        .selection-item label { flex: 1; cursor: pointer; font-size: 0.9rem; user-select: none; }
-        .item-meta { font-size: 0.8rem; color: #64748b; margin-left: auto; }
-
+        .modal-body { flex: 1; overflow-y: auto; padding: 0; background: #f8fafc; }
         .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
+            padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #fff;
             display: flex; justify-content: flex-end; gap: 12px;
         }
 
@@ -233,55 +142,65 @@
         .btn-confirm { padding: 10px 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .btn-confirm:hover { background: #1d4ed8; }
 
+        /* LISTA DE AULAS COM DATA (Cronograma) */
+        .cronograma-table { width: 100%; border-collapse: collapse; }
+        .cronograma-table th { background: #e2e8f0; font-size: 0.75rem; color: #475569; padding: 10px 20px; text-align: left; }
+        .cronograma-table td { padding: 10px 20px; border-bottom: 1px solid #e2e8f0; background: #fff; vertical-align: middle; }
+        
+        /* Input de Data dentro da tabela */
+        .input-date-inline {
+            border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px;
+            font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #1e293b;
+            width: 100%; max-width: 220px;
+        }
+        .input-date-inline:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
+
+        .check-wrapper { display: flex; align-items: center; gap: 12px; }
+        .check-wrapper input { width: 18px; height: 18px; cursor: pointer; }
+        .check-wrapper label { cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #334155; }
+        .aula-meta { font-size: 0.8rem; color: #64748b; margin-left: 30px; }
+
+        /* Utilitários */
+        .bulk-actions { padding: 10px 24px; background: #eff6ff; border-bottom: 1px solid #dbeafe; display: flex; align-items: center; gap: 15px; }
+        .bulk-actions label { font-size: 0.8rem; color: #1e40af; font-weight: 600; }
+        .bulk-actions input { border: 1px solid #bfdbfe; border-radius: 4px; padding: 6px; font-size: 0.8rem; }
+        .btn-apply { background: #3b82f6; color: #fff; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+
     </style>
 </head>
 <body>
 
     <div class="top-controls">
         
-        <div class="control-group" style="flex: 2;">
+        <div class="control-group" style="flex: 1.5;">
             <label>1. Curso / Treinamento</label>
-            <select id="sel-treino" class="input-toolbar">
-                <option value="">Selecione o Treinamento...</option>
+            <select id="sel-treino" class="input-toolbar" onchange="resetCronograma()">
+                <option value="">Carregando...</option>
             </select>
         </div>
 
-        <div class="control-group" style="flex: 1.5;">
-            <label>2. Alunos / Colaboradores</label>
-            <div class="btn-modal-trigger" onclick="abrirModalAlunos()">
+        <div class="control-group">
+            <label>2. Participantes</label>
+            <div class="btn-fake-input" onclick="abrirModalAlunos()">
                 <span>Selecionar Alunos</span>
                 <span id="badge-alunos" class="badge-count">0</span>
             </div>
         </div>
 
-        <div class="control-group" style="flex: 1.5;">
-            <label>3. Conteúdo / Aulas</label>
-            <div id="btn-trigger-aulas" class="btn-modal-trigger" onclick="abrirModalAulas()" style="opacity: 0.6; pointer-events: none;">
-                <span id="label-aulas">Todas as Aulas</span>
-                <span id="badge-aulas" class="badge-count">Auto</span>
-            </div>
-        </div>
-
-        <div class="control-group" style="width: 180px;">
-            <label>4. Data e Hora</label>
-            <input type="datetime-local" id="inp-data" class="input-toolbar">
-        </div>
-
-        <button class="btn-action-main" onclick="salvarAgendamentoEmMassa()">
-            <span>Agendar</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <button id="btn-open-cronograma" class="btn-action-main" onclick="abrirCronograma()" disabled style="opacity: 0.5;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>3. Definir Cronograma</span>
         </button>
 
     </div>
 
     <div class="grid-container">
-        <div class="grid-header">
-            <h2>📅 Agenda Geral</h2>
-            <button onclick="carregarAgenda()" style="background:none; border:none; color:#2563eb; cursor:pointer; font-weight:600;">↻ Atualizar</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2 style="font-size: 1.1rem; color: #1e293b; margin: 0;">📅 Visão Geral da Agenda</h2>
+            <button onclick="carregarAgenda()" style="background:none; border:none; color:#2563eb; cursor:pointer; font-weight:600; font-size: 0.9rem;">↻ Atualizar Lista</button>
         </div>
         
-        <div class="data-grid">
-            <div id="loading-grid" style="padding:20px; text-align:center; color:#64748b; display:none;">Carregando agenda...</div>
+        <div class="grid-wrapper">
             <div class="grid-scroll">
                 <table id="tabela-agenda">
                     <thead>
@@ -289,7 +208,7 @@
                             <th>Data/Hora</th>
                             <th>Colaborador</th>
                             <th>Treinamento</th>
-                            <th>Módulo/Aula</th>
+                            <th>Conteúdo (Aula)</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -300,51 +219,66 @@
     </div>
 
     <div id="modal-alunos" class="modal-overlay">
-        <div class="modal-large">
+        <div class="modal-card">
             <div class="modal-header">
-                <h3>Selecionar Colaboradores</h3>
-                <button onclick="fecharModal('modal-alunos')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button>
+                <h3>Selecionar Participantes</h3>
+                <button onclick="fecharModal('modal-alunos')" style="background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
             </div>
-            <div class="modal-search-bar">
-                <input type="text" id="search-alunos" class="input-search" placeholder="Buscar por nome ou departamento..." oninput="filtrarListaAlunos()">
+            <div style="padding: 12px 24px; border-bottom: 1px solid #e2e8f0; background: #fff;">
+                <input type="text" id="search-alunos" placeholder="Filtrar por nome..." 
+                       style="width:100%; padding: 8px 12px; border:1px solid #cbd5e1; border-radius:6px;"
+                       oninput="filtrarAlunos()">
             </div>
             <div class="modal-body">
-                <div style="padding: 10px 24px; border-bottom:1px solid #f1f5f9;">
-                    <label style="font-size:0.9rem; font-weight:600; cursor:pointer;">
-                        <input type="checkbox" onchange="toggleTodos('chk-aluno', this.checked)"> Marcar Todos
-                    </label>
-                </div>
-                <ul id="lista-alunos" class="selection-list"></ul>
+                <ul id="lista-alunos" style="list-style:none; padding:0; margin:0;">
+                    </ul>
             </div>
             <div class="modal-footer">
-                <div style="margin-right:auto; color:#64748b; font-size:0.9rem;" id="contador-alunos-modal">0 selecionados</div>
+                <span id="contador-alunos" style="margin-right:auto; color:#64748b; font-size:0.9rem;">0 selecionados</span>
                 <button class="btn-cancel" onclick="fecharModal('modal-alunos')">Cancelar</button>
-                <button class="btn-confirm" onclick="confirmarSelecaoAlunos()">Confirmar Seleção</button>
+                <button class="btn-confirm" onclick="fecharModal('modal-alunos')">Confirmar</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-aulas" class="modal-overlay">
-        <div class="modal-large">
+    <div id="modal-cronograma" class="modal-overlay">
+        <div class="modal-card" style="width: 900px;">
             <div class="modal-header">
-                <h3>Selecionar Aulas do Curso</h3>
-                <button onclick="fecharModal('modal-aulas')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button>
+                <h3>Definir Cronograma das Aulas</h3>
+                <button onclick="fecharModal('modal-cronograma')" style="background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
             </div>
+            
+            <div class="bulk-actions">
+                <label>Aplicar Data em Massa:</label>
+                <input type="datetime-local" id="bulk-date">
+                <button class="btn-apply" onclick="aplicarDataEmMassa()">Aplicar aos Selecionados</button>
+            </div>
+
             <div class="modal-body">
-                <div style="padding: 10px 24px; border-bottom:1px solid #f1f5f9;">
-                    <label style="font-size:0.9rem; font-weight:600; cursor:pointer;">
-                        <input type="checkbox" onchange="toggleTodos('chk-aula', this.checked)"> Marcar Todas
-                    </label>
-                </div>
-                <ul id="lista-aulas" class="selection-list"></ul>
-                <div id="msg-sem-aulas" style="padding:30px; text-align:center; color:#94a3b8; display:none;">
-                    Este curso não possui grade de aulas cadastrada.<br>O agendamento será feito para o curso inteiro.
+                <table class="cronograma-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"><input type="checkbox" onclick="toggleTodasAulas(this.checked)"></th>
+                            <th>Aula / Módulo</th>
+                            <th style="width: 250px;">Data e Hora da Realização</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-aulas-cronograma">
+                        </tbody>
+                </table>
+                
+                <div id="msg-sem-aulas" style="padding:40px; text-align:center; color:#64748b; display:none;">
+                    Este curso não possui grade de aulas cadastrada.<br>
+                    O agendamento será feito como um bloco único.
                 </div>
             </div>
+
             <div class="modal-footer">
-                <div style="margin-right:auto; color:#64748b; font-size:0.9rem;" id="contador-aulas-modal">0 selecionadas</div>
-                <button class="btn-cancel" onclick="fecharModal('modal-aulas')">Cancelar</button>
-                <button class="btn-confirm" onclick="confirmarSelecaoAulas()">Confirmar Seleção</button>
+                <div style="margin-right: auto; font-size: 0.85rem; color: #64748b;">
+                    * Apenas aulas marcadas serão agendadas.
+                </div>
+                <button class="btn-cancel" onclick="fecharModal('modal-cronograma')">Cancelar</button>
+                <button id="btn-salvar-final" class="btn-confirm" onclick="salvarAgendamentoFinal()">Confirmar Agendamento</button>
             </div>
         </div>
     </div>
@@ -352,19 +286,11 @@
     <script type="module">
         import { DBHandler } from "../bd-treinamentos/db-handler.js";
 
-        // ESTADO DA APLICAÇÃO
+        // ESTADO
         let todosCursos = [];
         let todosColabs = [];
-        
-        let idsAlunosSelecionados = [];
-        let idsAulasSelecionadas = []; // Se vazio, entende-se "Curso Inteiro" ou "Todas" dependendo da lógica
-        
-        // ELEMENTOS
-        const selTreino = document.getElementById('sel-treino');
-        const badgeAlunos = document.getElementById('badge-alunos');
-        const badgeAulas = document.getElementById('badge-aulas');
-        const btnTriggerAulas = document.getElementById('btn-trigger-aulas');
-        const labelAulas = document.getElementById('label-aulas');
+        let alunosSelecionadosIds = new Set();
+        let cursoAtual = null;
 
         // INICIALIZAÇÃO
         document.addEventListener('DOMContentLoaded', async () => {
@@ -378,295 +304,247 @@
                     DBHandler.listarTreinamentos(),
                     DBHandler.listarColaboradores({ somenteAtivos: true })
                 ]);
-                
                 todosCursos = treinos || [];
                 todosColabs = colabs || [];
 
                 // Popula Cursos
-                todosCursos.sort((a,b) => a.nome.localeCompare(b.nome));
-                selTreino.innerHTML = '<option value="">Selecione o Treinamento...</option>';
-                todosCursos.forEach(t => selTreino.innerHTML += `<option value="${t.id}">${t.nome}</option>`);
+                const selTreino = document.getElementById('sel-treino');
+                selTreino.innerHTML = '<option value="">Selecione...</option>';
+                todosCursos.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(t => {
+                    selTreino.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+                });
 
-                // Popula Lista de Alunos (Modal)
-                renderizarListaAlunos(todosColabs);
+                // Popula Lista de Alunos (no Modal)
+                renderizarListaAlunos();
 
-            } catch (e) { alert("Erro ao carregar dados: " + e.message); }
+            } catch (e) { alert("Erro ao carregar: " + e.message); }
         }
 
-        // ============================================================
-        // LÓGICA DE ALUNOS
-        // ============================================================
-        window.abrirModalAlunos = function() {
-            document.getElementById('modal-alunos').style.display = 'flex';
-            // Restaura checkbox state
-            document.querySelectorAll('.chk-aluno').forEach(chk => {
-                chk.checked = idsAlunosSelecionados.includes(chk.value);
-            });
-            atualizarContadorModal('alunos');
-        };
-
-        function renderizarListaAlunos(lista) {
+        // --- Lógica de Alunos ---
+        function renderizarListaAlunos() {
             const ul = document.getElementById('lista-alunos');
             ul.innerHTML = '';
-            lista.sort((a,b) => a.nome.localeCompare(b.nome));
-            lista.forEach(c => {
+            todosColabs.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
                 const li = document.createElement('li');
-                li.className = 'selection-item';
+                li.style.padding = '10px 24px';
+                li.style.borderBottom = '1px solid #f1f5f9';
+                li.style.display = 'flex';
+                li.style.alignItems = 'center';
+                
                 li.innerHTML = `
-                    <input type="checkbox" class="chk-aluno" value="${c.id}" onchange="atualizarContadorModal('alunos')">
-                    <label>${c.nome}</label>
-                    <span class="item-meta">${c.departamento || '-'}</span>
+                    <label style="display:flex; align-items:center; width:100%; cursor:pointer;">
+                        <input type="checkbox" class="chk-aluno" value="${c.id}" style="width:18px; height:18px; margin-right:12px;">
+                        <span style="font-size:0.9rem; color:#334155; font-weight:500;">${c.nome}</span>
+                        <span style="margin-left:auto; font-size:0.8rem; color:#94a3b8;">${c.departamento || '-'}</span>
+                    </label>
                 `;
-                // Clique na linha marca o check
-                li.onclick = (e) => {
-                    if(e.target.type !== 'checkbox') {
-                        const chk = li.querySelector('input');
-                        chk.checked = !chk.checked;
-                        atualizarContadorModal('alunos');
-                    }
+                li.querySelector('input').onchange = (e) => {
+                    if(e.target.checked) alunosSelecionadosIds.add(c.id);
+                    else alunosSelecionadosIds.delete(c.id);
+                    atualizarBadgeAlunos();
                 };
                 ul.appendChild(li);
             });
         }
 
-        window.filtrarListaAlunos = function() {
+        function atualizarBadgeAlunos() {
+            const count = alunosSelecionadosIds.size;
+            document.getElementById('badge-alunos').textContent = count;
+            document.getElementById('contador-alunos').textContent = `${count} selecionados`;
+            verificarHabilitarCronograma();
+        }
+
+        window.filtrarAlunos = function() {
             const termo = document.getElementById('search-alunos').value.toLowerCase();
-            const itens = document.querySelectorAll('#lista-alunos li');
-            itens.forEach(li => {
+            document.querySelectorAll('#lista-alunos li').forEach(li => {
                 const texto = li.innerText.toLowerCase();
                 li.style.display = texto.includes(termo) ? 'flex' : 'none';
             });
         };
 
-        window.confirmarSelecaoAlunos = function() {
-            const checks = document.querySelectorAll('.chk-aluno:checked');
-            idsAlunosSelecionados = Array.from(checks).map(c => c.value);
-            
-            badgeAlunos.textContent = idsAlunosSelecionados.length > 0 ? idsAlunosSelecionados.length : '0';
-            document.querySelector('.btn-modal-trigger').classList.toggle('active', idsAlunosSelecionados.length > 0);
-            
-            fecharModal('modal-alunos');
+        // --- Lógica de Cronograma (O Coração da Mudança) ---
+        window.resetCronograma = function() {
+            verificarHabilitarCronograma();
         };
 
-        // ============================================================
-        // LÓGICA DE AULAS
-        // ============================================================
-        
-        // Ao mudar o curso, libera o botão de aulas e limpa seleção anterior
-        selTreino.addEventListener('change', () => {
-            const id = selTreino.value;
-            idsAulasSelecionadas = []; // Reset
+        function verificarHabilitarCronograma() {
+            const cursoId = document.getElementById('sel-treino').value;
+            const temAlunos = alunosSelecionadosIds.size > 0;
+            const btn = document.getElementById('btn-open-cronograma');
             
-            if (id) {
-                btnTriggerAulas.style.opacity = '1';
-                btnTriggerAulas.style.pointerEvents = 'auto';
-                
-                // Verifica se tem aulas para mudar o texto
-                const curso = todosCursos.find(c => String(c.id) === String(id));
-                const qtdAulas = curso?.aulas?.length || 0;
-                
-                if (qtdAulas > 0) {
-                    labelAulas.textContent = "Selecionar Aulas";
-                    badgeAulas.textContent = "Todas";
-                } else {
-                    labelAulas.textContent = "Curso Único";
-                    badgeAulas.textContent = "Auto";
-                }
+            if (cursoId && temAlunos) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
             } else {
-                btnTriggerAulas.style.opacity = '0.6';
-                btnTriggerAulas.style.pointerEvents = 'none';
-                labelAulas.textContent = "Todas as Aulas";
-                badgeAulas.textContent = "-";
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
             }
-        });
+        }
 
-        window.abrirModalAulas = function() {
-            const cursoId = selTreino.value;
-            if(!cursoId) return;
-
-            const curso = todosCursos.find(c => String(c.id) === String(cursoId));
-            const aulas = curso?.aulas || [];
+        window.abrirCronograma = function() {
+            const cursoId = document.getElementById('sel-treino').value;
+            cursoAtual = todosCursos.find(c => String(c.id) === String(cursoId));
             
-            const ul = document.getElementById('lista-aulas');
-            ul.innerHTML = '';
+            const tbody = document.getElementById('lista-aulas-cronograma');
+            tbody.innerHTML = '';
+            
+            const aulas = cursoAtual.aulas || [];
             
             if (aulas.length === 0) {
                 document.getElementById('msg-sem-aulas').style.display = 'block';
+                // Adiciona linha única para curso inteiro
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center;"><input type="checkbox" class="chk-aula-crono" checked disabled></td>
+                    <td><strong>Curso Completo (Módulo Único)</strong></td>
+                    <td><input type="datetime-local" class="input-date-inline aula-date"></td>
+                `;
+                tbody.appendChild(tr);
             } else {
                 document.getElementById('msg-sem-aulas').style.display = 'none';
                 aulas.sort((a,b) => a.ordem - b.ordem);
                 aulas.forEach(a => {
-                    const li = document.createElement('li');
-                    li.className = 'selection-item';
-                    li.innerHTML = `
-                        <input type="checkbox" class="chk-aula" value="${a.id}" onchange="atualizarContadorModal('aulas')">
-                        <label>${a.ordem}. ${a.titulo}</label>
-                        <span class="item-meta">${a.duracao_minutos} min</span>
-                    `;
-                    // Restaura seleção
-                    if (idsAulasSelecionadas.includes(String(a.id))) {
-                        li.querySelector('input').checked = true;
-                    }
-                    
-                    li.onclick = (e) => {
-                        if(e.target.type !== 'checkbox') {
-                            const chk = li.querySelector('input');
-                            chk.checked = !chk.checked;
-                            atualizarContadorModal('aulas');
-                        }
-                    };
-                    ul.appendChild(li);
-                });
-            }
-            
-            document.getElementById('modal-aulas').style.display = 'flex';
-            atualizarContadorModal('aulas');
-        };
-
-        window.confirmarSelecaoAulas = function() {
-            const checks = document.querySelectorAll('.chk-aula:checked');
-            idsAulasSelecionadas = Array.from(checks).map(c => c.value);
-            
-            if (idsAulasSelecionadas.length > 0) {
-                badgeAulas.textContent = idsAulasSelecionadas.length;
-                btnTriggerAulas.classList.add('active');
-            } else {
-                // Se nenhuma marcada, assume "Todas" ou "Curso Inteiro"
-                badgeAulas.textContent = "Todas";
-                btnTriggerAulas.classList.remove('active');
-            }
-            
-            fecharModal('modal-aulas');
-        };
-
-        // ============================================================
-        // LÓGICA DE SALVAMENTO (EM MASSA)
-        // ============================================================
-        window.salvarAgendamentoEmMassa = async function() {
-            const cursoId = selTreino.value;
-            const dataHora = document.getElementById('inp-data').value;
-            
-            if (!cursoId || idsAlunosSelecionados.length === 0 || !dataHora) {
-                alert("Por favor, selecione:\n1. Um Curso\n2. Pelo menos um Aluno\n3. Uma Data");
-                return;
-            }
-
-            const btn = document.querySelector('.btn-action-main');
-            const textoOriginal = btn.innerHTML;
-            btn.innerHTML = 'Salvando...';
-            btn.style.pointerEvents = 'none';
-
-            try {
-                // PREPARAR O PAYLOAD (Matriz: Alunos x Aulas)
-                const payloadFinal = [];
-                
-                // Quais aulas agendar?
-                let aulasAlvo = [];
-                if (idsAulasSelecionadas.length > 0) {
-                    // Agendar apenas as selecionadas
-                    aulasAlvo = idsAulasSelecionadas;
-                } else {
-                    // Agendar TODAS ou CURSO INTEIRO
-                    // Se o curso tem aulas, pega todas. Se não, array vazio (significa aula_id = null)
-                    const curso = todosCursos.find(c => String(c.id) === String(cursoId));
-                    if (curso && curso.aulas && curso.aulas.length > 0) {
-                        aulasAlvo = curso.aulas.map(a => a.id);
-                    } else {
-                        aulasAlvo = [null]; // Representa "Curso Inteiro"
-                    }
-                }
-
-                // Criação da Matriz
-                idsAlunosSelecionados.forEach(alunoId => {
-                    aulasAlvo.forEach(aulaId => {
-                        payloadFinal.push({
-                            colaborador_id: alunoId,
-                            treinamento_id: cursoId,
-                            aula_id: aulaId,
-                            data_hora: new Date(dataHora).toISOString(),
-                            status: 'AGENDADO'
-                        });
-                    });
-                });
-
-                console.log("Enviando payload:", payloadFinal);
-                await DBHandler.criarAgendamento(payloadFinal);
-
-                alert(`✅ Sucesso! ${payloadFinal.length} agendamentos criados.`);
-                
-                // Reset básico
-                idsAlunosSelecionados = [];
-                idsAulasSelecionadas = [];
-                badgeAlunos.textContent = "0";
-                document.querySelector('.btn-modal-trigger').classList.remove('active');
-                await carregarAgenda();
-
-            } catch (e) {
-                alert("Erro ao salvar: " + e.message);
-            } finally {
-                btn.innerHTML = textoOriginal;
-                btn.style.pointerEvents = 'auto';
-            }
-        };
-
-        // ============================================================
-        // LÓGICA DA GRADE
-        // ============================================================
-        window.carregarAgenda = async function() {
-            const tbody = document.querySelector('#tabela-agenda tbody');
-            const loading = document.getElementById('loading-grid');
-            
-            tbody.innerHTML = '';
-            loading.style.display = 'block';
-
-            try {
-                const itens = await DBHandler.listarAgendamentosFuturos();
-                
-                if (itens.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">Nenhum agendamento futuro encontrado.</td></tr>';
-                    return;
-                }
-
-                itens.forEach(item => {
-                    const d = new Date(item.data_hora);
-                    const dataFmt = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                    
-                    let nomeCurso = item.treinamento?.nome || '-';
-                    let nomeAula = item.aula ? `${item.aula.ordem}. ${item.aula.titulo}` : '(Curso Completo)';
-                    
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td style="font-weight:600;">${dataFmt}</td>
-                        <td>${item.colaborador?.nome || '-'}</td>
-                        <td style="color:#64748b;">${nomeCurso}</td>
-                        <td>${nomeAula}</td>
-                        <td><span class="status-badge status-agendado">${item.status}</span></td>
+                        <td style="text-align:center;">
+                            <input type="checkbox" class="chk-aula-crono" value="${a.id}" onchange="toggleInputDate(this)">
+                        </td>
+                        <td>
+                            <div class="check-wrapper">
+                                <span>${a.ordem}. ${a.titulo}</span>
+                            </div>
+                            <div class="aula-meta">${a.duracao_minutos} min</div>
+                        </td>
+                        <td>
+                            <input type="datetime-local" class="input-date-inline aula-date" disabled>
+                        </td>
                     `;
                     tbody.appendChild(tr);
                 });
-
-            } catch (e) { console.error(e); } 
-            finally { loading.style.display = 'none'; }
+            }
+            
+            document.getElementById('modal-cronograma').style.display = 'flex';
         };
 
-        // Helpers de UI
-        window.fecharModal = (id) => document.getElementById(id).style.display = 'none';
-        
-        window.toggleTodos = (classe, checked) => {
-            document.querySelectorAll('.' + classe).forEach(el => el.checked = checked);
-            const tipo = classe === 'chk-aluno' ? 'alunos' : 'aulas';
-            atualizarContadorModal(tipo);
+        window.toggleInputDate = function(checkbox) {
+            const row = checkbox.closest('tr');
+            const input = row.querySelector('.aula-date');
+            input.disabled = !checkbox.checked;
+            if(!checkbox.checked) input.value = '';
         };
 
-        window.atualizarContadorModal = (tipo) => {
-            if (tipo === 'alunos') {
-                const count = document.querySelectorAll('.chk-aluno:checked').length;
-                document.getElementById('contador-alunos-modal').textContent = `${count} selecionados`;
-            } else {
-                const count = document.querySelectorAll('.chk-aula:checked').length;
-                document.getElementById('contador-aulas-modal').textContent = `${count} selecionadas`;
+        window.toggleTodasAulas = function(checked) {
+            document.querySelectorAll('.chk-aula-crono').forEach(chk => {
+                if(!chk.disabled) {
+                    chk.checked = checked;
+                    toggleInputDate(chk);
+                }
+            });
+        };
+
+        window.aplicarDataEmMassa = function() {
+            const data = document.getElementById('bulk-date').value;
+            if(!data) return alert("Selecione uma data acima primeiro.");
+            
+            document.querySelectorAll('.chk-aula-crono:checked').forEach(chk => {
+                const row = chk.closest('tr');
+                row.querySelector('.aula-date').value = data;
+            });
+        };
+
+        // --- SALVAR FINAL ---
+        window.salvarAgendamentoFinal = async function() {
+            const linhas = document.querySelectorAll('#lista-aulas-cronograma tr');
+            const payload = [];
+            let erro = false;
+
+            // Percorre cada linha da tabela de cronograma
+            linhas.forEach(tr => {
+                const chk = tr.querySelector('.chk-aula-crono');
+                if (chk && chk.checked) {
+                    const aulaId = chk.value || null; // null se for curso inteiro
+                    const dataHora = tr.querySelector('.aula-date').value;
+
+                    if (!dataHora) {
+                        erro = true;
+                        tr.querySelector('.aula-date').style.borderColor = 'red';
+                    } else {
+                        // Multiplica por todos os alunos selecionados
+                        alunosSelecionadosIds.forEach(alunoId => {
+                            payload.push({
+                                colaborador_id: alunoId,
+                                treinamento_id: cursoAtual.id,
+                                aula_id: aulaId,
+                                data_hora: new Date(dataHora).toISOString(),
+                                status: 'AGENDADO'
+                            });
+                        });
+                    }
+                }
+            });
+
+            if (erro) return alert("Por favor, preencha a Data/Hora para todas as aulas selecionadas.");
+            if (payload.length === 0) return alert("Nenhuma aula foi selecionada para agendamento.");
+
+            const btn = document.getElementById('btn-salvar-final');
+            const txtOriginal = btn.innerText;
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
+
+            try {
+                await DBHandler.criarAgendamento(payload);
+                alert(`✅ ${payload.length} agendamentos criados com sucesso!`);
+                
+                // Reset Total
+                fecharModal('modal-cronograma');
+                alunosSelecionadosIds.clear();
+                atualizarBadgeAlunos();
+                document.querySelectorAll('.chk-aluno').forEach(c => c.checked = false);
+                document.getElementById('sel-treino').value = "";
+                resetCronograma();
+                
+                carregarAgenda(); // Atualiza grid
+
+            } catch (e) {
+                alert("Erro: " + e.message);
+            } finally {
+                btn.innerText = txtOriginal;
+                btn.disabled = false;
             }
         };
+
+        // --- Grid e Utilitários ---
+        window.carregarAgenda = async function() {
+            const tbody = document.querySelector('#tabela-agenda tbody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+            
+            const itens = await DBHandler.listarAgendamentosFuturos();
+            tbody.innerHTML = '';
+
+            if(!itens || itens.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">Nenhum agendamento futuro.</td></tr>';
+                return;
+            }
+
+            itens.forEach(item => {
+                const d = new Date(item.data_hora);
+                const dataFmt = d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                const nomeAula = item.aula ? `${item.aula.ordem}. ${item.aula.titulo}` : '(Curso Completo)';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:600;">${dataFmt}</td>
+                    <td>${item.colaborador?.nome}</td>
+                    <td style="color:#64748b;">${item.treinamento?.nome}</td>
+                    <td>${nomeAula}</td>
+                    <td><span class="status-badge">${item.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.abrirModalAlunos = () => document.getElementById('modal-alunos').style.display = 'flex';
+        window.fecharModal = (id) => document.getElementById(id).style.display = 'none';
 
     </script>
 </body>
