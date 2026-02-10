@@ -1,2045 +1,254 @@
-:root {
-  /* FUNDO GERAL: Um cinza "frio" e sólido, sem gradiente confuso */
-  --bg: #f3f4f6; 
-  
-  /* HEADER: O "Segredo" do Bradesco. Um azul escuro profundo */
-  --header-bg: #0f172a; /* Slate 900 */
-  --header-text: #f8fafc;
-
-  /* CARDS */
-  --card: #ffffff;
-  --border: #e2e8f0;
-
-  /* DESTAQUES (Accent) */
-  /* Vamos manter seu azul, mas mais vibrante, ou usar um Rosa/Vermelho se quiser igual ao Bradesco */
-  --accent: #2563eb; /* Azul Royal vibrante */
-  --accent-hover: #1d4ed8;
-  
-  --text-main: #1e293b; /* Texto quase preto, não cinza lavado */
-  --text-muted: #64748b;
-
-  --radius-lg: 12px; /* Reduzir um pouco o arredondamento para ficar mais sério */
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* RESET BÁSICO -------------------------------------------------- */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  /* Substitua a linha antiga font-family por esta: */
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  
-  /* Mantenha o resto das suas configurações */
-  background-color: var(--bg);
-  color: var(--text-main);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  
-  /* Dica Extra: A Inter fica mais nítida com antialiasing ligado */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Dica de Design: Títulos em Inter ficam mais modernos com tracking negativo */
-h1, h2, h3, .card-titulo {
-  letter-spacing: -0.025em; /* Aperta levemente as letras */
-}
-
-.page {
-  width: 100%;
-  max-width: 1280px; /* Mais largo, estilo dashboard */
-  padding: 0 24px 40px;
-  background: transparent; /* Removemos o fundo branco do container */
-  box-shadow: none;        /* Removemos a sombra do container */
-  border: none;
-  margin-top: 0;
-}
-/* Ajuste Mobile para o container não colar nas bordas */
-@media (max-width: 640px) {
-  .page {
-    margin-top: 10px;
-    border-radius: 20px;
-    padding: 20px 16px;
-    background: rgba(255, 255, 255, 0.7); /* Mais sólido no mobile para leitura */
-  }
-  
-  body {
-    padding: 0 10px; /* Margem lateral no mobile */
-  }
-}
-
-/* CABEÇALHO PRINCIPAL ------------------------------------------- */
-
-header.topbar {
-  margin-bottom: 0px;
-}
-
-.topbar-title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.topbar h1 {
-  font-size: clamp(1.6rem, 2vw + 1rem, 2rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.topbar .tagline {
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.topbar p {
-  font-size: 0.95rem;
-  color: var(--muted);
-  max-width: 640px;
-}
-
-/* FILTROS -------------------------------------------------------- */
-
-.filtros {
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: var(--radius-lg);
-  padding: 16px 16px 12px;
-  box-shadow: var(--shadow-soft);
-  border: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px 16px;
-  margin-bottom: 20px;
-}
-
-.filtros-header {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 2px;
-}
-
-.filtros-header span {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.btn-limpar {
-  border: none;
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 999px;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.campo label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.campo select,
-.campo input {
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  padding: 7px 12px;
-  font-size: 0.9rem;
-  background: var(--bg-alt);
-  outline: none;
-  transition: border 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-}
-
-.campo select:focus,
-.campo input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
-  background: #ffffff;
-}
-
-.campo-busca {
-  grid-column: span 2;
-}
-
-.campo-busca input {
-  padding-left: 28px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.6' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15Z' /%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: 8px center;
-  background-size: 14px;
-}
-
-/* Responsivo filtros */
-@media (max-width: 900px) {
-  .filtros {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .campo-busca {
-    grid-column: span 2;
-  }
-}
-
-@media (max-width: 640px) {
-  .filtros {
-    grid-template-columns: 1fr;
-  }
-  .campo-busca {
-    grid-column: span 1;
-  }
-}
-
-/* RESUMO -------------------------------------------------------- */
-
-/* =========================================
-   PAINEL DE MÉTRICAS (RESUMO COM ÍCONES)
-   ========================================= */
-/* =========================================
-   DASHBOARD DE MÉTRICAS (6 CARDS COMPACTOS)
-   ========================================= */
-
-.resumo {
-  display: grid;
-  /* MÁGICA: minmax reduzido para 150px permite 6 cards na mesma linha em telas HD */
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-  gap: 12px;
-  
-  margin: 0 0 32px 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-}
-
-/* Card Individual */
-.card-metric {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px; /* Cantos um pouco menos redondos para ficar "tech" */
-  padding: 12px 14px;  /* Padding menor para ser compacto */
-  
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.card-metric:hover {
-  transform: translateY(-2px);
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 16px -4px rgba(0,0,0,0.08);
-}
-
-/* Ícone (Quadrado Colorido) */
-.metric-icon {
-  width: 40px;  /* Menor */
-  height: 40px; /* Menor */
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.metric-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* CORES DOS ÍCONES (Fundo Pastel + Cor Forte) */
-.icon-purple { background: #f3e8ff; color: #9333ea; }
-.icon-gray   { background: #f1f5f9; color: #475569; }
-.icon-green  { background: #dcfce7; color: #16a34a; }
-.icon-blue   { background: #dbeafe; color: #2563eb; }
-.icon-orange { background: #ffedd5; color: #ea580c; }
-.icon-cyan   { background: #ccfbf1; color: #0f766e; } /* Novo para tempo */
-
-/* Texto e Números */
-.metric-content {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* Evita quebra de layout */
-}
-
-/* Ajuste Fino de Tipografia do Dashboard */
-
-.metric-value {
-  font-size: 1.1rem; /* Reduzi de 1.3rem/1.5rem para 1.1rem (aprox 17px) */
-  font-weight: 700;  /* Reduzi de 800 para 700 (Bold padrão) */
-  color: #0f172a;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.metric-label {
-  font-size: 0.65rem; /* Letra miúda e elegante para o rótulo */
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em; /* Um pouco mais de espaço entre letras ajuda a leitura em tamanho pequeno */
-  margin-top: 2px;
-  white-space: nowrap;
-}
-
-/* Cores opcionais para os números */
-.text-green  { color: #16a34a; }
-.text-blue   { color: #2563eb; }
-.text-orange { color: #ea580c; }
-
-/* Responsividade Mobile */
-@media (max-width: 640px) {
-  .resumo {
-    grid-template-columns: 1fr 1fr; /* 2 colunas no celular */
-  }
-  .card-metric {
-    flex-direction: column; /* Ícone em cima, texto embaixo no mobile */
-    align-items: flex-start;
-    gap: 8px;
-  }
-}
-
-/* Responsivo */
-@media (max-width: 900px) {
-  /* 2 cards por linha em telas médias */
-  .resumo {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 520px) {
-  /* 1 card por linha no mobile pequeno */
-  .resumo {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-
-
-
-
-/* LISTA + AGRUPADORES ------------------------------------------- */
-
-.lista-cursos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-  margin-top: 8px;
-  align-items: stretch;
-}
-
-.header-trilha {
-  grid-column: 1 / -1;
-  background: #0b1120;
-  color: #f9fafb;
-  padding: 9px 16px;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-trilha small {
-  font-size: 0.7rem;
-  font-weight: 500;
-  opacity: 0.8;
-}
-
-.header-subtrilha {
-  grid-column: 1 / -1;
-  background: #1d4ed8;
-  color: #e5e7eb;
-  padding: 8px 18px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-subtrilha small {
-  font-size: 0.7rem;
-  opacity: 0.9;
-}
-
-/* CARD DO CURSO ------------------------------------------------- */
-
-.card-curso {
-background: var(--card);
-  border: 1px solid var(--border); /* Borda cinza bem suave */
-  box-shadow: var(--shadow-card);  /* Sombra leve, não difusa */
-  border-radius: var(--radius-lg);
-
-  padding: 14px 16px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  height: 100%;
-  min-height: 300px;             /* altura mínima premium */
-}
-
-/* Cabeçalho em 3 linhas: trilha, subtrilha, status */
-.card-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.card-trilhas {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  width: 100%;
-}
-
-/* BADGES -------------------------------------------------------- */
-/* Estilo base premium: finos, discretos e elegantes */
-
-.badge-trilha,
-.badge-subtrilha,
-.badge-status {
-  display: inline-flex;
-  align-items: center;
-
-  padding: 2px 9px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  border-radius: 999px;
-  line-height: 1.15;
-
-  text-transform: none;
-  letter-spacing: 0;
-
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  background: #f9fafb;
-  color: #374151;
-
-  max-width: 100%;
-  white-space: nowrap;
-}
-
-/* Trilha principal */
-.badge-trilha {
-  background: #eef2ff;
-  border-color: rgba(129, 140, 248, 0.6);
-  color: #3730a3;
-}
-
-/* Subtrilha */
-.badge-subtrilha {
-  background: #e0f2fe;
-  border-color: rgba(56, 189, 248, 0.55);
-  color: #0369a1;
-}
-
-/* Status (3ª linha do header) */
-.badge-status {
-  margin-top: 2px;
-}
-
-/* Variações de status */
-.badge-status.badge-disponivel {
-  background: #ecfdf3;
-  border-color: rgba(34, 197, 94, 0.55);
-  color: #15803d;
-}
-
-.badge-status.badge-backlog {
-  background: #f9fafb;
-  border-color: rgba(148, 163, 184, 0.6);
-  color: #4b5563;
-}
-
-.badge-status.badge-em-desenvolvimento {
-  background: #fffbeb;
-  border-color: rgba(245, 158, 11, 0.6);
-  color: #b45309;
-}
-
-/* --------------------------------------------------------------- */
-
-.card-titulo {
-  color: var(--text-main);
-  font-size: 1rem;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-/* MUDANÇA: Descrição flexível para alinhar o rodapé */
-.card-descricao {
-  font-size: 0.86rem;
-  color: var(--muted);
-  margin-bottom: 12px;
-  
-  /* O TRUQUE: Ocupa o espaço vazio vertical */
-  flex-grow: 1; 
-  
-  /* Opcional: Limita o texto a 4 linhas e coloca "..." se passar disso */
-  /* Isso garante que os cards tenham alturas mais uniformes */
-  display: -webkit-box;
-  -webkit-line-clamp: 4; 
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Bloco com nº de aulas e duração */
-.card-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px; /* Espaço entre os grupos */
-  font-size: 0.8rem;
-  color: #64748b; /* Slate 500 */
-  margin-top: 8px;
-}
-
-/* Removemos a bolinha antiga (•) pois agora temos ícones */
-.card-info span::before {
-  content: none; 
-}
-
-/* Estilo de cada item (Ícone + Texto) */
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 6px; /* Distância entre ícone e texto */
-  background: #f8fafc; /* Fundo bem sutil (opcional) */
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid #f1f5f9;
-}
-
-.info-item svg {
-  width: 16px;
-  height: 16px;
-  color: #94a3b8; /* Cor discreta para o ícone */
-  stroke-width: 2;
-}
-
-/* --- RODAPÉ DO CARD --- */
-
-.card-footer {
-  margin-top: auto;
-  padding-top: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  border-top: 1px solid #f1f5f9; /* Linha sutil separando o rodapé */
-}
-
-/* A pílula de minutos totais */
-.pill-duracao {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.pill-duracao svg {
-  width: 14px;
-  height: 14px;
-  color: #cbd5e1;
-}
-
-.pill-duracao strong {
-  color: #334155;
-  font-weight: 700;
-}
-.btn-link {
-  background: var(--accent);
-  color: #ffffff;
-  font-weight: 600;
-  
-  
-  border-radius: 999px;
-  border: none;
-  padding: 7px 18px;
-  font-size: 0.8rem;
-  
-  cursor: pointer;
-  
-  
-  transition:
-    transform 0.1s ease,
-    box-shadow 0.1s ease,
-    opacity 0.1s ease,
-    background 0.1s ease;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); /* Sombra colorida no botão */
-}
-
-.btn-link:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.55);
-  background: var(--accent-hover);
-}
-
-.btn-link:disabled {
-  cursor: default;
-  opacity: 0.55;
-  background: #e5e7eb;
-  color: #6b7280;
-  box-shadow: none;
-}
-
-.pill-duracao {
-  font-size: 0.76rem;
-  color: var(--muted);
-}
-
-.pill-duracao strong {
-  color: #111827;
-}
-
-/* Mensagem vazia ------------------------------------------------ */
-
-.lista-cursos-vazia {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 24px 16px;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: var(--radius-lg);
-  border: 1px dashed var(--border);
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.lista-cursos-vazia strong {
-  color: var(--text);
-}
-
-/* Rodapé da página ---------------------------------------------- */
-
-footer.page-footer {
-  margin-top: 24px;
-  font-size: 0.75rem;
-  color: var(--muted);
-  text-align: right;
-}
-
-
-
-/* =========================
-   BADGE DE STATUS POR TIPO
-   ========================= */
-
-.badge-status {
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-/* DISPONÍVEL → verde */
-.badge-status.disponivel {
-  background: rgba(34, 197, 94, 0.1);
-  color: #15803d;
-  border: 1px solid rgba(34, 197, 94, 0.6);
-}
-
-/* BACKLOG → amarelo/laranja */
-.badge-status.backlog {
-  background: rgba(234, 179, 8, 0.12);
-  color: #92400e;
-  border: 1px solid rgba(234, 179, 8, 0.65);
-}
-
-/* EM DESENVOLVIMENTO → azul */
-.badge-status.em-desenvolvimento {
-  background: rgba(59, 130, 246, 0.12);
-  color: #1d4ed8;
-  border: 1px solid rgba(59, 130, 246, 0.65);
-}
-
-/* ==================================
-   OPCIONAL: DESTAQUE NO CARD INTEIRO
-   ================================== */
-
-.card-curso.status-disponivel {
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
-}
-
-.card-curso.status-backlog {
-  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.18);
-}
-
-.card-curso.status-em-desenvolvimento {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18);
-}
-
-/* ======================================================
-   SELO DIAGONAL POR STATUS (premium)
-   ====================================================== */
-
-.card-curso {
-  position: relative;
-  overflow: hidden; /* necessário p/ cortar a faixa */
-}
-
-/* Estilo base da faixa diagonal */
-.card-curso::before {
-  content: attr(data-status-text);
-  position: absolute;
-  top: 12px;
-  right: -42px; /* deslocado p/ criar ângulo */
-  transform: rotate(45deg);
-  padding: 4px 40px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  pointer-events: none;
-  opacity: 0.9;
-}
-
-/* ---------------- STATUS ESPECÍFICOS ---------------- */
-
-/* DISPONÍVEL – verde */
-.card-curso.status-disponivel::before {
-  background: linear-gradient(90deg, #22c55e, #16a34a);
-  content: " ";
-}
-
-/* BACKLOG – laranja */
-.card-curso.status-backlog::before {
-  background: linear-gradient(90deg, #f59e0b, #d97706);
-  content: " ";
-}
-
-/* EM DESENVOLVIMENTO – azul */
-.card-curso.status-em-desenvolvimento::before {
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-  content: " ";
-  font-size: 0.55rem; /* texto maior, faixa mais estreita */
-}
-
-
-
-/* =========================================
-   CABEÇALHO FINAL (LABELS LIMPOS + GHOST TRASH)
-   ========================================= */
-/* ============================================================
-   AJUSTE DE HIERARQUIA: Remover o fundo escuro do container
-   ============================================================ */
-
-.app-header {
-  /* Remove a cor escura de fundo (Muda para transparente ou branco) */
-  background-color: transparent !important; 
-  
-  /* Remove qualquer sombra que dava o aspecto de bloco flutuante */
-  box-shadow: none !important;
-  
-  /* Remove bordas antigas se houver */
-  border: none !important;
-
-  /* Ajuste de espaçamento para ficar fluido na página */
-  padding: 10px 20px !important; /* Reduzido de 40px ou 60px para 10px */
-}
-
-/* Opcional: Se houver algum título ou descrição solta no header, 
-   garante que fiquem escuros para ler no fundo claro */
-.header-desc, 
-.header-top h1, 
-.header-top p {
-  color: #334155 !important; /* Cinza Escuro */
-}
-
-/* --- TOOLBAR --- */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px; 
-  padding: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08); 
-}
-
-.toolbar-search { flex: 1; position: relative; min-width: 200px; }
-.toolbar-filters { display: flex; gap: 12px; }
-.select-wrapper { display: flex; flex-direction: column; position: relative; }
-
-/* 1. LABEL LIMPO (SEM FUNDO, LETRA CLARA) */
-.select-wrapper label {
-  position: absolute;
-  /* Movemos totalmente para fora do input */
-  top: -24px; 
-  left: 2px; /* Alinhado levemente à esquerda */
-  padding: 0;
-  
-  font-size: 0.75rem; /* Um pouquinho maior para leitura */
-  font-weight: 500;
-  text-transform: uppercase;
-  z-index: 2;
-  
-  /* Sem fundo, apenas texto claro */
-  background: transparent;
-  color: #ffffff;
-  letter-spacing: 0.05em;
-  box-shadow: none;
-}
-
-/* Ao focar no input, o label acende em branco */
-.select-wrapper:focus-within label {
-  color: #ffffff;
-}
-
-/* Inputs e Selects (Brancos) */
-.toolbar-search input,
-.select-wrapper select {
-  width: 100%;
-  appearance: none;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 400;
-  transition: all 0.25s ease;
-  
-  background-color: #ffffff; 
-  border: 1px solid #cbd5e1;
-  color: var(--header-accent); 
-  color-scheme: light; 
-}
-
-/* Ajuste do Input (Mantém fundo branco, ajusta espaço interno) */
-.toolbar-search input { 
-  padding: 12px 12px 12px 48px; /* Aumentei para 48px para o ícone respirar */
-}
-
-/* Ícone da Lupa (Elegante e Fino) */
-.search-icon {
-  position: absolute; 
-  left: 16px; /* Mais afastado da borda esquerda */
-  top: 50%; 
-  transform: translateY(-50%);
-  
-  width: 20px; 
-  height: 20px;
-  
-  /* MUDANÇA: Cinza azulado (#64748b) em vez da cor forte. 
-     Isso deixa o visual mais leve e profissional. */
-  color: #64748b; 
-  
-  pointer-events: none; 
-  z-index: 2;
-  transition: color 0.2s ease; /* Animação suave de cor */
-}
-
-/* INTERAÇÃO: Quando clica no campo, a lupa ganha a cor de destaque */
-.toolbar-search:focus-within .search-icon {
-  color: var(--header-accent); /* Fica Azul Escuro (ou a cor do seu tema) ao digitar */
-}
-
-.select-wrapper select {
-  padding: 11px 36px 11px 14px;
-  min-width: 130px;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2305055b' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
-}
-
-.toolbar-search input:focus,
-.select-wrapper select:focus {
-  background-color: #fff;
-  border-color: var(--header-accent); 
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(5, 5, 91, 0.15); 
-}
-
-/* 2. LIXEIRA "GHOST" (TRANSPARENTE COM DESTAQUE) */
-.btn-reset {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  
-  /* Fundo transparente para não brigar com os inputs */
-  background: rgba(255, 255, 255, 0.05); 
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  
-  color: #99f6e4; /* Um verde bem clarinho quando parado (opcional) */
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-
-.btn-reset:hover {
-  /* Fundo Verde Neon bem suave (15% opacidade) */
-  background: rgba(20, 242, 201, 0.15); 
-  
-  /* Borda e Ícone Verde Neon Sólido */
-  border-color: #14f2c9; 
-  color: #14f2c9; 
-  
-  /* Efeitos de movimento e brilho */
-  transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(20, 242, 201, 0.3); /* Glow Verde */
-}
-
-/* Responsividade */
-@media (max-width: 900px) {
-  .toolbar { flex-wrap: wrap; }
-  .toolbar-search { min-width: 100%; order: 1; }
-  .toolbar-filters { order: 2; flex: 1; flex-wrap: wrap; }
-  .select-wrapper { flex: 1; }
-  .select-wrapper select { width: 100%; }
-  .btn-reset { order: 3; }
-  
-}
-@media (max-width: 600px) {
-  .app-header { padding: 24px 20px; margin: 0 -10px 24px; border-radius: 0 0 20px 20px; }
-  .header-top { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .toolbar-filters { flex-direction: column; width: 100%; }
-  .btn-reset { width: 100%; }
-}
-
-/* ==========================================================================
-   🚨 CORREÇÃO FINAL DE CONTRASTE (Cole no final do arquivo catalogo-style.css)
-   ========================================================================== */
-
-/* 1. Garante que a barra de ferramentas tenha espaço e alinhamento */
-.toolbar {
-  margin-top: 32px !important; /* Espaço extra para o label não cortar */
-  padding-top: 12px !important;
-  background-color: #ffffff !important; /* Fundo Branco Puro */
-  align-items: flex-end !important; /* Alinha inputs pela base */
-  border: 1px solid #e2e8f0 !important; /* Borda sutil */
-}
-
-/* 2. O PROBLEMA PRINCIPAL: A cor dos Labels "Trilha", "Subtrilha" */
-.select-wrapper label {
-  position: absolute;
-  top: -24px !important; /* Joga o texto para fora do input */
-  left: 2px;
-  
-  /* A COR MÁGICA: Cinza Escuro para ler no fundo branco */
-  color: #64748b !important; 
-  
-  font-size: 0.75rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: transparent !important;
-  z-index: 10;
-  pointer-events: none;
-}
-
-/* 3. Quando clica no campo, o label fica AZUL */
-.select-wrapper:focus-within label {
-  color: #2563eb !important; /* Azul Premium */
-}
-
-/* 4. Os campos (Inputs e Selects) - Fundo "Gelo" para destacar do branco */
-.toolbar .select-wrapper select,
-.toolbar .toolbar-search input {
-  background-color: #f8fafc !important; /* Fundo Cinza Gelo */
-  border: 1px solid #cbd5e1 !important; /* Borda definida */
-  color: #1e293b !important; /* Texto digitado ESCURO */
-  border-radius: 8px !important;
-  box-shadow: none !important; /* Remove sombras antigas */
-}
-
-/* 5. Efeito ao passar o mouse ou clicar no campo */
-.toolbar .select-wrapper select:hover,
-.toolbar .toolbar-search input:hover {
-  background-color: #ffffff !important;
-  border-color: #94a3b8 !important;
-}
-
-.toolbar .select-wrapper select:focus,
-.toolbar .toolbar-search input:focus {
-  background-color: #ffffff !important;
-  border-color: #2563eb !important; /* Borda Azul ao digitar */
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important; /* Brilho azul suave */
-  outline: none !important;
-}
-
-/* 6. Correção do Ícone da Lupa */
-.search-icon {
-  color: #64748b !important; /* Lupa cinza */
-  z-index: 10;
-}
-.toolbar-search:focus-within .search-icon {
-  color: #2563eb !important; /* Lupa azul quando focado */
-}
-
-/* =========================
-   ESTILOS DO MODAL PREMIUM
-   ========================= */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.8); /* Fundo escuro com blur */
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* =========================
-   AJUSTE DE TAMANHO DO MODAL
-   ========================= */
-
-.modal-content {
-    background: #ffffff;
-    width: 100%; 
-    /* AUMENTO: De 900px para 1000px para caber tudo confortavelmente */
-    max-width: 1000px; 
-    border-radius: 16px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    display: flex;
-    flex-direction: column;
-    /* TRAVA DE ALTURA: Evita que o modal estoure a tela, mas o conteúdo interno será ajustado para não precisar de scroll */
-    max-height: 95vh; 
-    animation: modalSlideIn 0.3s ease-out;
-}
-
-.modal-body { 
-    /* REDUÇÃO: Menos padding vertical (de 32px para 20px) para ganhar espaço útil */
-    padding: 20px 32px; 
-    overflow-y: auto; 
-    display: flex;
-    flex-direction: column;
-    /* REDUÇÃO: Gap menor entre linhas (de 16px para 12px) */
-    gap: 12px; 
-}
-
-/* Ajuste para telas muito grandes (Monitores Wide) */
-@media (min-width: 1400px) {
-    .modal-content {
-        max-width: 1000px;
-    }
-}
-@keyframes modalSlideIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h2 { font-size: 1.25rem; color: #1e293b; font-weight: 700; }
-.btn-close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
-
-.modal-body { padding: 24px; overflow-y: auto; }
-.modal-footer { padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 12px; background: #f8fafc; border-radius: 0 0 16px 16px;}
-
-/* Form Elements do Modal */
-/* =============================================================
-   AJUSTE DE PROXIMIDADE (LABEL + INPUT)
-   ============================================================= */
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px; /* Espaço entre um bloco de pergunta e outro */
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 4px;  /* Reduzido para o título "colar" no input */
-    font-weight: 600;
-    color: var(--text-main);
-    font-size: 0.85rem;
-}
-
-/* Opcional: Adicionar um pouco mais de respiro entre as linhas do formulário */
-.form-row {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 8px; 
-}
-.input-premium {
-    padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; width: 100%;
-}
-/* Área de Descrição Flexível */
-textarea.input-premium {
-    resize: vertical;
-    min-height: 80px;
-    font-family: inherit;
-}
-/* Ajuste Fino para o Toggle Switch ficar alinhado visualmente com Inputs */
-.toggle-wrapper {
-    height: 42px; /* Mesma altura aproximada dos inputs */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 2px;
-}
-
-/* Tabela de Preview */
-.preview-table-wrapper { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
-.preview-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-.preview-table th { background: #f1f5f9; padding: 8px; text-align: left; position: sticky; top: 0; }
-.preview-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-
-/* Botões */
-.btn-primary-full {
-    width: 100%; background: #2563eb; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: background 0.2s;
-}
-.btn-primary-full:hover { background: #1d4ed8; }
-.btn-save {
-    background: #16a34a; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;
-}
-/* Botão Salvar quando está desabilitado */
-.btn-save:disabled {
-    background-color: #e2e8f0 !important;
-    color: #94a3b8 !important;
-    cursor: not-allowed;
-    border: 1px solid #cbd5e1;
-    opacity: 0.7;
-}
-
-/* Quando habilitado (aceso) */
-.btn-save:not(:disabled) {
-    background-color: #16a34a !important; /* Verde sólido */
-    color: white !important;
-    opacity: 1;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-.status-msg { font-size: 0.85rem; font-weight: 500; margin-right: auto; }
-
-
-
-/* =========================
-   ESTILOS DO MODAL DE AULAS
-   ========================= */
-
-.curso-meta-info {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.badge-info {
-    background: #eff6ff;
-    color: #2563eb;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.lista-aulas-premium {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.aula-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border-radius: 8px;
-    transition: background 0.2s;
-    border-bottom: 1px solid #f8fafc;
-}
-
-.aula-item:hover {
-    background: #f8fafc;
-}
-
-.aula-ordem {
-    width: 28px;
-    height: 28px;
-    background: #e2e8f0;
-    color: #64748b;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.aula-info {
-    flex-grow: 1;
-}
-
-.aula-titulo {
-    font-size: 0.9rem;
-    color: #334155;
-    font-weight: 500;
-    margin-bottom: 2px;
-    display: block;
-}
-
-.aula-tempo {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.btn-ver-video {
-    color: #2563eb;
-    background: rgba(37, 99, 235, 0.1);
-    padding: 6px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.btn-ver-video:hover {
-    background: #2563eb;
-    color: white;
-}
-
-/* Botão secundário para fechar */
-.btn-secondary-full {
-    background: #f1f5f9;
-    color: #64748b;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.btn-secondary-full:hover {
-    background: #e2e8f0;
-    color: #334155;
-}
-
-
-
-
-/* Cole no CSS */
-.btn-icon-grade {
-    background: white; border: 1px solid #e2e8f0; color: #64748b;
-    width: 36px; height: 36px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
-}
-.btn-icon-grade:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
-
-
-
-/* ==========================================================================
-   AJUSTE: CARD COM TEXTO COMPLETO + BOTÃO DE AULAS NUMÉRADO
-   ========================================================================== */
-
-/* 1. LIBERAR O TEXTO DA DESCRIÇÃO */
-.card-descricao {
-  /* Remove o corte de linhas */
-  -webkit-line-clamp: unset !important; 
-  display: block !important;
-  overflow: visible !important;
-  height: auto !important;
-  
-  /* Garante que o texto respire */
-  margin-bottom: 16px !important;
-}
-
-/* 2. NOVO ESTILO DO BOTÃO DE GRADE (Agora com número) */
-.btn-icon-grade {
-  width: auto !important; /* Deixa crescer para caber o número */
-  padding: 6px 12px !important; /* Espaço interno */
-  border-radius: 999px !important; /* Formato Pílula */
-  gap: 8px; /* Espaço entre ícone e número */
-  
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.btn-icon-grade:hover {
-  background-color: #e2e8f0;
-  color: #1e293b;
-  border-color: #cbd5e1;
-}
-
-/* Estilo do numerozinho dentro do botão */
-.grade-count {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #2563eb; /* Azul para destacar o número */
-}
-
-
-/* ==========================================================================
-   AJUSTE DE LAYOUT: Botão Acessar virou Ícone (Economia de Espaço)
-   ========================================================================== */
-
-/* Garante que o rodapé nunca quebre a linha */
-.card-footer {
-  flex-wrap: nowrap !important; 
-  gap: 8px; /* Espaço mínimo entre tempo e botões */
-}
-
-/* O tempo não pode encolher, mas se for muito longo, usa reticências */
-.pill-duracao {
-  flex-shrink: 0; 
-  white-space: nowrap;
-}
-
-/* Novo estilo para o botão "Acessar" quando for ícone */
-.btn-icon-acessar {
-  background: var(--accent);
-  color: #ffffff;
-  border: none;
-  
-  /* Tamanho fixo para ser um círculo perfeito */
-  width: 36px; 
-  height: 36px;
-  border-radius: 50%;
-  
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-}
-
-.btn-icon-acessar:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
-}
-
-/* Mantém o estilo "Em breve" como texto (pílula cinza), pois ícone seria confuso */
-.btn-disabled-text {
-  background: #e2e8f0;
-  color: #94a3b8;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0 12px;
-  height: 36px;
-  border-radius: 999px;
-  border: none;
-  cursor: default;
-  white-space: nowrap;
-}
-
-.btn-icon-editar {
-  background: white;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-  width: 36px; height: 36px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s;
-}
-.btn-icon-editar:hover {
-  border-color: #f59e0b; color: #f59e0b; /* Laranja para edição */
-  background: #fffbeb;
-}
-
-
-/* =========================
-   ESTILOS DO TOGGLE SWITCH
-   ========================= */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 26px;
-}
-
-.switch input { 
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #cbd5e1;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 20px; width: 20px;
-  left: 3px; bottom: 3px;
-  background-color: white;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #2563eb; /* Azul quando ativo */
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #2563eb;
-}
-
-input:checked + .slider:before {
-  transform: translateX(24px);
-}
-
-.slider.round {
-  border-radius: 34px;
-}
-.slider.round:before {
-  border-radius: 50%;
-}
-
-/* =========================
-   ESTILO DE CURSO OCULTO
-   ========================= */
-.card-curso.is-hidden {
-    opacity: 0.6; /* Fica meio apagadinho */
-    border: 1px dashed #94a3b8;
-    background: #f1f5f9;
-}
-
-/* Badge indicativo */
-.badge-oculto {
-    background: #334155;
-    color: #fff;
-    font-size: 0.65rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-left: auto;
-}
-
-
-/* Botão de Sync Rápido no Modal */
-.btn-youtube-sync {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 16px;
-    background: #fef2f2; /* Vermelho YouTube bem claro */
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-youtube-sync:hover {
-    background: #fee2e2;
-    border-color: #f87171;
-    transform: translateY(-1px);
-}
-
-.btn-youtube-sync:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    filter: grayscale(100%);
-}
-
-.sync-metadata {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 4px; /* Mais colado no input */
-    padding: 6px 12px; /* Mais fino verticalmente */
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.75rem; /* Fonte levemente menor */
-}
-
-.meta-item {
-    display: flex;
-    gap: 4px;
-    color: #475569;
-}
-
-.meta-value {
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.meta-badge-pendente {
-    background: #fef3c7;
-    color: #d97706;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 0.7rem;
-    margin-left: auto;
-    text-transform: uppercase;
-}
-
-/* Botão Salvar Desabilitado */
-.btn-save:disabled {
-    background-color: #cbd5e1;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-/* ==========================================================================
-   CORREÇÃO TIPOGRÁFICA DE FORMULÁRIOS (PREMIUM FIX)
-   ========================================================================== */
-
-/* 1. Força a fonte Inter em TODOS os elementos de formulário */
-button, input, optgroup, select, textarea {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 2. Estilo dos Rótulos (Labels) - Mais profissionais e discretos */
-.form-group label {
-  font-size: 0.8rem !important;      /* Tamanho menor (aprox 13px) */
-  font-weight: 600 !important;       /* Semi-bold para leitura clara */
-  color: #334155 !important;         /* Slate 700 (Cinza escuro, não preto) */
-  letter-spacing: 0.01em;            /* Leve respiro entre letras */
-  margin-bottom: 6px !important;     /* Espaço entre o label e o input */
-  display: block;
-}
-
-/* 3. Ajuste de Contraste nos Inputs */
-.input-premium {
-  font-size: 0.9rem !important;      /* Tamanho confortável para digitar */
-  color: #0f172a !important;         /* Texto digitado bem escuro (Slate 900) */
-  font-weight: 500 !important;       /* Peso médio */
-  background-color: #f8fafc;         /* Fundo levemente cinza (Gelo) */
-  border: 1px solid #cbd5e1;         /* Borda cinza suave */
-  transition: all 0.2s ease-in-out;
-}
-
-/* Foco no input (Efeito Glow Azul) */
-.input-premium:focus {
-  background-color: #ffffff;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  outline: none;
-}
-
-/* 4. Placeholders (Texto de ajuda) */
-.input-premium::placeholder {
-  color: #94a3b8 !important; /* Cinza claro para não confundir com texto real */
-  font-weight: 400;
-}
-
-/* 5. Títulos do Modal */
-.modal-header h2 {
-  font-family: 'Inter', sans-serif !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.025em; /* Tracking negativo moderno */
-  color: #0f172a;
-}
-
-/* ==========================================================================
-   MÓDULO YOUTUBE (WRAPPER)
-   ========================================================================== */
-
-.youtube-wrapper {
-  background-color: #f8fafc; /* Fundo cinza gelo para destacar do branco do modal */
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;       /* Bordas arredondadas */
-  padding: 16px;             /* Respiro interno */
-  
-  display: flex;
-  flex-direction: column;
-  gap: 12px;                 /* Espaço vertical entre Input, Metadados e Ajuda */
-  
-  margin-top: 4px;
-}
-
-/* Ajuste para o Input brilhar dentro do fundo cinza */
-.youtube-wrapper .input-premium {
-  background-color: #ffffff !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Leve sombra para profundidade */
-}
-
-/* Ajuste da barra de metadados para se integrar ao card */
-.youtube-wrapper .sync-metadata {
-  background-color: #ffffff; /* Fundo branco para contraste */
-  border: 1px solid #cbd5e1;
-  margin-top: 0;             /* O gap do wrapper já cuida do espaço */
-}
-
-/* Texto de ajuda mais discreto e alinhado */
-.youtube-help-text {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-left: 4px;
-}
-
-/* Título do Bloco (Label) */
-.youtube-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-
-/* ==========================================================================
-   MODAL "ULTRA-COMPACTO" (NO-SCROLL FIX)
-   ========================================================================== */
-
-/* 1. Header Slim: Reduz drásticamente a altura do topo */
-.modal-header {
-    padding: 10px 24px !important; /* Era 20px */
-    min-height: 50px;              /* Altura fixa menor */
-    align-items: center;
-}
-.modal-header h2 {
-    font-size: 1.1rem !important;  /* Título um pouco menor e mais discreto */
-    margin: 0;
-}
-.btn-close-modal {
-    font-size: 1.2rem !important;  /* X um pouco menor */
-    line-height: 1;
-}
-
-/* 2. Footer Slim: Reduz a altura do rodapé */
-.modal-footer {
-    padding: 10px 24px !important; /* Era 16px */
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-}
-/* Botões do rodapé um pouco menores para acompanhar */
-.modal-footer button {
-    padding: 8px 16px !important;
-    font-size: 0.85rem !important;
-}
-
-/* 3. Corpo do Modal: Aperta os espaçamentos */
-.modal-body {
-    padding: 16px 24px !important; /* Menos padding nas bordas */
-    gap: 10px !important;          /* Menos espaço entre os blocos (era 12/16px) */
-    overflow-y: hidden !important; /* FORÇA a não ter scroll se couber */
-}
-
-/* 4. Inputs "Slim": Reduz a altura de todos os campos de texto */
-.input-premium, 
-.select-wrapper select,
-textarea.input-premium {
-    padding: 7px 10px !important;  /* Reduzido de 10px para 7px */
-    font-size: 0.85rem !important; /* Fonte levemente menor */
-    min-height: unset;             /* Remove alturas mínimas antigas */
-}
-
-/* 5. Labels: Cola o título no campo */
-.form-group label {
-    margin-bottom: 3px !important; /* Quase colado no input */
-    font-size: 0.75rem !important;
-}
-
-/* 6. Wrapper do YouTube: Compactação extrema */
-.youtube-wrapper {
-    padding: 10px 12px !important;
-    gap: 8px !important;
-    background-color: #f8fafc;
-}
-.youtube-label {
-    font-size: 0.8rem !important;
-    margin-bottom: 2px !important;
-}
-.sync-metadata {
-    padding: 4px 10px !important; /* Barra de status bem fina */
-    font-size: 0.75rem !important;
-}
-.btn-youtube-sync {
-    padding: 0 12px !important;   /* Botão sync mais compacto */
-    height: 34px !important;      /* Altura fixa igual ao input slim */
-}
-
-/* ==========================================================================
-   CORREÇÃO DO BOTÃO EXIBIR (TOGGLE SWITCH SLIM)
-   ========================================================================== */
-
-.toggle-wrapper {
-    /* Remove a altura fixa antiga e usa flex para alinhar na base */
-    height: auto !important;
-    min-height: 50px; /* Garante altura mínima igual ao bloco do input vizinho */
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-end !important; /* Empurra o botão para baixo (base alinhada) */
-    align-items: center !important;       /* Centraliza horizontalmente */
-    padding-bottom: 5px; /* Ajuste fino para alinhar com a linha de base dos inputs */
-}
-
-/* Ajuste do Label "Exibir?" */
-.toggle-wrapper label:first-child {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 4px !important;
-    color: #64748b !important;
-}
-
-/* O Switch (Caixa) - Mais compacto e arredondado */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 42px !important;   /* Reduzido de 50px para 42px */
-  height: 22px !important;  /* Reduzido de 26px para 22px */
-  margin: 0 !important;
-}
-
-/* O Trilho (Fundo) */
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #cbd5e1; /* Cinza suave quando desligado */
-  transition: .3s;
-  border-radius: 20px !important;
-}
-
-/* A Bolinha (Círculo Branco) */
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 16px !important;  /* Menor para caber no trilho de 22px */
-  width: 16px !important;
-  left: 3px !important;     /* Espaço da esquerda */
-  bottom: 3px !important;   /* Espaço de baixo */
-  background-color: white;
-  transition: .3s;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Sombra suave na bolinha */
-}
-
-/* Estado ATIVO (Azul) */
-input:checked + .slider {
-  background-color: #2563eb;
-}
-
-/* Movimento da Bolinha quando Ativo */
-input:checked + .slider:before {
-  transform: translateX(20px); /* Ajustado para a nova largura (42 - 16 - 3 - 3 = 20) */
-}
-
-/* ==========================================================================
-   CORREÇÃO DE PALETA: FIM DO "MODO DESABILITADO"
-   ========================================================================== */
-
-/* 1. INPUTS VIVOS (Branco Puro = Editável) */
-.input-premium, 
-.select-wrapper select, 
-textarea.input-premium {
-    background-color: #ffffff !important; /* Remove o cinza "gelo" */
-    border: 1px solid #94a3b8 !important; /* Borda mais escura e visível */
-    color: #0f172a !important;            /* Texto quase preto */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Leve sombra para dar profundidade */
-}
-
-/* Foco mais forte para indicar atividade */
-.input-premium:focus, 
-.select-wrapper select:focus, 
-textarea.input-premium:focus {
-    border-color: #2563eb !important; /* Azul vibrante */
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-}
-
-/* 2. LABELS DE ALTO CONTRASTE */
-.form-group label, 
-.youtube-label {
-    color: #1e293b !important; /* Azul noturno (quase preto), nada de cinza */
-    font-weight: 700 !important;
-}
-
-/* 3. BOTÃO CANCELAR (Estilo Outline Ativo) */
-.btn-secondary-full {
-    background-color: #ffffff !important; /* Fundo Branco */
-    color: #334155 !important;            /* Texto Escuro */
-    border: 1px solid #cbd5e1 !important; /* Borda visível */
-    transition: all 0.2s ease;
-}
-
-.btn-secondary-full:hover {
-    background-color: #fff1f2 !important; /* Leve tom avermelhado no hover (já que é cancelar) */
-    border-color: #ef4444 !important;     /* Borda vermelha ao passar o mouse */
-    color: #ef4444 !important;            /* Texto vermelho */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-/* 4. BOTÃO SALVAR (Regra de Ouro: Cinza SÓ se disabled) */
-.btn-save:disabled {
-    background-color: #e2e8f0 !important;
-    color: #94a3b8 !important;
-    border: 1px solid #cbd5e1;
-    cursor: not-allowed;
-}
-/* Quando ativo, garantimos que ele brilhe */
-.btn-save:not(:disabled) {
-    background-color: #16a34a !important; /* Verde Sucesso Vibrante */
-    box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);
-}
-
-/* 5. WRAPPER DO YOUTUBE (Área Ativa) */
-.youtube-wrapper {
-    /* Mudamos de cinza para um Azul Tinta extremamente suave */
-    /* Isso diz: "Sou uma área de destaque", não "Sou uma área desativada" */
-    background-color: #eff6ff !important; 
-    border: 1px solid #bfdbfe !important;
-}
-
-/* Ajuste do botão de Sync para combinar com a nova área azulada */
-.btn-youtube-sync {
-    background-color: #ffffff !important;
-    border: 1px solid #dbeafe !important;
-    color: #2563eb !important;
-    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.1);
-}
-.btn-youtube-sync:hover {
-    border-color: #2563eb !important;
-    background-color: #2563eb !important;
-    color: #ffffff !important;
-}
-
-/* 6. CORREÇÃO DO SELECT (Seta) */
-/* Garante que a setinha do select seja escura e visível */
-.select-wrapper select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") !important;
-}
-
-/* ==========================================================================
-   CORREÇÃO DE ALINHAMENTOS FINOS
-   ========================================================================== */
-
-/* 1. Botão de Adicionar Trilha (Ficar da mesma altura do input) */
-.form-row .btn-icon-editar {
-    width: 34px !important;   /* Largura fixa igual à altura */
-    height: 34px !important;  /* Altura idêntica ao Input Slim */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 !important;    /* Remove padding interno que desloca o ícone */
-    border-radius: 6px !important; /* Cantos iguais aos inputs */
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-}
-
-/* Hover do botão */
-.form-row .btn-icon-editar:hover {
-    border-color: #2563eb;
-    color: #2563eb;
-    background-color: #eff6ff;
-}
-
-/* 2. Label do YouTube (Alinhamento Ícone x Texto) */
-.youtube-label {
-    display: flex !important;
-    align-items: center !important; /* Garante centro vertical */
-    line-height: 1 !important;      /* Remove entrelinha extra que empurrava o texto */
-    padding-bottom: 2px;            /* Ajuste óptico mínimo */
-}
-
-.youtube-label svg {
-    display: block; /* Remove comportamento inline estranho do SVG */
-    margin-right: 2px;
-}
-
-/* ==========================================================================
-   ABAS DE ORIGEM & MODO MANUAL
-   ========================================================================== */
-
-/* Container das Abas (Fundo Cinza Arredondado) */
-.tabs-origin {
-    display: flex;
-    background-color: #f1f5f9;
-    padding: 4px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    gap: 4px;
-}
-
-/* Botão da Aba */
-.tab-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #64748b;
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-/* Aba Ativa (Branca com Sombra) */
-.tab-btn.active {
-    background-color: #ffffff;
-    color: #0f172a;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-.tab-btn:hover:not(.active) {
-    color: #334155;
-    background-color: rgba(255,255,255,0.5);
-}
-
-/* Wrapper Manual */
-.manual-wrapper {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 12px;
-}
-
-.manual-input-row {
-    display: flex;
-    gap: 8px;
-}
-
-/* Botão Adicionar Manual */
-.btn-add-manual {
-    background-color: #0f172a;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 0 16px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.btn-add-manual:hover {
-    background-color: #334155;
-}
-
-/* Lista de Preview Manual */
-.lista-manual-preview {
-    list-style: none;
-    margin-top: 12px;
-    padding: 0;
-    max-height: 150px;
-    overflow-y: auto;
-    border-top: 1px solid #e2e8f0;
-}
-
-.item-manual {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 4px;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 0.8rem;
-}
-
-.item-manual span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.btn-remove-item {
-    color: #ef4444;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-}
-.btn-remove-item:hover {
-    background-color: #fef2f2;
-    border-radius: 4px;
-}
-
-
-/* ==========================================================================
-   SELETOR DE FONTE (RADIO BUTTONS)
-   ========================================================================== */
-
-.source-selector {
-    display: flex;
-    gap: 16px;
-    background: #f1f5f9;
-    padding: 4px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-}
-
-.radio-option {
-    flex: 1;
-    position: relative;
-}
-
-.radio-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.radio-option label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 8px 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #64748b;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: transparent;
-    border: 1px solid transparent;
-    margin: 0 !important; /* Override do form-group label */
-}
-
-/* Estado Selecionado */
-.radio-option input[type="radio"]:checked + label {
-    background-color: #ffffff;
-    color: #0f172a;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    border-color: #e2e8f0;
-}
-
-/* Ícones dentro do label */
-.radio-option svg {
-    width: 16px;
-    height: 16px;
-}
+:root{--bg:#f3f4f6;--header-bg:#0f172a;--header-text:#f8fafc;--card:#fff;--border:#e2e8f0;--accent:#2563eb;--accent-hover:#1d4ed8;--text-main:#1e293b;--text-muted:#64748b;--radius-lg:12px;--shadow-card:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background-color:var(--bg);color:var(--text-main);min-height:100vh;display:flex;justify-content:center;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+h1,h2,h3,.card-titulo{letter-spacing:-.025em}
+.page{width:100%;max-width:1280px;padding:0 24px 40px;background:transparent;box-shadow:none;border:none;margin-top:0}
+@media (max-width:640px){.page{margin-top:10px;border-radius:20px;padding:20px 16px;background:rgba(255,255,255,.7)}body{padding:0 10px}}
+header.topbar{margin-bottom:0}
+.topbar-title-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:4px}
+.topbar h1{font-size:clamp(1.6rem,2vw + 1rem,2rem);font-weight:700;letter-spacing:-.03em}
+.topbar .tagline{font-size:.9rem;color:var(--muted)}
+.topbar p{font-size:.95rem;color:var(--muted);max-width:640px}
+.filtros{background:rgba(255,255,255,.96);border-radius:var(--radius-lg);padding:16px 16px 12px;box-shadow:var(--shadow-soft);border:1px solid var(--border);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 16px;margin-bottom:20px}
+.filtros-header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px}
+.filtros-header span{font-size:.8rem;color:var(--muted)}
+.btn-limpar{border:none;background:transparent;color:var(--accent);font-size:.8rem;cursor:pointer;padding:4px 8px;border-radius:999px;text-decoration:underline;text-underline-offset:2px}
+.campo{display:flex;flex-direction:column;gap:4px}
+.campo label{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.campo select,.campo input{border-radius:999px;border:1px solid var(--border);padding:7px 12px;font-size:.9rem;background:var(--bg-alt);outline:none;transition:border .15s ease,box-shadow .15s ease,background .15s ease}
+.campo select:focus,.campo input:focus{border-color:var(--accent);box-shadow:0 0 0 1px rgba(37,99,235,.18);background:#fff}
+.campo-busca{grid-column:span 2}
+.campo-busca input{padding-left:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.6' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15Z' /%3E%3C/svg%3E");background-repeat:no-repeat;background-position:8px center;background-size:14px}
+@media (max-width:900px){.filtros{grid-template-columns:repeat(2,minmax(0,1fr))}.campo-busca{grid-column:span 2}}
+@media (max-width:640px){.filtros{grid-template-columns:1fr}.campo-busca{grid-column:span 1}}
+.resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 32px 0;padding:0;border:none;background:transparent;box-shadow:none}
+.card-metric{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 4px rgba(0,0,0,.02);transition:transform .2s ease,border-color .2s ease}
+.card-metric:hover{transform:translateY(-2px);border-color:#cbd5e1;box-shadow:0 8px 16px -4px rgba(0,0,0,.08)}
+.metric-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.metric-icon svg{width:20px;height:20px}
+.icon-purple{background:#f3e8ff;color:#9333ea}
+.icon-gray{background:#f1f5f9;color:#475569}
+.icon-green{background:#dcfce7;color:#16a34a}
+.icon-blue{background:#dbeafe;color:#2563eb}
+.icon-orange{background:#ffedd5;color:#ea580c}
+.icon-cyan{background:#ccfbf1;color:#0f766e}
+.metric-content{display:flex;flex-direction:column;overflow:hidden}
+.metric-value{font-size:1.1rem;font-weight:700;color:#0f172a;line-height:1.1;letter-spacing:-.02em}
+.metric-label{font-size:.65rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;white-space:nowrap}
+.text-green{color:#16a34a}
+.text-blue{color:#2563eb}
+.text-orange{color:#ea580c}
+@media (max-width:640px){.resumo{grid-template-columns:1fr 1fr}.card-metric{flex-direction:column;align-items:flex-start;gap:8px}}
+@media (max-width:900px){.resumo{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.resumo{grid-template-columns:1fr}}
+
+.lista-cursos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px;align-items:stretch}
+.header-trilha{grid-column:1/-1;background:#0b1120;color:#f9fafb;padding:9px 16px;border-radius:999px;font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;justify-content:space-between}
+.header-trilha small{font-size:.7rem;font-weight:500;opacity:.8}
+.header-subtrilha{grid-column:1/-1;background:#1d4ed8;color:#e5e7eb;padding:8px 18px;border-radius:999px;font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.header-subtrilha small{font-size:.7rem;opacity:.9}
+.card-curso{background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow-card);border-radius:var(--radius-lg);padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px;height:100%;min-height:300px}
+.card-header{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.card-trilhas{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%}
+.badge-trilha,.badge-subtrilha,.badge-status{display:inline-flex;align-items:center;padding:2px 9px;font-size:.7rem;font-weight:500;border-radius:999px;line-height:1.15;text-transform:none;letter-spacing:0;border:1px solid rgba(148,163,184,.45);background:#f9fafb;color:#374151;max-width:100%;white-space:nowrap}
+.badge-trilha{background:#eef2ff;border-color:rgba(129,140,248,.6);color:#3730a3}
+.badge-subtrilha{background:#e0f2fe;border-color:rgba(56,189,248,.55);color:#0369a1}
+.badge-status{margin-top:2px}
+.badge-status.badge-disponivel{background:#ecfdf3;border-color:rgba(34,197,94,.55);color:#15803d}
+.badge-status.badge-backlog{background:#f9fafb;border-color:rgba(148,163,184,.6);color:#4b5563}
+.badge-status.badge-em-desenvolvimento{background:#fffbeb;border-color:rgba(245,158,11,.6);color:#b45309}
+.card-titulo{color:var(--text-main);font-size:1rem;font-weight:700;margin-top:4px}
+.card-descricao{font-size:.86rem;color:var(--muted);margin-bottom:12px;flex-grow:1;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.card-info{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:#64748b;margin-top:8px}
+.card-info span::before{content:none}
+.info-item{display:flex;align-items:center;gap:6px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #f1f5f9}
+.info-item svg{width:16px;height:16px;color:#94a3b8;stroke-width:2}
+.card-footer{margin-top:auto;padding-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #f1f5f9}
+.pill-duracao{display:flex;align-items:center;gap:5px;font-size:.75rem;color:#64748b;background:#f1f5f9;padding:4px 8px;border-radius:6px}
+.pill-duracao svg{width:14px;height:14px;color:#cbd5e1}
+.pill-duracao strong{color:#334155;font-weight:700}
+.btn-link{background:var(--accent);color:#fff;font-weight:600;border-radius:999px;border:none;padding:7px 18px;font-size:.8rem;cursor:pointer;transition:transform .1s ease,box-shadow .1s ease,opacity .1s ease,background .1s ease;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.btn-link:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 28px rgba(37,99,235,.55);background:var(--accent-hover)}
+.btn-link:disabled{cursor:default;opacity:.55;background:#e5e7eb;color:#6b7280;box-shadow:none}
+.pill-duracao{font-size:.76rem;color:var(--muted)}
+.pill-duracao strong{color:#111827}
+
+.lista-cursos-vazia{grid-column:1/-1;text-align:center;padding:24px 16px;background:rgba(255,255,255,.96);border-radius:var(--radius-lg);border:1px dashed var(--border);color:var(--muted);font-size:.9rem}
+.lista-cursos-vazia strong{color:var(--text)}
+footer.page-footer{margin-top:24px;font-size:.75rem;color:var(--muted);text-align:right}
+.badge-status{padding:3px 10px;border-radius:999px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.badge-status.disponivel{background:rgba(34,197,94,.1);color:#15803d;border:1px solid rgba(34,197,94,.6)}
+.badge-status.backlog{background:rgba(234,179,8,.12);color:#92400e;border:1px solid rgba(234,179,8,.65)}
+.badge-status.em-desenvolvimento{background:rgba(59,130,246,.12);color:#1d4ed8;border:1px solid rgba(59,130,246,.65)}
+.card-curso.status-disponivel{box-shadow:0 0 0 2px rgba(34,197,94,.18)}
+.card-curso.status-backlog{box-shadow:0 0 0 2px rgba(234,179,8,.18)}
+.card-curso.status-em-desenvolvimento{box-shadow:0 0 0 2px rgba(59,130,246,.18)}
+.card-curso{position:relative;overflow:hidden}
+.card-curso::before{content:attr(data-status-text);position:absolute;top:12px;right:-42px;transform:rotate(45deg);padding:4px 40px;font-size:.65rem;font-weight:700;color:#fff;letter-spacing:.05em;text-transform:uppercase;pointer-events:none;opacity:.9}
+.card-curso.status-disponivel::before{background:linear-gradient(90deg,#22c55e,#16a34a);content:" "}
+.card-curso.status-backlog::before{background:linear-gradient(90deg,#f59e0b,#d97706);content:" "}
+.card-curso.status-em-desenvolvimento::before{background:linear-gradient(90deg,#3b82f6,#1d4ed8);content:" ";font-size:.55rem}
+.app-header{background-color:transparent!important;box-shadow:none!important;border:none!important;padding:10px 20px!important}
+.header-desc,.header-top h1,.header-top p{color:#334155!important}
+.toolbar{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px;border-top:1px solid rgba(255,255,255,.08)}
+.toolbar-search{flex:1;position:relative;min-width:200px}
+.toolbar-filters{display:flex;gap:12px}
+.select-wrapper{display:flex;flex-direction:column;position:relative}
+.select-wrapper label{position:absolute;top:-24px;left:2px;padding:0;font-size:.75rem;font-weight:500;text-transform:uppercase;z-index:2;background:transparent;color:#fff;letter-spacing:.05em;box-shadow:none}
+.select-wrapper:focus-within label{color:#fff}
+.toolbar-search input,.select-wrapper select{width:100%;appearance:none;border-radius:12px;font-size:.9rem;font-weight:400;transition:all .25s ease;background-color:#fff;border:1px solid #cbd5e1;color:var(--header-accent);color-scheme:light}
+.toolbar-search input{padding:12px 12px 12px 48px}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:#64748b;pointer-events:none;z-index:2;transition:color .2s ease}
+.toolbar-search:focus-within .search-icon{color:var(--header-accent)}
+.select-wrapper select{padding:11px 36px 11px 14px;min-width:130px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2305055b' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:16px}
+.toolbar-search input:focus,.select-wrapper select:focus{background-color:#fff;border-color:var(--header-accent);outline:none;box-shadow:0 0 0 3px rgba(5,5,91,.15)}
+.btn-reset{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#99f6e4;cursor:pointer;transition:all .2s}
+.btn-reset:hover{background:rgba(20,242,201,.15);border-color:#14f2c9;color:#14f2c9;transform:scale(1.05);box-shadow:0 0 15px rgba(20,242,201,.3)}
+@media (max-width:900px){.toolbar{flex-wrap:wrap}.toolbar-search{min-width:100%;order:1}.toolbar-filters{order:2;flex:1;flex-wrap:wrap}.select-wrapper{flex:1}.select-wrapper select{width:100%}.btn-reset{order:3}}
+@media (max-width:600px){.app-header{padding:24px 20px;margin:0 -10px 24px;border-radius:0 0 20px 20px}.header-top{flex-direction:column;align-items:flex-start;gap:8px}.toolbar-filters{flex-direction:column;width:100%}.btn-reset{width:100%}}
+.toolbar{margin-top:32px!important;padding-top:12px!important;background-color:#fff!important;align-items:flex-end!important;border:1px solid #e2e8f0!important}
+.select-wrapper label{position:absolute;top:-24px!important;left:2px;color:#64748b!important;font-size:.75rem!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.05em;background:transparent!important;z-index:10;pointer-events:none}
+.select-wrapper:focus-within label{color:#2563eb!important}
+.toolbar .select-wrapper select,.toolbar .toolbar-search input{background-color:#f8fafc!important;border:1px solid #cbd5e1!important;color:#1e293b!important;border-radius:8px!important;box-shadow:none!important}
+.toolbar .select-wrapper select:hover,.toolbar .toolbar-search input:hover{background-color:#fff!important;border-color:#94a3b8!important}
+.toolbar .select-wrapper select:focus,.toolbar .toolbar-search input:focus{background-color:#fff!important;border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.1)!important;outline:none!important}
+.search-icon{color:#64748b!important;z-index:10}
+.toolbar-search:focus-within .search-icon{color:#2563eb!important}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.8);backdrop-filter:blur(4px);z-index:1000;display:flex;justify-content:center;align-items:center}
+.modal-content{background:#fff;width:100%;max-width:1000px;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);display:flex;flex-direction:column;max-height:95vh;animation:modalSlideIn .3s ease-out}
+.modal-body{padding:20px 32px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+@media (min-width:1400px){.modal-content{max-width:1000px}}
+@keyframes modalSlideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
+.modal-header h2{font-size:1.25rem;color:#1e293b;font-weight:700}
+.btn-close-modal{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b}
+.modal-body{padding:24px;overflow-y:auto}
+.modal-footer{padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;align-items:center;gap:12px;background:#f8fafc;border-radius:0 0 16px 16px}
+.form-group{display:flex;flex-direction:column;margin-bottom:20px}
+.form-group label{display:block;margin-bottom:4px;font-weight:600;color:var(--text-main);font-size:.85rem}
+.form-row{display:flex;gap:16px;margin-bottom:8px}
+.input-premium{padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:.95rem;width:100%}
+textarea.input-premium{resize:vertical;min-height:80px;font-family:inherit}
+.toggle-wrapper{height:42px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding-bottom:2px}
+.preview-table-wrapper{max-height:200px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px}
+.preview-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.preview-table th{background:#f1f5f9;padding:8px;text-align:left;position:sticky;top:0}
+.preview-table td{padding:8px;border-bottom:1px solid #f1f5f9;color:#334155}
+.btn-primary-full{width:100%;background:#2563eb;color:#fff;padding:10px;border-radius:8px;border:none;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-primary-full:hover{background:#1d4ed8}
+.btn-save{background:#16a34a;color:#fff;padding:10px 20px;border-radius:8px;border:none;font-weight:600;cursor:pointer}
+.btn-save:disabled{background-color:#e2e8f0!important;color:#94a3b8!important;cursor:not-allowed;border:1px solid #cbd5e1;opacity:.7}
+.btn-save:not(:disabled){background-color:#16a34a!important;color:#fff!important;opacity:1;box-shadow:0 4px 6px -1px rgba(0,0,0,.1)}
+.status-msg{font-size:.85rem;font-weight:500;margin-right:auto}
+.curso-meta-info{display:flex;gap:10px;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #f1f5f9}
+.badge-info{background:#eff6ff;color:#2563eb;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600}
+.lista-aulas-premium{list-style:none;padding:0;margin:0}
+.aula-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;transition:background .2s;border-bottom:1px solid #f8fafc}
+.aula-item:hover{background:#f8fafc}
+.aula-ordem{width:28px;height:28px;background:#e2e8f0;color:#64748b;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
+.aula-info{flex-grow:1}
+.aula-titulo{font-size:.9rem;color:#334155;font-weight:500;margin-bottom:2px;display:block}
+.aula-tempo{font-size:.75rem;color:#94a3b8;display:flex;align-items:center;gap:4px}
+.btn-ver-video{color:#2563eb;background:rgba(37,99,235,.1);padding:6px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.btn-ver-video:hover{background:#2563eb;color:#fff}
+.btn-secondary-full{background:#f1f5f9;color:#64748b;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer}
+.btn-secondary-full:hover{background:#e2e8f0;color:#334155}
+
+.btn-icon-grade{background:#fff;border:1px solid #e2e8f0;color:#64748b;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.btn-icon-grade:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff}
+.card-descricao{-webkit-line-clamp:unset!important;display:block!important;overflow:visible!important;height:auto!important;margin-bottom:16px!important}
+.btn-icon-grade{width:auto!important;padding:6px 12px!important;border-radius:999px!important;gap:8px;background-color:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:.8rem;font-weight:600;text-decoration:none}
+.btn-icon-grade:hover{background-color:#e2e8f0;color:#1e293b;border-color:#cbd5e1}
+.grade-count{font-size:.85rem;font-weight:700;color:#2563eb}
+.card-footer{flex-wrap:nowrap!important;gap:8px}
+.pill-duracao{flex-shrink:0;white-space:nowrap}
+.btn-icon-acessar{background:var(--accent);color:#fff;border:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s ease,background .2s ease,box-shadow .2s ease;box-shadow:0 4px 6px rgba(37,99,235,.2)}
+.btn-icon-acessar:hover{background:var(--accent-hover);transform:translateY(-2px);box-shadow:0 6px 12px rgba(37,99,235,.3)}
+.btn-disabled-text{background:#e2e8f0;color:#94a3b8;font-size:.75rem;font-weight:600;padding:0 12px;height:36px;border-radius:999px;border:none;cursor:default;white-space:nowrap}
+.btn-icon-editar{background:#fff;color:#64748b;border:1px solid #e2e8f0;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.btn-icon-editar:hover{border-color:#f59e0b;color:#f59e0b;background:#fffbeb}
+.switch{position:relative;display:inline-block;width:50px;height:26px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#cbd5e1;transition:.4s}
+.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background-color:#fff;transition:.4s}
+input:checked + .slider{background-color:#2563eb}
+input:focus + .slider{box-shadow:0 0 1px #2563eb}
+input:checked + .slider:before{transform:translateX(24px)}
+.slider.round{border-radius:34px}
+.slider.round:before{border-radius:50%}
+
+.card-curso.is-hidden{opacity:.6;border:1px dashed #94a3b8;background:#f1f5f9}
+.badge-oculto{background:#334155;color:#fff;font-size:.65rem;padding:2px 8px;border-radius:4px;margin-left:auto}
+.btn-youtube-sync{display:flex;align-items:center;gap:8px;padding:0 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;cursor:pointer;transition:all .2s}
+.btn-youtube-sync:hover{background:#fee2e2;border-color:#f87171;transform:translateY(-1px)}
+.btn-youtube-sync:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(100%)}
+.sync-metadata{display:flex;align-items:center;gap:16px;margin-top:4px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:.75rem}
+.meta-item{display:flex;gap:4px;color:#475569}
+.meta-value{font-weight:700;color:#1e293b}
+.meta-badge-pendente{background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:4px;font-weight:700;font-size:.7rem;margin-left:auto;text-transform:uppercase}
+.btn-save:disabled{background-color:#cbd5e1;cursor:not-allowed;opacity:.7}
+button,input,optgroup,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-serif!important;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.form-group label{font-size:.8rem!important;font-weight:600!important;color:#334155!important;letter-spacing:.01em;margin-bottom:6px!important;display:block}
+.input-premium{font-size:.9rem!important;color:#0f172a!important;font-weight:500!important;background-color:#f8fafc;border:1px solid #cbd5e1;transition:all .2s ease-in-out}
+.input-premium:focus{background-color:#fff;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1);outline:none}
+.input-premium::placeholder{color:#94a3b8!important;font-weight:400}
+.modal-header h2{font-family:'Inter',sans-serif!important;font-weight:700!important;letter-spacing:-.025em;color:#0f172a}
+.youtube-wrapper{background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.youtube-wrapper .input-premium{background-color:#fff!important;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.youtube-wrapper .sync-metadata{background-color:#fff;border:1px solid #cbd5e1;margin-top:0}
+.youtube-help-text{font-size:.75rem;color:#64748b;margin-left:4px}
+.youtube-label{font-size:.85rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.modal-header{padding:10px 24px!important;min-height:50px;align-items:center}
+.modal-header h2{font-size:1.1rem!important;margin:0}
+.btn-close-modal{font-size:1.2rem!important;line-height:1}
+.modal-footer{padding:10px 24px!important;background:#f8fafc;border-top:1px solid #e2e8f0}
+.modal-footer button{padding:8px 16px!important;font-size:.85rem!important}
+.modal-body{padding:16px 24px!important;gap:10px!important;overflow-y:hidden!important}
+.input-premium,.select-wrapper select,textarea.input-premium{padding:7px 10px!important;font-size:.85rem!important;min-height:unset}
+.form-group label{margin-bottom:3px!important;font-size:.75rem!important}
+.youtube-wrapper{padding:10px 12px!important;gap:8px!important;background-color:#f8fafc}
+.youtube-label{font-size:.8rem!important;margin-bottom:2px!important}
+.sync-metadata{padding:4px 10px!important;font-size:.75rem!important}
+.btn-youtube-sync{padding:0 12px!important;height:34px!important}
+.toggle-wrapper{height:auto!important;min-height:50px;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;align-items:center!important;padding-bottom:5px}
+.toggle-wrapper label:first-child{width:100%;text-align:center;margin-bottom:4px!important;color:#64748b!important}
+.switch{position:relative;display:inline-block;width:42px!important;height:22px!important;margin:0!important}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#cbd5e1;transition:.3s;border-radius:20px!important}
+.slider:before{position:absolute;content:"";height:16px!important;width:16px!important;left:3px!important;bottom:3px!important;background-color:#fff;transition:.3s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+input:checked + .slider{background-color:#2563eb}
+input:checked + .slider:before{transform:translateX(20px)}
+.input-premium,.select-wrapper select,textarea.input-premium{background-color:#fff!important;border:1px solid #94a3b8!important;color:#0f172a!important;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.input-premium:focus,.select-wrapper select:focus,textarea.input-premium:focus{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.15)!important}
+.form-group label,.youtube-label{color:#1e293b!important;font-weight:700!important}
+.btn-secondary-full{background-color:#fff!important;color:#334155!important;border:1px solid #cbd5e1!important;transition:all .2s ease}
+.btn-secondary-full:hover{background-color:#fff1f2!important;border-color:#ef4444!important;color:#ef4444!important;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+.btn-save:disabled{background-color:#e2e8f0!important;color:#94a3b8!important;border:1px solid #cbd5e1;cursor:not-allowed}
+.btn-save:not(:disabled){background-color:#16a34a!important;box-shadow:0 4px 6px -1px rgba(22,163,74,.3)}
+.youtube-wrapper{background-color:#eff6ff!important;border:1px solid #bfdbfe!important}
+.btn-youtube-sync{background-color:#fff!important;border:1px solid #dbeafe!important;color:#2563eb!important;box-shadow:0 1px 2px rgba(37,99,235,.1)}
+.btn-youtube-sync:hover{border-color:#2563eb!important;background-color:#2563eb!important;color:#fff!important}
+.select-wrapper select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")!important}
+.form-row .btn-icon-editar{width:34px!important;height:34px!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;border-radius:6px!important;background-color:#fff;border:1px solid #cbd5e1}
+.form-row .btn-icon-editar:hover{border-color:#2563eb;color:#2563eb;background-color:#eff6ff}
+.youtube-label{display:flex!important;align-items:center!important;line-height:1!important;padding-bottom:2px}
+.youtube-label svg{display:block;margin-right:2px}
+.tabs-origin{display:flex;background-color:#f1f5f9;padding:4px;border-radius:8px;margin-bottom:8px;gap:4px}
+.tab-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 12px;font-size:.8rem;font-weight:600;color:#64748b;background:transparent;border:none;border-radius:6px;cursor:pointer;transition:all .2s}
+.tab-btn.active{background-color:#fff;color:#0f172a;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.tab-btn:hover:not(.active){color:#334155;background-color:rgba(255,255,255,.5)}
+.manual-wrapper{background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px}
+.manual-input-row{display:flex;gap:8px}
+.btn-add-manual{background-color:#0f172a;color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:.8rem;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-add-manual:hover{background-color:#334155}
+.lista-manual-preview{list-style:none;margin-top:12px;padding:0;max-height:150px;overflow-y:auto;border-top:1px solid #e2e8f0}
+.item-manual{display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid #f1f5f9;font-size:.8rem}
+.item-manual span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-remove-item{color:#ef4444;background:none;border:none;cursor:pointer;padding:4px}
+.btn-remove-item:hover{background-color:#fef2f2;border-radius:4px}
+.source-selector{display:flex;gap:16px;background:#f1f5f9;padding:4px;border-radius:8px;margin-bottom:12px}
+.radio-option{flex:1;position:relative}
+.radio-option input[type=radio]{position:absolute;opacity:0;cursor:pointer}
+.radio-option label{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px 12px;font-size:.85rem;font-weight:600;color:#64748b;border-radius:6px;cursor:pointer;transition:all .2s;background:transparent;border:1px solid transparent;margin:0!important}
+.radio-option input[type=radio]:checked + label{background-color:#fff;color:#0f172a;box-shadow:0 1px 2px rgba(0,0,0,.1);border-color:#e2e8f0}
+.radio-option svg{width:16px;height:16px}
