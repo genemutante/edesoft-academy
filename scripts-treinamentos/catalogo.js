@@ -442,13 +442,59 @@ function renderCursos(lista) {
 
         const html = `
         <article class="card-curso ${isOculto ? 'is-hidden' : ''} status-${statusClass}">
-            <header class="card-header">
-                <div class="card-trilhas">
-                    ${curso.subtrilha ? `<span class="badge-subtrilha">${curso.subtrilha}</span>` : `<span class="badge-trilha">${curso.trilha}</span>`}
-                    ${isOculto ? '<span class="badge-oculto">🔒 OCULTO</span>' : ''}
-                </div>
-                <span class="badge-status ${statusClass}">${curso.status || 'Rascunho'}</span>
-            </header>
+        
+// --- Fonte (youtube/manual) + visibilidade (eye/eyeOff) ---
+// fonte: tenta deduzir pelo link (se tiver) — e se não tiver, assume manual quando existir aulas sem link_video
+const temLinkYoutube = (curso.link || "").includes("youtube") || (curso.link || "").includes("youtu.be");
+const temAulasComLink = (curso.aulas || []).some(a => (a.link_video || "").includes("youtube") || (a.link_video || "").includes("youtu.be"));
+const fonte = (temLinkYoutube || temAulasComLink) ? "youtube" : "manual";
+
+const fonteIcon = (fonte === "manual") ? ICONS.manual : ICONS.youtube;
+const visIcon = isOculto ? ICONS.eyeOff : ICONS.eye;
+
+const html = `
+<article class="card-curso ${isOculto ? 'is-hidden' : ''} status-${statusClass}">
+  <header class="card-header">
+    <div class="card-trilhas">
+      ${curso.subtrilha
+        ? `<span class="badge-subtrilha">${curso.subtrilha}</span>`
+        : `<span class="badge-trilha">${curso.trilha}</span>`}
+
+      <div class="card-badges-icons">
+        <span class="badge-icon" title="Fonte: ${fonte === "youtube" ? "YouTube" : "Manual"}">
+          ${fonteIcon}
+        </span>
+
+        <span class="badge-icon ${isOculto ? "badge-icon--off" : ""}" title="Visibilidade: ${isOculto ? "Oculto" : "Visível"}">
+          ${visIcon}
+        </span>
+      </div>
+    </div>
+
+    <span class="badge-status ${statusClass}">${curso.status || 'Rascunho'}</span>
+  </header>
+
+  <h2 class="card-titulo">${curso.nome}</h2>
+  <p class="card-descricao">${curso.descricao || "Sem descrição."}</p>
+
+  <footer class="card-footer">
+    <div class="pill-duracao"><strong>${formatarDuracao(curso.duracaoMinutos)}</strong></div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-icon-grade btn-abrir-grade" data-id="${curso.id}" title="Grade">
+        <span class="grade-count">${curso.quantidadeAulas}</span> aulas
+      </button>
+
+      <button class="btn-icon-editar" type="button" data-id="${curso.id}" title="Editar" aria-label="Editar">
+        ${ICONS.edit}
+      </button>
+
+      ${botaoLink}
+    </div>
+  </footer>
+</article>`;
+
+
+            
             <h2 class="card-titulo">${curso.nome}</h2>
             <p class="card-descricao">${curso.descricao || "Sem descrição."}</p>
             <footer class="card-footer">
@@ -664,6 +710,7 @@ window.alternarFonte = function(v) {
     document.getElementById("panel-youtube").style.display = v==='youtube'?'block':'none';
     document.getElementById("panel-manual").style.display = v==='manual'?'block':'none';
 }
+
 
 
 
