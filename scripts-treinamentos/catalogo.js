@@ -435,7 +435,6 @@ function renderCursos(lista) {
         const statusClass = (curso.status || "backlog").toLowerCase().replace(/\s+/g, "-");
         const isOculto = curso.exibir_catalogo === false;
        const botaoLink = curso.link
-       const botaoLink = curso.link
         ? `<button class="btn-icon-acessar" type="button" title="Acessar curso" aria-label="Acessar curso"
            onclick="window.open('${curso.link}', '_blank')">${ICONS.open}</button>`
         : `<button class="btn-disabled-text" disabled>Em breve</button>`;
@@ -665,5 +664,6 @@ window.alternarFonte = function(v) {
     document.getElementById("panel-youtube").style.display = v==='youtube'?'block':'none';
     document.getElementById("panel-manual").style.display = v==='manual'?'block':'none';
 }
+
 
 
