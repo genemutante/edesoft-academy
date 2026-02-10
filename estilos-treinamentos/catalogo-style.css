@@ -767,8 +767,7 @@ footer.page-footer {
   border: none !important;
 
   /* Ajuste de espaçamento para ficar fluido na página */
-  padding-top: 10px;
-  padding-bottom: 20px;
+  padding: 10px 20px !important; /* Reduzido de 40px ou 60px para 10px */
 }
 
 /* Opcional: Se houver algum título ou descrição solta no header, 
@@ -1617,4 +1616,5 @@ button, input, optgroup, select, textarea {
   gap: 6px;
   margin-bottom: 4px;
 }
+
 
