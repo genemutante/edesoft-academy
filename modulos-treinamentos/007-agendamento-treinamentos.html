@@ -3,357 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento de Treinamentos</title>
-    
+    <title>Agendamento Modular | Enterprise</title>
     <link rel="stylesheet" href="../estilos-treinamentos/catalogo-style.css">
     
     <style>
-        /* =========================================
-           Estilos Específicos da Tela de Agendamento
-           ========================================= */
-        .layout-agendamento {
+        .layout-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr; /* Coluna do form menor, agenda maior */
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 60px);
         }
 
-        .panel {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-        }
-
-        .panel h2 {
-            margin-top: 0;
-            border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-            color: #1e293b;
-            font-size: 1.25rem;
-        }
-
-        /* --- Formulário --- */
-        .form-group { margin-bottom: 1rem; }
-        
-        .form-label { 
-            display: block; 
-            margin-bottom: 0.5rem; 
-            font-weight: 600; 
-            color: #475569; 
-            font-size: 0.9rem;
-        }
-
-        .form-input, .form-select, .form-textarea {
-            width: 100%; 
-            padding: 0.75rem; 
-            border: 1px solid #cbd5e1; 
+        .panel-form {
+            background: #fff;
+            padding: 20px;
             border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.95rem;
-            background-color: #f8fafc;
-        }
-        
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: #2563eb;
-            background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto; /* Permite rolar se tiver muitas aulas */
         }
 
-        .btn-primary-full { 
-            width: 100%; 
-            padding: 1rem; 
-            background-color: #2563eb; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: background 0.2s, transform 0.1s; 
-            margin-top: 10px;
+        .panel-agenda {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            overflow-y: auto;
+        }
+
+        /* Área de Checkboxes das Aulas */
+        .aulas-container {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8fafc;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none; /* Oculto até selecionar curso */
         }
         
-        .btn-primary-full:hover { background-color: #1d4ed8; }
-        .btn-primary-full:active { transform: translateY(1px); }
-        .btn-primary-full:disabled { background-color: #94a3b8; cursor: not-allowed; }
-
-        /* --- Agenda Visual --- */
-        .agenda-list { list-style: none; padding: 0; margin: 0; }
-        
-        .agenda-item {
+        .aula-checkbox-item {
             display: flex;
             align-items: center;
-            padding: 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            background: #fff;
-            border-left: 5px solid #2563eb; /* Cor padrão Agendado */
-            transition: transform 0.2s;
-        }
-        
-        .agenda-item:hover { transform: translateX(2px); border-color: #cbd5e1; }
-
-        .agenda-date {
-            flex-basis: 80px;
-            text-align: center;
-            font-weight: 700;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
             color: #334155;
-            line-height: 1.2;
-            background: #f1f5f9;
-            padding: 8px;
-            border-radius: 6px;
         }
+        .aula-checkbox-item:last-child { border-bottom: none; }
+        .aula-checkbox-item input { cursor: pointer; }
+
+        /* Estilos Padrão */
+        label { font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; }
+        .input-std { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
         
-        .agenda-date span { 
-            display: block; 
-            font-size: 0.8rem; 
-            color: #64748b; 
-            font-weight: 600; 
-            margin-top: 4px;
+        .btn-full {
+            width: 100%; padding: 12px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
         }
+        .btn-full:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        .agenda-details { flex: 1; margin-left: 1.5rem; }
-        .agenda-details h4 { margin: 0; color: #1e293b; font-size: 1rem; }
-        .agenda-details p { margin: 0.25rem 0 0; color: #64748b; font-size: 0.9rem; }
-
-        .agenda-status {
-            padding: 0.35rem 0.85rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        /* Lista Agenda */
+        .agenda-item {
+            display: flex; align-items: center; padding: 12px;
+            border-bottom: 1px solid #f1f5f9; border-left: 4px solid #cbd5e1;
+            background: #fff; margin-bottom: 5px; border-radius: 4px;
         }
-
-        .status-agendado { background: #dbeafe; color: #1e40af; }
-        .status-realizado { background: #dcfce7; color: #166534; }
-        .status-cancelado { background: #fee2e2; color: #991b1b; }
+        .agenda-date {
+            background: #eff6ff; color: #1d4ed8; padding: 8px; border-radius: 6px;
+            text-align: center; margin-right: 15px; min-width: 60px;
+        }
+        .agenda-date strong { display: block; font-size: 1rem; }
+        .agenda-date span { font-size: 0.7rem; }
         
-        .loading-spinner { text-align: center; padding: 2rem; color: #64748b; font-style: italic; }
-
-        @media (max-width: 768px) {
-            .layout-agendamento { grid-template-columns: 1fr; gap: 1rem; padding: 1rem; }
-            .agenda-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .agenda-date { width: 100%; flex-basis: auto; display: flex; justify-content: space-between; align-items: center; }
-            .agenda-date span { margin-top: 0; }
-            .agenda-details { margin-left: 0; }
-            .agenda-status { align-self: flex-start; }
+        .info-box h4 { margin: 0; color: #1e293b; font-size: 0.95rem; }
+        .info-box small { color: #64748b; font-size: 0.8rem; display: block; margin-top: 2px;}
+        .aula-tag { 
+            display: inline-block; background: #f1f5f9; color: #475569; 
+            padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 4px;
         }
     </style>
 </head>
-<body style="background-color: #f8fafc;">
+<body style="background-color: #f1f5f9;">
 
-    <header style="background: white; padding: 1rem 2rem; border-bottom: 1px solid #e2e8f0;">
-        <h1 style="margin: 0; font-size: 1.5rem; color: #0f172a; display: flex; align-items: center; gap: 10px;">
-            🗓️ Agendamento de Treinamentos
-        </h1>
+    <header class="top-bar" style="background: white; padding: 1rem 2rem; border-bottom: 1px solid #e2e8f0;">
+        <h1 style="margin: 0; font-size: 1.2rem; color: #0f172a;">📅 Agendamento Modular</h1>
     </header>
 
-    <main class="layout-agendamento">
+    <div class="layout-grid">
         
-        <section class="panel">
-            <h2>Novo Agendamento</h2>
-            <form id="form-agendamento">
-                <div class="form-group">
-                    <label class="form-label">O quê? (Treinamento)</label>
-                    <select id="select-treinamento" class="form-select" required>
-                        <option value="">Carregando...</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Quem? (Colaborador)</label>
-                    <select id="select-colaborador" class="form-select" required>
-                        <option value="">Carregando...</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Quando? (Data e Hora)</label>
-                    <input type="datetime-local" id="input-datahora" class="form-input" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Observações (Opcional)</label>
-                    <textarea id="input-obs" class="form-textarea" rows="3" placeholder="Ex: Sala de reuniões 01"></textarea>
-                </div>
-
-                <button type="submit" id="btn-agendar" class="btn-primary-full">Confirmar Agendamento</button>
-            </form>
-        </section>
-
-        <section class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Próximos Treinamentos</h2>
-                <button id="btn-refresh" style="background: none; border: none; cursor: pointer; color: #2563eb; font-size: 1.2rem;" title="Atualizar Lista">↻</button>
-            </div>
+        <div class="panel-form">
+            <h2 style="font-size: 1rem; color: #1e293b; margin:0;">Novo Agendamento</h2>
             
-            <div id="loading-agenda" class="loading-spinner">Carregando agenda...</div>
-            <ul id="lista-agenda" class="agenda-list" style="display: none;">
-                </ul>
-        </section>
+            <div>
+                <label>1. Colaborador</label>
+                <select id="sel-colab" class="input-std">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
 
-    </main>
+            <div>
+                <label>2. Treinamento</label>
+                <select id="sel-treino" class="input-std">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div id="box-aulas" style="display: none;">
+                <label style="color: #2563eb;">3. Selecione as Aulas para este dia:</label>
+                <div class="aulas-container" id="lista-checkbox-aulas">
+                    </div>
+                <div style="text-align: right; margin-top: 5px;">
+                    <a href="#" onclick="marcarTodasAulas(event)" style="font-size: 0.75rem; color: #2563eb;">Marcar Todas</a>
+                </div>
+            </div>
+
+            <div>
+                <label>4. Data e Hora</label>
+                <input type="datetime-local" id="inp-data" class="input-std">
+            </div>
+
+            <div>
+                <label>Observações</label>
+                <textarea id="inp-obs" class="input-std" rows="2"></textarea>
+            </div>
+
+            <button id="btn-agendar" class="btn-full" onclick="salvarAgendamento()">
+                Confirmar Agendamento
+            </button>
+        </div>
+
+        <div class="panel-agenda">
+            <h2 style="font-size: 1rem; color: #1e293b; margin-bottom: 15px;">Agenda Futura</h2>
+            <div id="loading" style="display:none; text-align:center;">Carregando...</div>
+            <ul id="lista-agenda" style="list-style:none; padding:0;"></ul>
+        </div>
+    </div>
 
     <script type="module">
-        import "../scripts-treinamentos/module-guard.js"; // Guard de segurança
         import { DBHandler } from "../bd-treinamentos/db-handler.js";
 
-        // --- Elementos do DOM ---
-        const formAgendamento = document.getElementById('form-agendamento');
-        const selectTreino = document.getElementById('select-treinamento');
-        const selectColab = document.getElementById('select-colaborador');
-        const btnAgendar = document.getElementById('btn-agendar');
+        // Variáveis Globais
+        let todosCursos = [];
+        const selTreino = document.getElementById('sel-treino');
+        const selColab = document.getElementById('sel-colab');
+        const listaAulasDiv = document.getElementById('lista-checkbox-aulas');
+        const boxAulas = document.getElementById('box-aulas');
         const listaAgenda = document.getElementById('lista-agenda');
-        const loadingAgenda = document.getElementById('loading-agenda');
-        const btnRefresh = document.getElementById('btn-refresh');
 
-        // --- Funções Utilitárias ---
-        function formatarDataHoraVisual(isoString) {
-            const data = new Date(isoString);
-            const dia = String(data.getDate()).padStart(2, '0');
-            const mes = String(data.getMonth() + 1).padStart(2, '0');
-            const hora = String(data.getHours()).padStart(2, '0');
-            const min = String(data.getMinutes()).padStart(2, '0');
-            
-            return {
-                diaMes: `${dia}/${mes}`,
-                ano: data.getFullYear(),
-                hora: `${hora}:${min}`
-            };
-        }
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async () => {
+            await carregarDadosIniciais();
+            await carregarAgenda();
+        });
 
-        // --- Inicialização ---
-        async function inicializarTela() {
+        async function carregarDadosIniciais() {
             try {
-                // 1. Carrega os selects em paralelo (Promise.all para performance)
-                const [treinos, colaboradores] = await Promise.all([
+                const [treinos, colabs] = await Promise.all([
                     DBHandler.listarTreinamentos(),
-                    DBHandler.listarColaboradores({ somenteAtivos: true }) // Filtro opcional se implementado no handler
+                    DBHandler.listarColaboradores({ somenteAtivos: true })
                 ]);
+                
+                todosCursos = treinos; // Guarda na memória para acessar as aulas depois
 
-                popularSelect(selectTreino, treinos, 'Selecione o Treinamento');
-                popularSelect(selectColab, colaboradores, 'Selecione o Colaborador');
+                // Popula Colabs
+                selColab.innerHTML = '<option value="">Selecione...</option>';
+                colabs.forEach(c => selColab.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
 
-                // 2. Carrega a agenda
-                await carregarAgenda();
+                // Popula Treinos
+                selTreino.innerHTML = '<option value="">Selecione...</option>';
+                treinos.forEach(t => selTreino.innerHTML += `<option value="${t.id}">${t.nome}</option>`);
 
-            } catch (error) {
-                console.error("Erro ao inicializar:", error);
-                alert("Erro ao carregar dados. Verifique a conexão ou o console.");
+            } catch (e) { alert("Erro ao carregar: " + e.message); }
+        }
+
+        // --- LÓGICA DE EXIBIR AULAS AO SELECIONAR CURSO ---
+        selTreino.addEventListener('change', () => {
+            const cursoId = selTreino.value;
+            listaAulasDiv.innerHTML = '';
+            
+            if (!cursoId) {
+                boxAulas.style.display = 'none';
+                return;
             }
-        }
 
-        // Popula um <select> genérico
-        function popularSelect(elementoSelect, dados, placeholder) {
-            elementoSelect.innerHTML = `<option value="">${placeholder}</option>`;
-            if (!dados) return;
+            // Encontra o curso na memória (que já tem as aulas aninhadas pelo DBHandler)
+            const cursoSelecionado = todosCursos.find(c => c.id == cursoId);
+            
+            if (cursoSelecionado && cursoSelecionado.aulas && cursoSelecionado.aulas.length > 0) {
+                // Ordena por ordem
+                const aulasOrdenadas = cursoSelecionado.aulas.sort((a,b) => a.ordem - b.ordem);
 
-            // Ordena alfabeticamente
-            dados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+                aulasOrdenadas.forEach(aula => {
+                    const div = document.createElement('div');
+                    div.className = 'aula-checkbox-item';
+                    div.innerHTML = `
+                        <input type="checkbox" class="chk-aula" value="${aula.id}" id="aula-${aula.id}">
+                        <label for="aula-${aula.id}" style="margin:0; font-weight:normal; cursor:pointer;">
+                            ${aula.ordem}. ${aula.titulo} (${aula.duracao_minutos} min)
+                        </label>
+                    `;
+                    listaAulasDiv.appendChild(div);
+                });
+                boxAulas.style.display = 'block';
+            } else {
+                listaAulasDiv.innerHTML = '<div style="padding:10px; color:orange; font-size:0.8rem;">Este curso não possui aulas cadastradas ainda. O agendamento será genérico.</div>';
+                boxAulas.style.display = 'block';
+            }
+        });
 
-            dados.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.id;
-                option.textContent = item.nome;
-                elementoSelect.appendChild(option);
-            });
-        }
+        window.marcarTodasAulas = function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.chk-aula').forEach(chk => chk.checked = true);
+        };
 
-        // Carrega e Renderiza a Agenda
-        async function carregarAgenda() {
-            loadingAgenda.style.display = 'block';
-            listaAgenda.style.display = 'none';
-            listaAgenda.innerHTML = '';
+        // --- SALVAR MÚLTIPLOS ---
+        window.salvarAgendamento = async function() {
+            const colabId = selColab.value;
+            const treinoId = selTreino.value;
+            const dataHora = document.getElementById('inp-data').value;
+            const obs = document.getElementById('inp-obs').value;
+
+            if(!colabId || !treinoId || !dataHora) return alert("Preencha Colaborador, Treinamento e Data.");
+
+            // Coleta IDs das aulas selecionadas
+            const checkboxes = document.querySelectorAll('.chk-aula:checked');
+            const aulasIds = Array.from(checkboxes).map(cb => cb.value);
+
+            const btn = document.getElementById('btn-agendar');
+            btn.disabled = true; btn.innerText = "Processando...";
 
             try {
-                // Chama a função nova criada no db-handler.js
-                const agendamentos = await DBHandler.listarAgendamentosFuturos();
+                // Estratégia: Se selecionou aulas, cria N registros. Se não, cria 1 registro genérico (aula_id = null)
+                const payloadFinal = [];
 
-                if (!agendamentos || agendamentos.length === 0) {
-                    listaAgenda.innerHTML = '<li style="text-align:center; padding: 2rem; color: #64748b;">Nenhum agendamento futuro encontrado.</li>';
+                if (aulasIds.length > 0) {
+                    // Cria um agendamento para cada aula selecionada
+                    aulasIds.forEach(aulaId => {
+                        payloadFinal.push({
+                            treinamento_id: treinoId,
+                            colaborador_id: colabId,
+                            aula_id: aulaId, // <--- O SEGREDO ESTÁ AQUI
+                            data_hora: new Date(dataHora).toISOString(),
+                            observacoes: obs,
+                            status: 'AGENDADO'
+                        });
+                    });
                 } else {
-                    agendamentos.forEach(item => {
-                        const dataF = formatarDataHoraVisual(item.data_hora);
-                        const statusClass = `status-${(item.status || 'AGENDADO').toLowerCase()}`;
-                        
-                        // Proteção contra dados nulos (caso alguém exclua um curso mas o agendamento fique)
-                        const nomeTreino = item.treinamento ? item.treinamento.nome : '(Treinamento Removido)';
-                        const nomeColab = item.colaborador ? item.colaborador.nome : '(Colaborador Removido)';
-
-                        const li = document.createElement('li');
-                        li.className = `agenda-item ${statusClass}`;
-                        li.innerHTML = `
-                            <div class="agenda-date">
-                                ${dataF.diaMes}
-                                <span>${dataF.hora}</span>
-                            </div>
-                            <div class="agenda-details">
-                                <h4>${nomeTreino}</h4>
-                                <p>👤 ${nomeColab}</p>
-                            </div>
-                            <span class="agenda-status ${statusClass}">${item.status || 'Agendado'}</span>
-                        `;
-                        listaAgenda.appendChild(li);
+                    // Agendamento Genérico (Curso inteiro)
+                    payloadFinal.push({
+                        treinamento_id: treinoId,
+                        colaborador_id: colabId,
+                        aula_id: null,
+                        data_hora: new Date(dataHora).toISOString(),
+                        observacoes: obs,
+                        status: 'AGENDADO'
                     });
                 }
-            } catch (error) {
-                console.error("Erro ao carregar agenda:", error);
-                listaAgenda.innerHTML = '<li style="color: #ef4444; text-align: center; padding: 1rem;">Erro ao carregar agenda.</li>';
-            } finally {
-                loadingAgenda.style.display = 'none';
-                listaAgenda.style.display = 'block';
-            }
-        }
 
-        // --- Evento de Salvar ---
-        formAgendamento.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const payload = {
-                treinamento_id: selectTreino.value,
-                colaborador_id: selectColab.value,
-                data_hora: new Date(document.getElementById('input-datahora').value).toISOString(),
-                observacoes: document.getElementById('input-obs').value || null,
-                status: 'AGENDADO'
-            };
-
-            const btnTextoOriginal = btnAgendar.innerText;
-            btnAgendar.innerText = 'Agendando...';
-            btnAgendar.disabled = true;
-
-            try {
-                await DBHandler.criarAgendamento(payload);
+                await DBHandler.criarAgendamento(payloadFinal); // O DBHandler aceita array!
                 
-                // Sucesso
-                formAgendamento.reset();
-                await carregarAgenda(); // Recarrega a lista
-                alert("✅ Agendamento realizado com sucesso!");
+                alert(`✅ ${payloadFinal.length} agendamento(s) criado(s) com sucesso!`);
+                
+                // Reset parcial (mantém colab selecionado para facilitar agendar outro dia)
+                document.querySelectorAll('.chk-aula').forEach(chk => chk.checked = false);
+                await carregarAgenda();
 
-            } catch (error) {
-                console.error("Erro ao agendar:", error);
-                alert("Erro ao salvar agendamento:\n" + (error.message || error));
+            } catch (e) {
+                alert("Erro: " + e.message);
             } finally {
-                btnAgendar.innerText = btnTextoOriginal;
-                btnAgendar.disabled = false;
+                btn.disabled = false; btn.innerText = "Confirmar Agendamento";
             }
-        });
-        
-        // Botão manual de atualizar
-        btnRefresh.addEventListener('click', (e) => {
-            e.preventDefault();
-            carregarAgenda();
-        });
+        };
 
-        // Roda ao carregar a página
-        document.addEventListener('DOMContentLoaded', inicializarTela);
+        window.carregarAgenda = async function() {
+            const lista = document.getElementById('lista-agenda');
+            lista.innerHTML = '';
+            const itens = await DBHandler.listarAgendamentosFuturos();
 
+            if(itens.length === 0) {
+                lista.innerHTML = '<li style="padding:20px; text-align:center; color:#94a3b8;">Nada agendado.</li>';
+                return;
+            }
+
+            itens.forEach(item => {
+                const d = new Date(item.data_hora);
+                
+                // Verifica se é aula específica ou curso geral
+                let tituloItem = item.treinamento?.nome || 'Curso Removido';
+                let detalheItem = '';
+                
+                if (item.aula) {
+                    // Se tem aula vinculada, mostra ela com destaque
+                    tituloItem = item.aula.titulo;
+                    detalheItem = `<span class="aula-tag">${item.treinamento?.nome}</span>`;
+                }
+
+                const li = document.createElement('li');
+                li.className = 'agenda-item';
+                li.style.borderLeftColor = item.aula ? '#2563eb' : '#cbd5e1'; // Azul se for aula, Cinza se for genérico
+
+                li.innerHTML = `
+                    <div class="agenda-date">
+                        <strong>${d.getDate()}/${d.getMonth()+1}</strong>
+                        <span>${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span>
+                    </div>
+                    <div class="info-box" style="flex:1;">
+                        <h4>${tituloItem}</h4>
+                        ${detalheItem}
+                        <small>👤 ${item.colaborador?.nome}</small>
+                    </div>
+                    <span style="font-size:0.7rem; font-weight:bold; color:#64748b;">${item.status}</span>
+                `;
+                lista.appendChild(li);
+            });
+        };
     </script>
 </body>
 </html>
