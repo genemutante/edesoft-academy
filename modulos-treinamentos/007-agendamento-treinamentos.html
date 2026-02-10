@@ -3,276 +3,387 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento Modular | Enterprise</title>
-    <link rel="stylesheet" href="../estilos-treinamentos/catalogo-style.css">
+    <title>Agendamento | Enterprise</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        /* =========================================
-           LAYOUT DE TELA CHEIA (FULLSCREEN)
-           ========================================= */
+        /* =================================================================
+           RESET E BASE (Layout de Aplicativo, não de Site)
+           ================================================================= */
+        * { box-sizing: border-box; }
+
         html, body {
-            height: 100%;
             margin: 0;
             padding: 0;
+            height: 100vh; /* Ocupa 100% da altura da janela */
+            width: 100vw;  /* Ocupa 100% da largura */
             overflow: hidden; /* Remove scroll da página inteira */
-            background-color: #f1f5f9;
             font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Cabeçalho fixo no topo */
-        .top-header {
+        /* =================================================================
+           HEADER (Barra de Topo Fixa)
+           ================================================================= */
+        header.app-header {
             height: 60px;
-            background: #fff;
+            flex-shrink: 0; /* Não encolhe */
+            background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
             padding: 0 24px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            flex-shrink: 0; /* Não deixa encolher */
+            justify-content: space-between;
+            z-index: 10;
         }
-        
-        .top-header h1 {
-            margin: 0;
-            font-size: 1.25rem;
+
+        .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
             color: #0f172a;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        /* Grid Principal - Ocupa todo o resto da tela */
-        .layout-grid {
-            display: grid;
-            /* Coluna 1: 450px fixo | Coluna 2: O resto da tela */
-            grid-template-columns: 480px 1fr; 
-            height: calc(100vh - 60px); /* 100% da altura menos o header */
-            gap: 0; /* Removemos gap do grid, usaremos padding interno */
-        }
-
-        /* --- COLUNA ESQUERDA (FORMULÁRIO) --- */
-        .col-form {
-            padding: 20px;
-            overflow-y: hidden; /* Scroll interno controlado */
+        /* =================================================================
+           CORPO PRINCIPAL (Divisão Esquerda/Direita)
+           ================================================================= */
+        .app-container {
             display: flex;
-            flex-direction: column;
+            flex: 1;       /* Ocupa todo o espaço restante abaixo do header */
+            overflow: hidden; /* O scroll será interno nos painéis */
+        }
+
+        /* --- PAINEL ESQUERDO: FORMULÁRIO --- */
+        .pane-form {
+            width: 420px; /* Largura fixa */
+            background: #ffffff;
             border-right: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            height: 100%;
+            overflow: hidden; /* Impede scroll geral */
+        }
+
+        /* O formulário usa Flexbox Vertical para empurrar coisas */
+        form#form-agendamento {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 16px;
+        }
+
+        /* --- PAINEL DIREITO: AGENDA --- */
+        .pane-agenda {
+            flex: 1; /* Ocupa o resto da largura */
+            background: #f1f5f9;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* =================================================================
+           COMPONENTES DE FORMULÁRIO
+           ================================================================= */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input, select, textarea {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
             background: #fff;
-            height: 100%;
+            color: #0f172a;
+            width: 100%;
         }
 
-        .form-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            gap: 15px;
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        /* --- COLUNA DIREITA (AGENDA) --- */
-        .col-agenda {
-            padding: 20px;
-            background: #f8fafc;
-            overflow-y: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        /* --- COMPONENTES --- */
-        
-        /* Inputs */
-        label { font-size: 0.85rem; font-weight: 700; color: #475569; display: block; margin-bottom: 5px; }
-        .input-std { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; background: #fff; }
-        .input-std:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-
-        /* LISTA DE AULAS (A Mágica do CSS Flex) */
-        .wrapper-aulas {
-            display: flex;
-            flex-direction: column;
-            /* ISSO FAZ A LISTA CRESCER E OCUPAR O ESPAÇO VERMELHO VAZIO */
+        /* =================================================================
+           A LISTA "ELÁSTICA" (Solução do problema)
+           ================================================================= */
+        .elastic-list-container {
+            /* O SEGREDO: flex: 1 faz isso crescer e ocupar todo o vazio */
             flex: 1; 
-            min-height: 200px; /* Altura mínima de segurança */
+            min-height: 150px; 
             border: 1px solid #cbd5e1;
             border-radius: 8px;
-            background: #fff;
-            overflow: hidden; /* Mantém bordas arredondadas */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Contém o scroll interno */
+            background: #f8fafc;
         }
 
-        .header-aulas {
+        .list-header {
+            padding: 8px 12px;
             background: #f1f5f9;
-            padding: 10px 12px;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .scroll-aulas {
-            /* Scroll apenas aqui dentro */
-            overflow-y: auto;
-            padding: 5px;
-            flex: 1; /* Ocupa todo o espaço vertical disponível */
+        .list-actions button {
+            background: none;
+            border: none;
+            color: #2563eb;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .list-actions button:hover { text-decoration: underline; }
+
+        .list-scroll-area {
+            flex: 1;          /* Ocupa o resto do container elástico */
+            overflow-y: auto; /* Scroll acontece SÓ aqui dentro */
+            padding: 4px;
         }
 
-        .aula-checkbox-item {
+        /* Item da lista */
+        .aula-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #fff;
             cursor: pointer;
             transition: background 0.1s;
         }
-        .aula-checkbox-item:hover { background: #eff6ff; }
-        .aula-checkbox-item:last-child { border-bottom: none; }
-        .aula-checkbox-item input { width: 18px; height: 18px; cursor: pointer; }
-        .aula-checkbox-item label { margin: 0; cursor: pointer; font-weight: 500; font-size: 0.9rem; color: #334155; }
+        .aula-item:last-child { border-bottom: none; }
+        .aula-item:hover { background: #eff6ff; }
 
-        /* Botão Salvar Fixo no Final */
-        .footer-actions {
-            margin-top: auto; /* Empurra para baixo se sobrar espaço */
-            padding-top: 15px;
+        .aula-item input { width: auto; margin-right: 10px; cursor: pointer; }
+        .aula-item span { font-size: 0.85rem; color: #334155; user-select: none; flex: 1; }
+        .aula-badge { font-size: 0.7rem; background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 4px; }
+
+        /* =================================================================
+           RODAPÉ DO FORMULÁRIO (Fixo embaixo)
+           ================================================================= */
+        .form-footer {
+            margin-top: auto; /* Empurra para baixo se houver espaço sobrando */
+            padding-top: 10px;
         }
 
-        .btn-full {
-            width: 100%; padding: 14px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-        .btn-full:hover { background: #1e293b; transform: translateY(-1px); }
-        .btn-full:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
 
-        /* Agenda Lista */
-        .agenda-container {
+        /* =================================================================
+           AGENDA (Lado Direito)
+           ================================================================= */
+        .agenda-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .agenda-header h2 { margin: 0; font-size: 1.1rem; color: #1e293b; }
+        
+        .agenda-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
             flex: 1;
-            overflow-y: auto; /* Scroll independente */
-            padding-right: 5px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .agenda-item {
-            display: flex; align-items: center; padding: 16px;
-            border-bottom: 1px solid #e2e8f0; border-left: 5px solid #cbd5e1;
-            background: #fff; margin-bottom: 10px; border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .agenda-date {
-            background: #eff6ff; color: #1d4ed8; padding: 10px; border-radius: 8px;
-            text-align: center; margin-right: 16px; min-width: 70px;
+        .agenda-scroll {
+            flex: 1;
+            overflow-y: auto;
         }
 
-        .btn-link {
-            background: none; border: none; color: #2563eb; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+        .agenda-item-card {
+            display: flex;
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            gap: 16px;
+            align-items: center;
         }
-        .btn-link:hover { text-decoration: underline; }
+        
+        .date-box {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 60px;
+        }
+        .date-box strong { display: block; font-size: 1.1rem; line-height: 1; }
+        .date-box small { font-size: 0.75rem; }
 
-        /* Scrollbar mais bonita */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .info-box h4 { margin: 0 0 4px 0; font-size: 0.95rem; color: #0f172a; }
+        .info-box p { margin: 0; font-size: 0.85rem; color: #64748b; }
+        
+        .status-tag {
+            margin-left: auto;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
 
+        /* Scrollbars Customizadas */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <header class="top-header">
-        <h1>🗓️ Agendamento Modular</h1>
+    <header class="app-header">
+        <div class="brand">
+            <span>📅</span> Agendamento Modular
+        </div>
+        <div style="font-size: 0.8rem; color: #64748b;">Painel Administrativo</div>
     </header>
 
-    <div class="layout-grid">
-        
-        <div class="col-form">
-            <h2 style="font-size: 1.1rem; color: #1e293b; margin: 0 0 15px 0;">Novo Agendamento</h2>
-            
-            <form id="form-agendamento" class="form-container">
+    <div class="app-container">
+
+        <aside class="pane-form">
+            <h2 style="font-size: 1.1rem; color: #0f172a; margin: 0 0 20px 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                Novo Agendamento
+            </h2>
+
+            <form id="form-agendamento">
                 
-                <div style="display: flex; gap: 15px;">
-                    <div style="flex: 1;">
-                        <label>1. Colaborador</label>
-                        <select id="sel-colab" class="input-std">
-                            <option value="">Carregando...</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div>
-                    <label>2. Treinamento</label>
-                    <select id="sel-treino" class="input-std">
+                <div class="form-group">
+                    <label>1. Colaborador</label>
+                    <select id="sel-colab">
                         <option value="">Carregando...</option>
                     </select>
                 </div>
 
-                <div id="box-wrapper-aulas" style="display:none; flex-direction:column; flex:1; min-height:0;">
-                    <label style="color:#2563eb;">3. Selecione as Aulas:</label>
+                <div class="form-group">
+                    <label>2. Treinamento</label>
+                    <select id="sel-treino">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                    <label style="color: #2563eb;">3. Selecione as Aulas</label>
                     
-                    <div class="wrapper-aulas">
-                        <div class="header-aulas">
-                            <span style="font-size:0.8rem; font-weight:600; color:#64748b;">Lista de Conteúdo</span>
-                            <div>
-                                <button type="button" class="btn-link" onclick="toggleTodasAulas(true)">Marcar Todas</button>
-                                <span style="color:#cbd5e1; margin:0 5px;">|</span>
-                                <button type="button" class="btn-link" onclick="toggleTodasAulas(false)">Limpar</button>
+                    <div id="wrapper-aulas" class="elastic-list-container" style="display: none;">
+                        <div class="list-header">
+                            <span>Conteúdo Programático</span>
+                            <div class="list-actions">
+                                <button type="button" onclick="toggleTodasAulas(true)">Marcar Todas</button>
+                                <span style="color:#cbd5e1; margin:0 4px;">|</span>
+                                <button type="button" onclick="toggleTodasAulas(false)">Limpar</button>
                             </div>
                         </div>
-                        
-                        <div class="scroll-aulas" id="lista-checkbox-aulas">
+                        <div id="lista-checkbox-aulas" class="list-scroll-area">
                             </div>
                     </div>
-                    <div id="msg-sem-aulas" style="display:none; padding:15px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1; margin-top:5px;">
-                        Este curso não possui aulas cadastradas. Será agendado como item único.
+
+                    <div id="msg-sem-aulas" style="display:none; padding:15px; text-align:center; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; flex:1;">
+                        Este curso não possui grade de aulas cadastrada.
+                    </div>
+                    
+                    <div id="msg-selecione-curso" style="flex:1; display:flex; align-items:center; justify-content:center; color:#94a3b8; border:1px dashed #e2e8f0; border-radius:8px; font-size:0.9rem;">
+                        Selecione um curso acima
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 15px; margin-top: 5px;">
-                    <div style="flex: 1;">
-                        <label>4. Data e Hora</label>
-                        <input type="datetime-local" id="inp-data" class="input-std">
-                    </div>
+                <div class="form-group">
+                    <label>4. Data e Hora</label>
+                    <input type="datetime-local" id="inp-data">
                 </div>
 
-                <div>
+                <div class="form-group">
                     <label>Observações</label>
-                    <textarea id="inp-obs" class="input-std" rows="1" style="resize: none;"></textarea>
+                    <textarea id="inp-obs" rows="1" style="resize: none;"></textarea>
                 </div>
 
-                <div class="footer-actions">
-                    <button type="submit" id="btn-agendar" class="btn-full">
+                <div class="form-footer">
+                    <button type="submit" id="btn-agendar" class="btn-primary">
                         Confirmar Agendamento
                     </button>
                 </div>
-            </form>
-        </div>
 
-        <div class="col-agenda">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="font-size: 1.1rem; color: #1e293b; margin:0;">Agenda Futura</h2>
-                <button onclick="carregarAgenda()" style="cursor:pointer; background:none; border:none; color:#2563eb; font-weight:600; display:flex; align-items:center; gap:5px;">
-                    <span style="font-size:1.2rem;">↻</span> Atualizar
+            </form>
+        </aside>
+
+        <main class="pane-agenda">
+            <div class="agenda-header">
+                <h2>Próximos Treinamentos</h2>
+                <button onclick="carregarAgenda()" style="background:none; border:none; cursor:pointer; color:#2563eb; font-weight:600; font-size:0.9rem;">
+                    ↻ Atualizar
                 </button>
             </div>
 
-            <div id="loading" style="display:none; text-align:center; padding:20px; color:#64748b;">Carregando...</div>
-            
-            <div class="agenda-container">
-                <ul id="lista-agenda" style="list-style:none; padding:0; margin:0;"></ul>
+            <div class="agenda-wrapper">
+                <div id="loading" style="display:none; text-align:center; padding:20px; color:#64748b;">Carregando...</div>
+                
+                <div id="lista-agenda" class="agenda-scroll">
+                    </div>
             </div>
-        </div>
+        </main>
+
     </div>
 
     <script type="module">
         import { DBHandler } from "../bd-treinamentos/db-handler.js";
 
+        // Elementos Globais
         let todosCursos = [];
         const selTreino = document.getElementById('sel-treino');
         const selColab = document.getElementById('sel-colab');
         const listaAulasDiv = document.getElementById('lista-checkbox-aulas');
-        const boxWrapper = document.getElementById('box-wrapper-aulas');
+        const wrapperAulas = document.getElementById('wrapper-aulas');
         const msgSemAulas = document.getElementById('msg-sem-aulas');
+        const msgSelecione = document.getElementById('msg-selecione-curso');
         const listaAgenda = document.getElementById('lista-agenda');
 
+        // Inicialização
         document.addEventListener('DOMContentLoaded', async () => {
             await carregarDadosIniciais();
             await carregarAgenda();
         });
 
+        // 1. CARREGAMENTO INICIAL DE DADOS
         async function carregarDadosIniciais() {
             try {
                 const [treinos, colabs] = await Promise.all([
@@ -282,10 +393,12 @@
                 
                 todosCursos = treinos || [];
 
+                // Popula Colaboradores
                 colabs.sort((a,b) => a.nome.localeCompare(b.nome));
                 selColab.innerHTML = '<option value="">Selecione...</option>';
                 colabs.forEach(c => selColab.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
 
+                // Popula Treinamentos
                 todosCursos.sort((a,b) => a.nome.localeCompare(b.nome));
                 selTreino.innerHTML = '<option value="">Selecione...</option>';
                 todosCursos.forEach(t => selTreino.innerHTML += `<option value="${t.id}">${t.nome}</option>`);
@@ -293,22 +406,27 @@
             } catch (e) { alert("Erro ao carregar dados: " + e.message); }
         }
 
+        // 2. LÓGICA DE EXIBIR AULAS (A Lista Elástica)
         selTreino.addEventListener('change', async () => {
             const cursoId = selTreino.value;
             listaAulasDiv.innerHTML = '';
             
+            // Reseta visibilidade
+            msgSelecione.style.display = 'none';
+            wrapperAulas.style.display = 'none';
+            msgSemAulas.style.display = 'none';
+            
             if (!cursoId) {
-                boxWrapper.style.display = 'none';
+                msgSelecione.style.display = 'flex';
                 return;
             }
 
-            // Exibe o wrapper imediatamente e ajusta display flex para ocupar altura
-            boxWrapper.style.display = 'flex';
-
+            // Busca aulas (Memória ou Banco)
             let cursoSelecionado = todosCursos.find(c => String(c.id) === String(cursoId));
             let aulas = cursoSelecionado ? (cursoSelecionado.aulas || []) : [];
 
             if (aulas.length === 0) {
+                // Tenta buscar no banco caso não tenha vindo no join inicial
                 try {
                     const { data } = await DBHandler.supabaseClient
                         .from('aulas_treinamentos')
@@ -319,38 +437,43 @@
                 } catch (err) { console.error(err); }
             }
 
+            // Renderiza
             if (aulas.length > 0) {
                 aulas.sort((a,b) => (a.ordem || 0) - (b.ordem || 0));
+                
                 aulas.forEach(aula => {
                     const div = document.createElement('div');
-                    div.className = 'aula-checkbox-item';
+                    div.className = 'aula-item';
                     div.innerHTML = `
                         <input type="checkbox" class="chk-aula" value="${aula.id}" id="aula-${aula.id}">
-                        <label for="aula-${aula.id}">
-                            ${aula.ordem || 0}. ${aula.titulo} 
-                            <span style="color:#94a3b8; font-size:0.75rem;">(${aula.duracao_minutos || 0} min)</span>
+                        <label for="aula-${aula.id}" style="flex:1; cursor:pointer;">
+                            ${aula.ordem || 0}. ${aula.titulo}
                         </label>
+                        <span class="aula-badge">${aula.duracao_minutos || 0} min</span>
                     `;
+                    // Clique na linha marca o check
                     div.onclick = (e) => {
                         if(e.target.tagName !== 'INPUT') {
                             const chk = div.querySelector('input');
                             chk.checked = !chk.checked;
                         }
-                    }
+                    };
                     listaAulasDiv.appendChild(div);
                 });
-                msgSemAulas.style.display = 'none';
-                document.querySelector('.wrapper-aulas').style.display = 'flex';
+                
+                // Exibe o container elástico
+                wrapperAulas.style.display = 'flex'; // Importante ser flex para funcionar a elasticidade
             } else {
-                document.querySelector('.wrapper-aulas').style.display = 'none';
                 msgSemAulas.style.display = 'block';
             }
         });
 
+        // Helpers de Seleção
         window.toggleTodasAulas = function(marcar) {
             document.querySelectorAll('.chk-aula').forEach(chk => chk.checked = marcar);
         };
 
+        // 3. SALVAR AGENDAMENTO
         document.getElementById('form-agendamento').addEventListener('submit', async (e) => {
             e.preventDefault();
             const colabId = selColab.value;
@@ -364,11 +487,13 @@
             const aulasIds = Array.from(checkboxes).map(cb => cb.value);
 
             const btn = document.getElementById('btn-agendar');
-            btn.disabled = true; btn.innerText = "Processando...";
+            btn.disabled = true; btn.innerText = "Salvando...";
 
             try {
                 const payloadFinal = [];
+                
                 if (aulasIds.length > 0) {
+                    // Múltiplos Agendamentos (Por Aula)
                     aulasIds.forEach(aulaId => {
                         payloadFinal.push({
                             treinamento_id: treinoId, colaborador_id: colabId, aula_id: aulaId,
@@ -376,7 +501,8 @@
                         });
                     });
                 } else {
-                    if(!confirm("Deseja agendar o curso inteiro (sem aulas específicas)?")) {
+                    // Agendamento Genérico (Curso Inteiro)
+                    if(wrapperAulas.style.display === 'flex' && !confirm("Nenhuma aula selecionada. Deseja agendar o curso inteiro?")) {
                          btn.disabled = false; btn.innerText = "Confirmar Agendamento"; return;
                     }
                     payloadFinal.push({
@@ -386,7 +512,10 @@
                 }
 
                 await DBHandler.criarAgendamento(payloadFinal); 
+                
                 alert(`✅ ${payloadFinal.length} agendamento(s) criado(s)!`);
+                
+                // Reset da interface
                 toggleTodasAulas(false);
                 await carregarAgenda();
 
@@ -394,41 +523,52 @@
             finally { btn.disabled = false; btn.innerText = "Confirmar Agendamento"; }
         });
 
+        // 4. CARREGAR AGENDA
         window.carregarAgenda = async function() {
-            const lista = document.getElementById('lista-agenda');
             const loading = document.getElementById('loading');
-            lista.innerHTML = ''; loading.style.display = 'block';
+            listaAgenda.innerHTML = ''; loading.style.display = 'block';
             
             try {
                 const itens = await DBHandler.listarAgendamentosFuturos();
+                
                 if(itens.length === 0) {
-                    lista.innerHTML = '<li style="padding:40px; text-align:center; color:#94a3b8;">Nenhum agendamento futuro.</li>';
+                    listaAgenda.innerHTML = '<div style="padding:40px; text-align:center; color:#94a3b8;">Nenhum agendamento futuro encontrado.</div>';
                     return;
                 }
+
                 itens.forEach(item => {
                     const d = new Date(item.data_hora);
-                    let tituloItem = item.aula ? item.aula.titulo : (item.treinamento?.nome || 'Curso');
-                    let subTitulo = item.aula ? `Curso: ${item.treinamento?.nome}` : '';
+                    const dia = String(d.getDate()).padStart(2, '0');
+                    const mes = String(d.getMonth()+1).padStart(2, '0');
+                    const hora = String(d.getHours()).padStart(2, '0');
+                    const min = String(d.getMinutes()).padStart(2, '0');
 
-                    const li = document.createElement('li');
-                    li.className = 'agenda-item';
-                    li.style.borderLeftColor = item.aula ? '#2563eb' : '#f59e0b';
-                    li.innerHTML = `
-                        <div class="agenda-date">
-                            <strong style="font-size:1.1rem; display:block;">${d.getDate()}/${d.getMonth()+1}</strong>
-                            <span style="font-size:0.8rem;">${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</span>
+                    // Lógica de exibição (Aula ou Curso)
+                    let titulo = item.treinamento?.nome || 'Curso';
+                    let subtitulo = '';
+                    
+                    if (item.aula) {
+                        titulo = item.aula.titulo;
+                        subtitulo = `Módulo de: ${item.treinamento?.nome}`;
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = 'agenda-item-card';
+                    div.innerHTML = `
+                        <div class="date-box">
+                            <strong>${dia}/${mes}</strong>
+                            <small>${hora}:${min}</small>
                         </div>
-                        <div style="flex:1;">
-                            <h4 style="margin:0; color:#1e293b; font-size:0.95rem;">${tituloItem}</h4>
-                            <div style="font-size:0.75rem; color:#64748b;">${subTitulo}</div>
-                            <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
-                                <span style="font-size:0.8rem; font-weight:600; color:#475569;">👤 ${item.colaborador?.nome}</span>
-                            </div>
+                        <div class="info-box" style="flex:1">
+                            <h4>${titulo}</h4>
+                            <p>${subtitulo}</p>
+                            <p style="margin-top:4px; color:#334155;">👤 ${item.colaborador?.nome}</p>
                         </div>
-                        <span style="font-size:0.7rem; font-weight:700; color:#2563eb; background:#eff6ff; padding:4px 8px; border-radius:12px;">${item.status}</span>
+                        <span class="status-tag">${item.status}</span>
                     `;
-                    lista.appendChild(li);
+                    listaAgenda.appendChild(div);
                 });
+
             } catch(e) { console.error(e); } 
             finally { loading.style.display = 'none'; }
         };
