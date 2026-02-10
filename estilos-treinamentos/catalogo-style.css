@@ -1618,3 +1618,74 @@ button, input, optgroup, select, textarea {
 }
 
 
+/* ==========================================================================
+   MODAL "ULTRA-COMPACTO" (NO-SCROLL FIX)
+   ========================================================================== */
+
+/* 1. Header Slim: Reduz drásticamente a altura do topo */
+.modal-header {
+    padding: 10px 24px !important; /* Era 20px */
+    min-height: 50px;              /* Altura fixa menor */
+    align-items: center;
+}
+.modal-header h2 {
+    font-size: 1.1rem !important;  /* Título um pouco menor e mais discreto */
+    margin: 0;
+}
+.btn-close-modal {
+    font-size: 1.2rem !important;  /* X um pouco menor */
+    line-height: 1;
+}
+
+/* 2. Footer Slim: Reduz a altura do rodapé */
+.modal-footer {
+    padding: 10px 24px !important; /* Era 16px */
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+/* Botões do rodapé um pouco menores para acompanhar */
+.modal-footer button {
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+}
+
+/* 3. Corpo do Modal: Aperta os espaçamentos */
+.modal-body {
+    padding: 16px 24px !important; /* Menos padding nas bordas */
+    gap: 10px !important;          /* Menos espaço entre os blocos (era 12/16px) */
+    overflow-y: hidden !important; /* FORÇA a não ter scroll se couber */
+}
+
+/* 4. Inputs "Slim": Reduz a altura de todos os campos de texto */
+.input-premium, 
+.select-wrapper select,
+textarea.input-premium {
+    padding: 7px 10px !important;  /* Reduzido de 10px para 7px */
+    font-size: 0.85rem !important; /* Fonte levemente menor */
+    min-height: unset;             /* Remove alturas mínimas antigas */
+}
+
+/* 5. Labels: Cola o título no campo */
+.form-group label {
+    margin-bottom: 3px !important; /* Quase colado no input */
+    font-size: 0.75rem !important;
+}
+
+/* 6. Wrapper do YouTube: Compactação extrema */
+.youtube-wrapper {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    background-color: #f8fafc;
+}
+.youtube-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 2px !important;
+}
+.sync-metadata {
+    padding: 4px 10px !important; /* Barra de status bem fina */
+    font-size: 0.75rem !important;
+}
+.btn-youtube-sync {
+    padding: 0 12px !important;   /* Botão sync mais compacto */
+    height: 34px !important;      /* Altura fixa igual ao input slim */
+}
