@@ -1,5 +1,5 @@
 /* =============================================================
-   catalogo.JS - Versão Final (Correção Botão Fechar)
+   catalogo.JS - Versão Final (Correção de Eventos Duplicados)
    ============================================================= */
 
 import { DBHandler } from "../bd-treinamentos/db-handler.js";
@@ -51,7 +51,7 @@ function limparTituloVideo(titulo) {
 }
 
 // =============================================================
-// 3. INICIALIZAÇÃO
+// 3. INICIALIZAÇÃO E CARREGAMENTO
 // =============================================================
 
 function carregarElementosDOM() {
@@ -70,10 +70,223 @@ function carregarElementosDOM() {
     btnLimparFiltros = document.getElementById("btn-limpar-filtros");
 }
 
+/* MUDANÇA CRÍTICA:
+   Esta função agora só roda UMA VEZ no carregamento da página.
+   Ela não é mais chamada dentro de inicializarApp().
+*/
+function setupListenersUnicos() {
+    console.log("🔧 Configurando botões (Execução Única)...");
+    
+    const addEvt = (id, evt, fn) => { const el = document.getElementById(id); if(el) el.addEventListener(evt, fn); };
+
+    // --- FILTROS ---
+    addEvt("filtro-trilha", "change", (e) => { preencherOpcoesSubtrilha(e.target.value); aplicarFiltros(); });
+    addEvt("filtro-subtrilha", "change", aplicarFiltros);
+    addEvt("filtro-status", "change", aplicarFiltros);
+    addEvt("filtro-busca", "input", aplicarFiltros);
+    addEvt("filtro-ver-ocultos", "change", aplicarFiltros);
+    
+    addEvt("btn-limpar-filtros", "click", () => {
+        document.getElementById("filtro-busca").value = "";
+        document.getElementById("filtro-trilha").value = "";
+        document.getElementById("filtro-status").value = "";
+        preencherOpcoesSubtrilha("");
+        aplicarFiltros();
+    });
+
+    // --- FECHAR MODAIS ---
+    // Fecha visualização de aulas
+    document.querySelectorAll(".btn-close-modal-aulas").forEach(btn => {
+        btn.addEventListener("click", () => { if(modalAulas) modalAulas.style.display = "none"; });
+    });
+
+    // Fecha edição de curso (X e Cancelar)
+    document.querySelectorAll(".btn-close-modal-curso, .modal-footer .btn-secondary-full").forEach(btn => {
+        btn.addEventListener("click", () => {
+            resetarModalManutencao();
+            if(modalCurso) modalCurso.style.display = "none";
+        });
+    });
+
+    // --- AÇÕES DO FORMULÁRIO ---
+    addEvt("btn-novo-curso", "click", () => {
+        resetarModalManutencao();
+        document.getElementById("modal-curso-titulo").textContent = "Novo Curso";
+        document.getElementById("curso-exibir").checked = true;
+        popularSelectTrilhas("");
+        if(modalCurso) modalCurso.style.display = "flex";
+    });
+
+    addEvt("btn-excluir-curso", "click", async () => {
+        const id = document.getElementById("curso-id").value;
+        if(id && confirm("ATENÇÃO: Isso apagará o curso permanentemente.\nContinuar?")) {
+            try { await DBHandler.excluirCurso(id); modalCurso.style.display = "none"; inicializarApp(); } 
+            catch (e) { alert("Erro: " + e.message); }
+        }
+    });
+
+    addEvt("btn-toggle-trilha", "click", () => {
+        const input = document.getElementById("curso-trilha-input");
+        const isInput = input.style.display === "block";
+        alternarModoTrilha(isInput ? "select" : "input");
+    });
+
+    // --- ADICIONAR MANUAL ---
+    addEvt("btn-add-manual", "click", () => {
+        const t = document.getElementById("manual-titulo").value.trim();
+        const l = document.getElementById("manual-link").value.trim();
+        const m = parseInt(document.getElementById("manual-minutos").value) || 0;
+        if(!t) return alert("Título obrigatório");
+        
+        videosPendentes.push({ titulo: t, link_video: l, duracao_minutos: m, ordem: videosPendentes.length + 1 });
+        renderizarListaManual(); marcarAlteracao(); atualizarMetadadosGlobais();
+        document.getElementById("manual-titulo").value = "";
+    });
+
+    // --- LIMPAR AULAS (AQUI ESTAVA O PROBLEMA DO LOOP) ---
+    addEvt("btn-limpar-aulas", "click", () => {
+        if(confirm("Remover todas as aulas da lista?")) {
+            videosPendentes = []; 
+            renderizarListaManual(); 
+            marcarAlteracao(); 
+            atualizarMetadadosGlobais();
+            
+            // Se limpou tudo, reseta o status de sync
+            const elData = document.getElementById("meta-data-sync");
+            if(elData) { elData.textContent = "-"; elData.style.color = ""; }
+        }
+    });
+
+    // --- DETECTAR MUDANÇAS NO FORM ---
+    if(formCurso) {
+        formCurso.querySelectorAll("input, select, textarea").forEach(el => {
+            el.addEventListener("input", marcarAlteracao);
+            el.addEventListener("change", marcarAlteracao);
+        });
+    }
+
+    // --- DETECTAR LIMPEZA DO LINK YOUTUBE ---
+    const inputLink = document.getElementById("curso-link");
+    if (inputLink) {
+        inputLink.addEventListener("input", (e) => {
+            // Se o usuário apagar o link, limpamos a lista MAS SEM ALERTAR (para não irritar)
+            // Se ele quiser confirmar, ele usa o botão "Limpar Tudo"
+            if (e.target.value.trim() === "" && videosPendentes.length > 0) {
+                 // Opcional: Se quiser limpar automático descomente abaixo
+                 // videosPendentes = []; 
+                 // renderizarListaManual(); 
+                 // atualizarMetadadosGlobais();
+                 marcarAlteracao();
+            }
+        });
+    }
+
+    // --- SALVAR CURSO ---
+    if(btnSalvarCurso) btnSalvarCurso.onclick = async () => {
+        const id = document.getElementById("curso-id").value;
+        const nome = document.getElementById("curso-nome").value;
+        const inputTrilha = document.getElementById("curso-trilha-input");
+        const trilha = inputTrilha.dataset.mode === "active" ? inputTrilha.value.trim() : document.getElementById("curso-trilha-select").value;
+        
+        if(!nome || !trilha) return alert("Preencha Nome e Trilha.");
+
+        const payload = {
+            id: id || undefined, nome, trilha,
+            categoria: trilha,
+            subtrilha: document.getElementById("curso-subtrilha").value,
+            link: document.getElementById("curso-link").value,
+            status: document.getElementById("curso-status").value,
+            descricao: document.getElementById("curso-descricao").value,
+            exibir_catalogo: document.getElementById("curso-exibir").checked
+        };
+
+        if(houveAlteracao && videosPendentes.length > 0) payload.ultima_sincronizacao = new Date().toISOString();
+        
+        btnSalvarCurso.disabled = true; btnSalvarCurso.innerText = "Gravando...";
+        try {
+            await DBHandler.salvarCursoCompleto(payload, videosPendentes);
+            modalCurso.style.display = "none";
+            resetarModalManutencao();
+            inicializarApp(); // Recarrega dados, mas NÃO recarrega listeners
+        } catch(e) { 
+            alert(e.message); 
+            btnSalvarCurso.disabled = false; btnSalvarCurso.innerText = "Salvar Alterações";
+        }
+    };
+
+    // --- SYNC YOUTUBE ---
+    if(btnSyncRapido) btnSyncRapido.onclick = async () => {
+        const link = document.getElementById("curso-link").value.trim();
+        const pid = link.includes("list=") ? link.split("list=")[1].split("&")[0] : link;
+        if(!pid || pid.length < 5) return alert("Playlist inválida.");
+
+        const textoOriginal = btnSyncRapido.innerHTML;
+        btnSyncRapido.innerHTML = `⏳ Buscando...`;
+        btnSyncRapido.disabled = true;
+
+        const backup = [...videosPendentes];
+        videosPendentes = []; // Limpa para evitar duplicidade
+
+        try {
+            let fetched = [];
+            let token = "";
+            do {
+                const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${pid}&key=${YOUTUBE_API_KEY_FIXA}&pageToken=${token}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if(data.error) throw new Error(data.error.message);
+                if(!data.items || data.items.length === 0) break;
+
+                const ids = data.items.map(i => i.contentDetails.videoId).join(",");
+                if(!ids) { token = data.nextPageToken || ""; continue; }
+
+                const resD = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${ids}&key=${YOUTUBE_API_KEY_FIXA}`);
+                const dataD = await resD.json();
+
+                fetched.push(...dataD.items.map(i => ({
+                    titulo: limparTituloVideo(i.snippet.title),
+                    link_video: `https://www.youtube.com/watch?v=${i.id}`,
+                    duracao_minutos: parseIsoDuration(i.contentDetails.duration),
+                    ordem: 0
+                })));
+                token = data.nextPageToken || "";
+            } while(token);
+
+            if(fetched.length === 0) throw new Error("Playlist vazia.");
+
+            videosPendentes = fetched.map((v, i) => ({ ...v, ordem: i+1 }));
+            
+            marcarAlteracao(); 
+            renderizarListaManual();      
+            atualizarMetadadosGlobais();  
+            
+            const elData = document.getElementById("meta-data-sync");
+            if(elData) { elData.textContent = "Agora"; elData.style.color = "#16a34a"; }
+
+            alert(`✅ ${videosPendentes.length} aulas encontradas.`);
+
+        } catch(e) {
+            console.error(e);
+            alert("Erro: " + e.message);
+            videosPendentes = backup;
+            renderizarListaManual();
+        } finally {
+            btnSyncRapido.innerHTML = textoOriginal;
+            btnSyncRapido.disabled = false;
+        }
+    };
+}
+
+// =============================================================
+// LÓGICA DE DADOS (RECARREGÁVEL)
+// =============================================================
+
 async function inicializarApp() {
-    console.log("🚀 Iniciando Aplicação...");
-    carregarElementosDOM();
-    setupGlobalListeners();
+    console.log("🚀 Recarregando dados...");
+    
+    // NOTA: carregarElementosDOM() e setupListenersUnicos() agora são chamados no DOMContentLoaded
+    // Isso evita que os botões ganhem múltiplos eventos de clique.
 
     try {
         const dados = await DBHandler.listarTreinamentos();
@@ -96,10 +309,15 @@ async function inicializarApp() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", inicializarApp);
+// INICIALIZAÇÃO SEGURA
+document.addEventListener("DOMContentLoaded", () => {
+    carregarElementosDOM();    // Pega os elementos do HTML
+    setupListenersUnicos();    // Configura os cliques UMA VEZ
+    inicializarApp();          // Busca os dados do banco
+});
 
 // =============================================================
-// 4. RENDERIZAÇÃO
+// RENDERIZAÇÃO
 // =============================================================
 
 function atualizarResumo(lista) {
@@ -174,7 +392,7 @@ function renderCursos(lista) {
 }
 
 // =============================================================
-// 5. FILTROS
+// FILTROS
 // =============================================================
 
 function preencherOpcoesTrilha() {
@@ -210,7 +428,7 @@ function aplicarFiltros() {
 }
 
 // =============================================================
-// 6. MODAL DE AULAS (VISUALIZAÇÃO)
+// MODAL DE AULAS (VISUALIZAÇÃO)
 // =============================================================
 
 function abrirModalAulas(id) {
@@ -226,7 +444,7 @@ function abrirModalAulas(id) {
 }
 
 // =============================================================
-// 7. GESTÃO DE ESTADO (MANUTENÇÃO)
+// GESTÃO DE ESTADO (MANUTENÇÃO)
 // =============================================================
 
 function resetarModalManutencao() {
@@ -286,7 +504,7 @@ function editarCurso(id) {
 }
 
 // =============================================================
-// 8. LISTA DE AULAS (MANUAL & SYNC)
+// LISTA DE AULAS (MANUAL & SYNC)
 // =============================================================
 
 function renderizarListaManual() {
@@ -347,190 +565,6 @@ function atualizarMetadadosGlobais() {
             badge.style.display = "none";
         }
     }
-}
-
-// =============================================================
-// 9. EVENTOS E SYNC CORRIGIDO
-// =============================================================
-
-function setupGlobalListeners() {
-    const addEvt = (id, evt, fn) => { const el = document.getElementById(id); if(el) el.addEventListener(evt, fn); };
-
-    // Filtros
-    addEvt("filtro-trilha", "change", (e) => { preencherOpcoesSubtrilha(e.target.value); aplicarFiltros(); });
-    addEvt("filtro-subtrilha", "change", aplicarFiltros);
-    addEvt("filtro-status", "change", aplicarFiltros);
-    addEvt("filtro-busca", "input", aplicarFiltros);
-    addEvt("filtro-ver-ocultos", "change", aplicarFiltros);
-    addEvt("btn-limpar-filtros", "click", () => {
-        document.getElementById("filtro-busca").value = "";
-        document.getElementById("filtro-trilha").value = "";
-        document.getElementById("filtro-status").value = "";
-        preencherOpcoesSubtrilha("");
-        aplicarFiltros();
-    });
-
-    // -------------------------------------------------------------
-    // FECHAR MODAIS - CORREÇÃO CRÍTICA AQUI
-    // -------------------------------------------------------------
-
-    // 1. Botões "X" e "Fechar" da Lista de Aulas (Visualização)
-    // Esses botões tem a classe .btn-close-modal-aulas no HTML
-    document.querySelectorAll(".btn-close-modal-aulas").forEach(btn => {
-        btn.addEventListener("click", () => {
-            if(modalAulas) modalAulas.style.display = "none";
-        });
-    });
-
-    // 2. Botões "X" e "Cancelar" do Modal de Edição (Novo/Editar)
-    // Esses botões tem a classe .btn-close-modal-curso no HTML
-    document.querySelectorAll(".btn-close-modal-curso").forEach(btn => {
-        btn.addEventListener("click", () => {
-            resetarModalManutencao();
-            if(modalCurso) modalCurso.style.display = "none";
-        });
-    });
-
-    // -------------------------------------------------------------
-
-    addEvt("btn-novo-curso", "click", () => {
-        resetarModalManutencao();
-        document.getElementById("modal-curso-titulo").textContent = "Novo Curso";
-        document.getElementById("curso-exibir").checked = true;
-        popularSelectTrilhas("");
-        if(modalCurso) modalCurso.style.display = "flex";
-    });
-
-    addEvt("btn-excluir-curso", "click", async () => {
-        const id = document.getElementById("curso-id").value;
-        if(id && confirm("ATENÇÃO: Isso apagará o curso permanentemente.\nContinuar?")) {
-            try { await DBHandler.excluirCurso(id); modalCurso.style.display = "none"; inicializarApp(); } 
-            catch (e) { alert("Erro: " + e.message); }
-        }
-    });
-
-    addEvt("btn-toggle-trilha", "click", () => {
-        const input = document.getElementById("curso-trilha-input");
-        const isInput = input.style.display === "block";
-        alternarModoTrilha(isInput ? "select" : "input");
-    });
-
-    addEvt("btn-add-manual", "click", () => {
-        const t = document.getElementById("manual-titulo").value.trim();
-        const l = document.getElementById("manual-link").value.trim();
-        const m = parseInt(document.getElementById("manual-minutos").value) || 0;
-        if(!t) return alert("Título obrigatório");
-        videosPendentes.push({ titulo: t, link_video: l, duracao_minutos: m, ordem: videosPendentes.length + 1 });
-        renderizarListaManual(); marcarAlteracao(); atualizarMetadadosGlobais();
-        document.getElementById("manual-titulo").value = "";
-    });
-
-    addEvt("btn-limpar-aulas", "click", () => {
-        if(confirm("Remover todas as aulas?")) {
-            videosPendentes = []; renderizarListaManual(); marcarAlteracao(); atualizarMetadadosGlobais();
-        }
-    });
-
-    if(formCurso) {
-        formCurso.querySelectorAll("input, select, textarea").forEach(el => {
-            el.addEventListener("input", marcarAlteracao);
-            el.addEventListener("change", marcarAlteracao);
-        });
-    }
-
-    if(btnSalvarCurso) btnSalvarCurso.onclick = async () => {
-        const id = document.getElementById("curso-id").value;
-        const nome = document.getElementById("curso-nome").value;
-        const inputTrilha = document.getElementById("curso-trilha-input");
-        const trilha = inputTrilha.dataset.mode === "active" ? inputTrilha.value.trim() : document.getElementById("curso-trilha-select").value;
-        
-        if(!nome || !trilha) return alert("Preencha Nome e Trilha.");
-
-        const payload = {
-            id: id || undefined, nome, trilha,
-            categoria: trilha,
-            subtrilha: document.getElementById("curso-subtrilha").value,
-            link: document.getElementById("curso-link").value,
-            status: document.getElementById("curso-status").value,
-            descricao: document.getElementById("curso-descricao").value,
-            exibir_catalogo: document.getElementById("curso-exibir").checked
-        };
-
-        if(houveAlteracao && videosPendentes.length > 0) payload.ultima_sincronizacao = new Date().toISOString();
-        
-        btnSalvarCurso.disabled = true; btnSalvarCurso.innerText = "Gravando...";
-        try {
-            await DBHandler.salvarCursoCompleto(payload, videosPendentes);
-            modalCurso.style.display = "none";
-            resetarModalManutencao();
-            inicializarApp();
-        } catch(e) { 
-            alert(e.message); 
-            btnSalvarCurso.disabled = false; btnSalvarCurso.innerText = "Salvar Alterações";
-        }
-    };
-
-    if(btnSyncRapido) btnSyncRapido.onclick = async () => {
-        const link = document.getElementById("curso-link").value.trim();
-        const pid = link.includes("list=") ? link.split("list=")[1].split("&")[0] : link;
-        if(!pid || pid.length < 5) return alert("Playlist inválida.");
-
-        const textoOriginal = btnSyncRapido.innerHTML;
-        btnSyncRapido.innerHTML = `⏳ Buscando...`;
-        btnSyncRapido.disabled = true;
-
-        const backup = [...videosPendentes];
-        videosPendentes = []; 
-
-        try {
-            let fetched = [];
-            let token = "";
-            do {
-                const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${pid}&key=${YOUTUBE_API_KEY_FIXA}&pageToken=${token}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if(data.error) throw new Error(data.error.message);
-                if(!data.items || data.items.length === 0) break;
-
-                const ids = data.items.map(i => i.contentDetails.videoId).join(",");
-                if(!ids) { token = data.nextPageToken || ""; continue; }
-
-                const resD = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${ids}&key=${YOUTUBE_API_KEY_FIXA}`);
-                const dataD = await resD.json();
-
-                fetched.push(...dataD.items.map(i => ({
-                    titulo: limparTituloVideo(i.snippet.title),
-                    link_video: `https://www.youtube.com/watch?v=${i.id}`,
-                    duracao_minutos: parseIsoDuration(i.contentDetails.duration),
-                    ordem: 0
-                })));
-                token = data.nextPageToken || "";
-            } while(token);
-
-            if(fetched.length === 0) throw new Error("Playlist vazia.");
-
-            videosPendentes = fetched.map((v, i) => ({ ...v, ordem: i+1 }));
-            
-            marcarAlteracao(); 
-            renderizarListaManual();      
-            atualizarMetadadosGlobais();  
-            
-            const elData = document.getElementById("meta-data-sync");
-            if(elData) { elData.textContent = "Agora"; elData.style.color = "#16a34a"; }
-
-            alert(`✅ ${videosPendentes.length} aulas encontradas.`);
-
-        } catch(e) {
-            console.error(e);
-            alert("Erro: " + e.message);
-            videosPendentes = backup;
-            renderizarListaManual();
-        } finally {
-            btnSyncRapido.innerHTML = textoOriginal;
-            btnSyncRapido.disabled = false;
-        }
-    };
 }
 
 // Helpers
