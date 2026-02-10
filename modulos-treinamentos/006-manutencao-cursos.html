@@ -11,6 +11,181 @@
 
   <link rel="stylesheet" href="../estilos-treinamentos/catalogo-style.css">
 
+  <!-- ✅ OVERRIDES CIRÚRGICOS (PRECISAM FICAR DEPOIS DO CSS PRINCIPAL) -->
+  <style>
+    /* ------------------------------------------------------------
+       Toolbar: checkbox "Mostrar Ocultos" sem brigar com label absoluto
+    ------------------------------------------------------------ */
+    .checkbox-wrapper{
+      display:flex !important;
+      flex-direction:row !important;
+      align-items:center !important;
+      gap:8px !important;
+      padding-top:10px !important;
+    }
+    .checkbox-wrapper label{
+      position:static !important;
+      top:auto !important;
+      left:auto !important;
+      transform:none !important;
+      font-size:.85rem !important;
+      font-weight:700 !important;
+      color:#64748b !important;
+      text-transform:none !important;
+      letter-spacing:0 !important;
+      pointer-events:auto !important;
+    }
+    .checkbox-wrapper input[type="checkbox"]{
+      width:18px !important;
+      height:18px !important;
+      cursor:pointer !important;
+    }
+
+    /* ------------------------------------------------------------
+       Modal CURSO: largura/altura maior + compactação vertical
+       (aplica porque você adicionou .modal-curso-wide no HTML)
+    ------------------------------------------------------------ */
+    #modal-curso .modal-content.modal-curso-wide{
+      width: min(1380px, 96vw) !important;   /* mais largo */
+      max-width: none !important;
+      max-height: 92vh !important;          /* mais alto */
+      border-radius: 16px !important;
+    }
+
+    #modal-curso .modal-header{
+      padding: 10px 18px !important;
+      min-height: 52px !important;
+    }
+    #modal-curso .modal-header h2{
+      font-size: 1.05rem !important;
+    }
+
+    #modal-curso .modal-body{
+      padding: 14px 18px !important;
+      gap: 10px !important;
+      overflow: hidden !important; /* evita scrollbar no modal */
+    }
+
+    #modal-curso .modal-footer{
+      padding: 10px 18px !important;
+      gap: 10px !important;
+    }
+
+    /* ------------------------------------------------------------
+       ✅ TOPO EM GRID (Nome / Status / Descrição / Exibir) + trilha/subtrilha
+       Agora funciona porque existe .curso-topo-grid e .form-row-trilhas
+    ------------------------------------------------------------ */
+    .curso-topo-grid{
+      display:grid !important;
+      grid-template-columns: 2.2fr 1.1fr 2.2fr auto !important;
+      grid-auto-rows: auto !important;
+      gap: 10px 12px !important;
+      align-items: end !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* Linha 2 dentro do topo (Trilha/Subtrilha) ocupa a linha de baixo */
+    .curso-topo-grid .form-row-trilhas{
+      grid-column: 1 / -1 !important;
+      display:grid !important;
+      grid-template-columns: 1.2fr 1fr !important; /* Trilha | Subtrilha */
+      gap: 12px !important;
+      align-items: end !important;
+      margin-top: 2px !important;
+    }
+
+    /* Deixa os form-group sem “respiro” extra */
+    #modal-curso .form-group{
+      margin-bottom: 0 !important;
+    }
+    #modal-curso .form-group label{
+      margin-bottom: 3px !important;
+      font-size: .75rem !important;
+      font-weight: 700 !important;
+      letter-spacing: .04em !important;
+      text-transform: uppercase !important;
+    }
+
+    /* Inputs mais “slim” (mantém seu padrão) */
+    #modal-curso .input-premium,
+    #modal-curso textarea.input-premium,
+    #modal-curso .select-wrapper select{
+      padding: 7px 10px !important;
+      font-size: .85rem !important;
+    }
+
+    /* Descrição: não engolir altura */
+    #modal-curso #curso-descricao{
+      resize: none !important;
+      max-height: 58px !important;
+      overflow: auto !important;
+      line-height: 1.25 !important;
+    }
+
+    /* Toggle “Exibir?” alinhado e compacto */
+    #modal-curso .toggle-wrapper{
+      height: auto !important;
+      min-height: unset !important;
+      display:flex !important;
+      flex-direction:column !important;
+      justify-content:flex-end !important;
+      align-items:center !important;
+      padding-bottom: 2px !important;
+    }
+
+    /* ------------------------------------------------------------
+       Origem das aulas: menos altura e mais “premium”
+    ------------------------------------------------------------ */
+    #modal-curso .source-selector{
+      padding: 3px !important;
+      gap: 8px !important;
+      border-radius: 10px !important;
+      margin-bottom: 10px !important;
+    }
+    #modal-curso .radio-option label{
+      padding: 7px 10px !important;
+      font-size: .82rem !important;
+    }
+
+    /* Painel YouTube mais compacto */
+    #modal-curso .youtube-wrapper{
+      padding: 10px 12px !important;
+      gap: 6px !important;
+    }
+    #modal-curso .youtube-help-text{
+      margin-top: 0 !important;
+    }
+    #modal-curso .btn-youtube-sync{
+      height: 34px !important;
+      padding: 0 12px !important;
+    }
+
+    /* Metadata mais fina */
+    #modal-curso .sync-metadata{
+      padding: 4px 10px !important;
+      font-size: .74rem !important;
+    }
+
+    /* Preview manual: se precisar rolar, rola só aqui */
+    #modal-curso #lista-manual-preview{
+      max-height: 120px !important;
+      overflow-y: auto !important;
+    }
+
+    /* ------------------------------------------------------------
+       Responsivo: em telas menores, quebra o grid do topo
+    ------------------------------------------------------------ */
+    @media (max-width: 980px){
+      .curso-topo-grid{
+        grid-template-columns: 1fr 1fr !important;
+      }
+      /* Exibir? vai para a próxima linha automaticamente */
+      .curso-topo-grid .form-row-trilhas{
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+
   <script type="module" src="../bd-treinamentos/db-handler.js"></script>
   <script type="module" src="../scripts-treinamentos/catalogo.js"></script>
 </head>
@@ -40,9 +215,9 @@
           </div>
 
           <!-- Wrapper separado para não brigar com o label absoluto do .select-wrapper -->
-          <div class="select-wrapper checkbox-wrapper" style="flex-direction: row; align-items: center; gap: 8px; padding-top: 10px;">
-            <input type="checkbox" id="filtro-ver-ocultos" style="width: 18px; height: 18px; cursor: pointer;">
-            <label for="filtro-ver-ocultos" style="position: static; color: #64748b; font-size: 0.85rem; cursor: pointer;">
+          <div class="select-wrapper checkbox-wrapper">
+            <input type="checkbox" id="filtro-ver-ocultos">
+            <label for="filtro-ver-ocultos">
               Mostrar Ocultos
             </label>
           </div>
@@ -197,7 +372,6 @@
 
   <!-- MODAL CURSO -->
   <div id="modal-curso" class="modal-overlay" style="display: none;">
-    <!-- classe extra para você controlar largura/altura via CSS se quiser -->
     <div class="modal-content modal-curso-wide">
       <div class="modal-header">
         <h2 id="modal-curso-titulo">Novo Curso</h2>
@@ -208,7 +382,7 @@
         <form id="form-curso">
           <input type="hidden" id="curso-id">
 
-          <!-- ✅ TOPO EM GRID (Nome / Status / Descrição / Exibir) + (Trilha / + / Subtrilha) -->
+          <!-- ✅ TOPO EM GRID -->
           <div class="curso-topo-grid">
             <!-- Linha 1 -->
             <div class="form-group" style="grid-column: 1;">
@@ -238,7 +412,7 @@
               </label>
             </div>
 
-            <!-- Linha 2 (Trilha / + / Subtrilha) -->
+            <!-- Linha 2 (Trilha / Subtrilha) -->
             <div class="form-row-trilhas">
               <div class="form-group" style="flex: 1;">
                 <label>Trilha</label>
@@ -257,15 +431,6 @@
                     </svg>
                   </button>
                 </div>
-              </div>
-
-              <!-- Botão + isolado (se quiser usar no futuro). Mantido como “slot” do grid.
-                   Se não precisar, pode remover esse bloco inteiro. -->
-              <div class="form-group" style="display:none;">
-                <label>&nbsp;</label>
-                <button type="button" class="btn-icon-editar" title="Adicionar" style="width: 44px; height: 34px; border-radius: 8px;">
-                  +
-                </button>
               </div>
 
               <div class="form-group" style="flex: 1;">
