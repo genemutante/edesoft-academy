@@ -212,7 +212,11 @@ function setupListenersUnicos() {
         
         videosPendentes.push({ titulo: t, link_video: l, duracao_minutos: m, ordem: videosPendentes.length + 1 });
         renderizarListaManual(); marcarAlteracao(); atualizarMetadadosGlobais();
+        // --- CORREÇÃO AQUI: Limpar todos os campos ---
         document.getElementById("manual-titulo").value = "";
+        document.getElementById("manual-link").value = "";     // Adicionado
+        document.getElementById("manual-minutos").value = "";  // Adicionado
+        document.getElementById("manual-titulo").focus();      // Opcional: foca no título para a próxima
     });
 
     // --- LIMPAR AULAS (AQUI ESTAVA O PROBLEMA DO LOOP) ---
@@ -664,5 +668,6 @@ window.alternarFonte = function(v) {
     document.getElementById("panel-youtube").style.display = v==='youtube'?'block':'none';
     document.getElementById("panel-manual").style.display = v==='manual'?'block':'none';
 }
+
 
 
