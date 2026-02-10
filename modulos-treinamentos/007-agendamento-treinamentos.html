@@ -38,18 +38,18 @@
         tr:hover { background: #f8fafc; }
         tr.group-row td { background-color: #eef2ff; color: #1e3a8a; font-weight: 700; font-size: 0.9rem; padding: 10px 14px; border-top: 1px solid #e0e7ff; }
 
-        /* AÇÕES E STATUS */
         .actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
         .btn-mini { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 4px; cursor: pointer; background: #fff; border-color: #e2e8f0; color: #64748b; }
         .btn-check:hover { background: #dcfce7; border-color: #22c55e; color: #15803d; }
         .btn-miss:hover { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
         .btn-trash:hover { background: #f1f5f9; border-color: #94a3b8; color: #0f172a; }
 
-        .tag-status { font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; display: inline-block; min-width: 90px; text-align: center; }
+        .tag-status { font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; display: inline-block; min-width: 110px; text-align: center; }
         .st-agendado { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
         .st-participou { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
         .st-faltou { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        
+        .st-pendente { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+
         /* MODAIS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(2px); z-index: 100; display: none; align-items: center; justify-content: center; }
         .modal-card { width: 800px; max-width: 95vw; height: 85vh; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
@@ -65,6 +65,8 @@
         
         .btn-confirm { padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
         .btn-cancel { padding: 8px 16px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; font-weight: 600; color: #64748b; font-size: 0.85rem; }
+        .btn-apply { background: #3b82f6; color: #fff; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; }
+        .bulk-actions { padding: 10px 20px; background: #eff6ff; border-bottom: 1px solid #dbeafe; display: flex; align-items: center; gap: 15px; }
     </style>
 </head>
 <body>
@@ -93,17 +95,19 @@
             <div class="grid-filters">
                 <select id="grid-view-mode" class="select-view-mode" onchange="renderizarGrid()">
                     <option value="view_date">📅 Cronograma (Timeline)</option>
-                    <option value="view_student">👤 Visão Aluno (Histórico)</option>
-                    <option value="view_class">📖 Por Conteúdo (Chamada)</option>
-                    <option value="view_course">📚 Por Curso (Turmas)</option>
+                    <option value="view_student">👤 Visão Aluno</option>
+                    <option value="view_class">📖 Por Conteúdo</option>
+                    <option value="view_course">📚 Por Curso</option>
                     <option value="view_list">📋 Lista Geral</option>
                 </select>
                 <input type="text" id="grid-search" class="search-grid" placeholder="Buscar aluno, curso ou data..." oninput="renderizarGrid()">
-                <select id="grid-filter-status" class="search-grid" style="width: 150px;" onchange="renderizarGrid()">
+                
+                <select id="grid-filter-status" class="search-grid" style="width: 180px; font-weight:600;" onchange="renderizarGrid()">
                     <option value="">Todos Status</option>
-                    <option value="AGENDADO">Agendados</option>
-                    <option value="PARTICIPOU">Participou</option>
-                    <option value="FALTOU">Faltou</option>
+                    <option value="AGENDADO" style="color:#2563eb;">🔵 Agendados (Futuro)</option>
+                    <option value="PENDENTE" style="color:#ea580c;">🟠 Aguardando Baixa</option>
+                    <option value="PARTICIPOU" style="color:#15803d;">🟢 Participou</option>
+                    <option value="FALTOU" style="color:#b91c1c;">🔴 Faltou</option>
                 </select>
             </div>
             <button onclick="carregarAgenda()" style="background:none; border:none; color:#2563eb; cursor:pointer; font-weight:600; font-size:0.85rem;">↻ Atualizar Dados</button>
@@ -144,7 +148,7 @@
             <div style="padding: 10px 20px; background:#eff6ff; display:flex; gap:10px; align-items:center;">
                 <label style="font-size:0.8rem; font-weight:600; color:#1e40af;">Data em Massa:</label>
                 <input type="datetime-local" id="bulk-date" style="border:1px solid #cbd5e1; border-radius:4px; padding:4px;">
-                <button onclick="aplicarDataEmMassa()" style="background:#3b82f6; color:#fff; border:none; border-radius:4px; padding:4px 10px; cursor:pointer;">Aplicar</button>
+                <button onclick="aplicarDataEmMassa()" class="btn-apply">Aplicar</button>
             </div>
             <div class="modal-body"><table class="cronograma-table"><thead><tr><th style="width: 40px;"><input type="checkbox" onclick="toggleTodasAulas(this.checked)"></th><th>Aula / Módulo</th><th style="width: 220px;">Data de Realização</th></tr></thead><tbody id="lista-aulas-cronograma"></tbody></table></div>
             <div class="modal-footer"><button class="btn-cancel" onclick="fecharModal('modal-cronograma')">Cancelar</button><button id="btn-salvar-final" class="btn-confirm" onclick="salvarAgendamentoFinal()">Confirmar Agendamento</button></div>
@@ -178,29 +182,21 @@
                     selTreino.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
                 });
                 renderizarListaAlunos();
-            } catch (e) { 
-                console.error(e);
-                alert("Erro ao carregar listas iniciais: " + e.message);
-            }
+            } catch (e) { console.error(e); alert("Erro ao carregar listas iniciais: " + e.message); }
         }
 
         window.carregarAgenda = async function() {
             document.getElementById('loading-grid').style.display = 'block';
             document.getElementById('tbody-agenda').innerHTML = '';
             try {
-                // Tenta usar o método correto, com fallback se não atualizou o JS
                 if (DBHandler.listarAgendamentos) {
                     agendaCache = await DBHandler.listarAgendamentos();
                 } else {
                     agendaCache = await DBHandler.listarAgendamentosFuturos();
                 }
                 renderizarGrid();
-            } catch (e) {
-                console.error(e);
-                alert("Erro ao carregar agenda: " + e.message);
-            } finally {
-                document.getElementById('loading-grid').style.display = 'none';
-            }
+            } catch (e) { console.error(e); alert("Erro ao carregar agenda: " + e.message); } 
+            finally { document.getElementById('loading-grid').style.display = 'none'; }
         };
 
         window.renderizarGrid = function() {
@@ -215,10 +211,28 @@
                 return;
             }
 
+            const agora = new Date();
+
             let lista = agendaCache.filter(item => {
+                // 1. Filtro de Texto
                 const txt = (item.colaborador?.nome + ' ' + item.treinamento?.nome + ' ' + (item.aula?.titulo || '')).toLowerCase();
                 const matchTexto = txt.includes(termo);
-                const matchStatus = statusFilter ? item.status === statusFilter : true;
+                
+                // 2. Filtro de Status Inteligente (DB + Data)
+                let matchStatus = true;
+                const d = new Date(item.data_hora);
+
+                if (statusFilter === 'AGENDADO') {
+                    // Futuro apenas
+                    matchStatus = (item.status === 'AGENDADO' && d >= agora);
+                } else if (statusFilter === 'PENDENTE') {
+                    // Passado e ainda agendado
+                    matchStatus = (item.status === 'AGENDADO' && d < agora);
+                } else if (statusFilter) {
+                    // Status diretos (PARTICIPOU, FALTOU)
+                    matchStatus = (item.status === statusFilter);
+                }
+
                 return matchTexto && matchStatus;
             });
 
@@ -275,8 +289,10 @@
 
                 if (item.status === 'PARTICIPOU') { statusClass = 'st-participou'; corTexto = '#15803d'; }
                 else if (item.status === 'FALTOU') { statusClass = 'st-faltou'; corTexto = '#b91c1c'; }
-                else if (item.status === 'AGENDADO' && dataItem < agora) {
-                    labelStatus = 'AGUARDANDO BAIXA'; statusClass = 'st-faltou'; corTexto = '#ea580c';
+                else if (item.status === 'AGENDADO') {
+                    if (dataItem < agora) {
+                        labelStatus = 'AGUARDANDO BAIXA'; statusClass = 'st-pendente'; corTexto = '#c2410c';
+                    }
                 }
 
                 let botoesHtml = '';
@@ -315,7 +331,6 @@
             } catch(e) { alert("Erro: " + e.message); }
         };
 
-        // UI Helpers
         function renderizarListaAlunos() {
             const ul = document.getElementById('lista-alunos'); ul.innerHTML = '';
             todosColabs.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(c => {
@@ -375,12 +390,16 @@
             });
             if(erro) return alert("Preencha as datas.");
             if(payload.length===0) return alert("Nada selecionado.");
-            try { await DBHandler.criarAgendamento(payload); alert("Agendado!"); fecharModal('modal-cronograma'); carregarAgenda(); } catch(e) { alert(e.message); }
+            const btn = document.getElementById('btn-salvar-final');
+            btn.innerText = "Salvando..."; btn.disabled = true;
+            try { await DBHandler.criarAgendamento(payload); alert("Agendado!"); fecharModal('modal-cronograma'); carregarAgenda(); 
+                // Reset
+                alunosSelecionadosIds.clear(); atualizarBadgeAlunos(); document.querySelectorAll('.chk-aluno').forEach(c => c.checked = false); document.getElementById('sel-treino').value = ""; resetCronograma();
+            } catch(e) { alert(e.message); } finally { btn.innerText = "Confirmar Agendamento"; btn.disabled = false; }
         };
         window.abrirModalAlunos = () => document.getElementById('modal-alunos').style.display = 'flex';
         window.fecharModal = (id) => document.getElementById(id).style.display = 'none';
         
-        // Expor funções globais para o HTML
         window.mudarStatus = mudarStatus;
         window.excluirAgendamento = excluirAgendamento;
         window.carregarAgenda = carregarAgenda;
