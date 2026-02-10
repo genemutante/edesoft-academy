@@ -746,3 +746,23 @@ textarea.input-premium{
 .switch{ width: 40px !important; height: 20px !important; }
 .slider:before{ width: 14px !important; height: 14px !important; }
 input:checked + .slider:before{ transform: translateX(18px) !important; }
+
+/* Linha Trilha / + / Subtrilha / Descrição na mesma faixa */
+#modal-curso .form-row{
+  display:grid !important;
+  grid-template-columns: 260px 44px 1fr 1.2fr; /* ajuste fino aqui */
+  gap:12px !important;
+  align-items:end !important;
+}
+
+/* Remove aquele empurrão vertical do botão + */
+#modal-curso #btn-toggle-trilha{ margin-top:0 !important; }
+
+/* Descrição compacta e sem “comer” altura */
+#modal-curso .form-group-descricao textarea{
+  resize:none !important;
+  height:34px !important;       /* igual ao input slim */
+  min-height:34px !important;
+  padding:7px 10px !important;  /* segue seu padrão slim */
+  line-height:1.15;
+}
