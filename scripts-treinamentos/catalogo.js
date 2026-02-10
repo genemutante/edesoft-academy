@@ -9,6 +9,20 @@ import { DBHandler } from "../bd-treinamentos/db-handler.js";
 // =============================================================
 const YOUTUBE_API_KEY_FIXA = "AIzaSyAJyCenPXn41mbjieW6wTzeaFPYFX5Xrzo";
 
+const ICON_EDIT = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M16.862 3.487a2.1 2.1 0 0 1 2.97 2.97l-10.6 10.6-4.232.706.706-4.232 10.6-10.6Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M19 7 17 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
+
+const ICON_OPEN = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M14 3h7v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 14 21 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21 14v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+
 let cursos = [];
 let videosPendentes = []; 
 let houveAlteracao = false;
@@ -362,7 +376,9 @@ function renderCursos(lista) {
 
         const statusClass = (curso.status || "backlog").toLowerCase().replace(/\s+/g, "-");
         const isOculto = curso.exibir_catalogo === false;
-        const botaoLink = curso.link ? `<button class="btn-icon-acessar" onclick="window.open('${curso.link}', '_blank')">🚀</button>` : `<button class="btn-disabled-text" disabled>Em breve</button>`;
+       const botaoLink = curso.link
+       ? `<button class="btn-icon-acessar" type="button" title="Acessar curso" aria-label="Acessar curso" onclick="window.open('${curso.link}', '_blank')">${ICON_OPEN}</button>`
+       : `<button class="btn-disabled-text" disabled>Em breve</button>`;
 
         const html = `
         <article class="card-curso ${isOculto ? 'is-hidden' : ''} status-${statusClass}">
@@ -379,7 +395,8 @@ function renderCursos(lista) {
                 <div class="pill-duracao"><strong>${formatarDuracao(curso.duracaoMinutos)}</strong></div>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn-icon-grade btn-abrir-grade" data-id="${curso.id}" title="Grade"><span class="grade-count">${curso.quantidadeAulas}</span> aulas</button>
-                    <button class="btn-icon-editar" data-id="${curso.id}" title="Editar">📝</button>
+                    <button class="btn-icon-editar" type="button" data-id="${curso.id}" title="Editar" aria-label="Editar">${ICON_EDIT}</button>
+
                     ${botaoLink}
                 </div>
             </footer>
@@ -584,3 +601,4 @@ window.alternarFonte = function(v) {
     document.getElementById("panel-youtube").style.display = v==='youtube'?'block':'none';
     document.getElementById("panel-manual").style.display = v==='manual'?'block':'none';
 }
+
