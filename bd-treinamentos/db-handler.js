@@ -445,6 +445,7 @@ async buscarHomologacaoPorId(id) {
     // 12) SALVAR CURSO COMPLETO (Transacional)
     // =========================
 // db-handler.js - (Final do arquivo)
+// db-handler.js
 
 async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
     // 1. Salva/Atualiza o Curso (Tabela Pai)
@@ -456,32 +457,78 @@ async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
 
     if (erroCurso) throw erroCurso;
 
-    // 2. Tratamento das Aulas
+    const cursoId = cursoSalvo.id;
+
+    // 2. Sincronização Inteligente das Aulas (Smart Sync)
     if (Array.isArray(aulasPendentes)) {
-        const cursoId = cursoSalvo.id;
-
-        // Remove antigas
-        const { error: erroDelete } = await supabaseClient
-            .from("aulas_treinamentos")
-            .delete()
-            .eq("treinamento_id", cursoId);
         
-        if (erroDelete) throw erroDelete;
+        // A. Separar quem é novo de quem já existe
+        const aulasParaAtualizar = [];
+        const aulasParaInserir = [];
+        const idsMantidos = [];
 
-        // Só tenta inserir se houver novas aulas na lista
-        if (aulasPendentes.length > 0) {
-            // --- CORREÇÃO AQUI: Sanitização do payload ---
-            // Recriamos o objeto APENAS com os campos de dados, EXCLUINDO o 'id'
-            // Isso força o banco a gerar novos IDs sequenciais e evita o erro de null.
-            const aulasParaInserir = aulasPendentes.map(a => ({
+        aulasPendentes.forEach((aula, index) => {
+            const payloadAula = {
                 treinamento_id: cursoId,
-                titulo: a.titulo,
-                duracao_minutos: a.duracao_minutos || 0,
-                ordem: a.ordem,
-                link_video: a.link_video || null 
-                // Nota: Não passamos 'id' aqui propositalmente
-            }));
+                titulo: aula.titulo,
+                duracao_minutos: aula.duracao_minutos || 0,
+                link_video: aula.link_video || null,
+                ordem: index + 1 // Garante a ordem visual atual
+            };
 
+            if (aula.id) {
+                // Se tem ID, é update
+                aulasParaAtualizar.push({ ...payloadAula, id: aula.id });
+                idsMantidos.push(aula.id);
+            } else {
+                // Se não tem ID, é insert
+                aulasParaInserir.push(payloadAula);
+            }
+        });
+
+        // B. EXCLUIR ORFÃOS (Delete Missing)
+        // Apaga do banco qualquer aula deste curso que NÃO esteja na lista de IDs mantidos
+        if (idsMantidos.length > 0) {
+            const { error: erroDelete } = await supabaseClient
+                .from("aulas_treinamentos")
+                .delete()
+                .eq("treinamento_id", cursoId)
+                .not("id", "in", `(${idsMantidos.join(',')})`); // Sintaxe correta do filtro 'not in'
+
+            if (erroDelete) throw erroDelete;
+        } else {
+            // Se a lista de mantidos estiver vazia, significa que o usuário 
+            // ou apagou tudo, ou só tem aulas novas.
+            // Nesse caso, precisamos apagar TUDO o que já existia no banco para não duplicar.
+            // CUIDADO: Isso só roda se não houver NENHUMA aula antiga sendo mantida.
+            
+            // Mas espere! Se eu adicionei 5 novas e apaguei 5 velhas, idsMantidos é vazio.
+            // Então devo apagar tudo que é 'treinamento_id' = cursoId
+            // PORÉM, se eu apagar tudo, perco histórico.
+            // O correto aqui é: Se não sobrou nenhum ID antigo, apaga tudo antigo mesmo.
+            
+            // Para segurança, vamos buscar os IDs atuais no banco antes? 
+            // Não precisa. O comando abaixo apaga tudo se a lista de "mantidos" for vazia.
+            if (aulasParaAtualizar.length === 0) {
+                 const { error: erroDeleteAll } = await supabaseClient
+                    .from("aulas_treinamentos")
+                    .delete()
+                    .eq("treinamento_id", cursoId);
+                 if (erroDeleteAll) throw erroDeleteAll;
+            }
+        }
+
+        // C. ATUALIZAR EXISTENTES (Upsert/Update)
+        if (aulasParaAtualizar.length > 0) {
+            const { error: erroUpdate } = await supabaseClient
+                .from("aulas_treinamentos")
+                .upsert(aulasParaAtualizar); // Upsert com ID funciona como Update
+
+            if (erroUpdate) throw erroUpdate;
+        }
+
+        // D. INSERIR NOVAS
+        if (aulasParaInserir.length > 0) {
             const { error: erroInsert } = await supabaseClient
                 .from("aulas_treinamentos")
                 .insert(aulasParaInserir);
@@ -498,6 +545,7 @@ async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
 
 // No final do ficheiro db-handler.js
 window.DBHandler = DBHandler;
+
 
 
 
