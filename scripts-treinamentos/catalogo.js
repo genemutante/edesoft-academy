@@ -1,14 +1,14 @@
 /* =============================================================
-   catalogo.JS - Versão Corrigida e Consolidada
+   catalogo.JS - Versão Final Corrigida (Mestre dos Magos)
    ============================================================= */
 
-// 1. IMPORTAÇÃO OBRIGATÓRIA (Sem isso, nada funciona)
+// 1. IMPORTAÇÃO OBRIGATÓRIA
 import { DBHandler } from "../bd-treinamentos/db-handler.js";
 
 let cursos = [];
 const YOUTUBE_API_KEY_FIXA = "AIzaSyAJyCenPXn41mbjieW6wTzeaFPYFX5Xrzo";
 
-// --- Variáveis Globais de Elementos DOM (Inicializadas depois) ---
+// --- Variáveis Globais de Elementos DOM ---
 let modalCurso, formCurso, areaDelete, btnSalvarCurso;
 let modalAulas, listaAulasUl;
 let modalYouTube, btnSyncRapido, selectCursoYT, inputPlaylistId, inputApiKey;
@@ -25,12 +25,22 @@ function formatarDuracao(minutos) {
   return `${h} h ${m} min`;
 }
 
+// ⚠️ ESTA FUNÇÃO FALTAVA E CAUSAVA ERRO NA SYNC
+function parseIsoDuration(iso) {
+    if (!iso) return 0;
+    const match = iso.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+    if (!match) return 0;
+    const hours = (parseInt(match[1]) || 0);
+    const minutes = (parseInt(match[2]) || 0);
+    return (hours * 60) + minutes;
+}
+
 function normalizarTexto(str) {
   return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 // =============================================================
-// FUNÇÕES PRINCIPAIS DE DOM (Carregadas após o DOM estar pronto)
+// FUNÇÕES PRINCIPAIS DE DOM
 // =============================================================
 
 function carregarElementosDOM() {
@@ -83,7 +93,6 @@ function renderCursos(lista) {
     return;
   }
 
-  // Ordenação
   const listaOrdenada = [...lista].sort((a, b) => {
     const t = (a.trilha || "Geral").localeCompare(b.trilha || "Geral");
     if (t !== 0) return t;
@@ -96,7 +105,7 @@ function renderCursos(lista) {
   let subAtual = null;
 
   listaOrdenada.forEach((curso) => {
-    // Cabeçalhos de Trilha
+    // Cabeçalhos
     const trilhaDoCurso = curso.trilha || "Geral";
     if (trilhaDoCurso !== trilhaAtual) {
       trilhaAtual = trilhaDoCurso;
@@ -114,12 +123,10 @@ function renderCursos(lista) {
       container.appendChild(h);
     }
 
-    // Dados do Card
     const qtdAulas = Number(curso.quantidadeAulas) || 0;
     const statusClass = (curso.status || "").toLowerCase().replace(/\s+/g, "-");
     const isOculto = curso.exibir_catalogo === false;
 
-    // Botão Acesso
     let botaoAcessoHtml = `<button class="btn-disabled-text" disabled>Em breve</button>`;
     if (curso.link) {
         botaoAcessoHtml = `<button class="btn-icon-acessar" onclick="window.open('${curso.link}', '_blank')" title="Acessar"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg></button>`;
@@ -160,15 +167,15 @@ function renderCursos(lista) {
     container.appendChild(card);
   });
 
-  // Attach Listeners
-  document.querySelectorAll('.btn-abrir-grade').forEach(btn => {
+  // Attach Listeners - AGORA RESTRITO AO CONTAINER (Evita pegar botões do modal)
+  container.querySelectorAll('.btn-abrir-grade').forEach(btn => {
       btn.addEventListener('click', (e) => {
           e.stopPropagation(); 
           abrirModalAulas(e.currentTarget.dataset.id); 
       });
   });
 
-  document.querySelectorAll('.btn-icon-editar').forEach(btn => {
+  container.querySelectorAll('.btn-icon-editar').forEach(btn => {
       btn.addEventListener('click', (e) => {
           e.stopPropagation();
           editarCurso(e.currentTarget.dataset.id);
@@ -225,12 +232,8 @@ function aplicarFiltros() {
 // --- Inicialização ---
 async function inicializarApp() {
   console.log("🚀 Iniciando App...");
-  
-  // 1. Garante que variáveis globais do DOM estão preenchidas
-  carregarElementosDOM();
-
-  // 2. Setup Listeners Globais
-  setupGlobalListeners();
+  carregarElementosDOM(); // Garante variáveis globais
+  setupGlobalListeners(); // Garante listeners estáticos
 
   try {
     const dados = await DBHandler.listarTreinamentos();
@@ -311,7 +314,6 @@ function resetarModalManutencao() {
     houveAlteracao = false;
     if(btnSalvarCurso) btnSalvarCurso.disabled = true;
     
-    // Reseta UI
     const elBadge = document.getElementById("badge-pendente");
     if(elBadge) elBadge.style.display = "none";
     
@@ -327,19 +329,16 @@ function resetarModalManutencao() {
     
     if(areaDelete) areaDelete.style.display = "none";
     
-    // Limpa lista manual visual
     const listaManual = document.getElementById("lista-manual-preview");
     if(listaManual) listaManual.innerHTML = "";
     const btnLimpar = document.getElementById("btn-limpar-aulas");
     if(btnLimpar) btnLimpar.style.display = "none";
 
-    // Reseta abas para Youtube por padrão
     const btnYT = document.querySelector('.tab-btn[data-target="tab-youtube"]');
     if(btnYT && window.alternarAba) window.alternarAba(btnYT);
 }
 
-// --- FUNÇÃO DE EDIÇÃO (CHAMADA PELO BOTÃO DO CARD) ---
-// Agora é global no escopo do módulo para ser chamada pelo listener
+// --- FUNÇÃO DE EDIÇÃO ---
 function editarCurso(id) {
     if(!modalCurso) { console.error("Modal não carregado"); return; }
     
@@ -347,7 +346,6 @@ function editarCurso(id) {
     const curso = cursos.find(c => c.id == id);
     if (!curso) return;
 
-    // Preenche Campos
     document.getElementById("curso-id").value = curso.id;
     document.getElementById("curso-nome").value = curso.nome;
     document.getElementById("curso-status").value = (curso.status || "DISPONÍVEL").toUpperCase();
@@ -356,7 +354,6 @@ function editarCurso(id) {
     document.getElementById("curso-descricao").value = curso.descricao || "";
     document.getElementById("curso-exibir").checked = (curso.exibir_catalogo !== false);
 
-    // Preenche Metadados
     document.getElementById("meta-qtd-aulas").textContent = curso.quantidadeAulas || 0;
     document.getElementById("meta-tempo-total").textContent = formatarDuracao(curso.duracaoMinutos);
     
@@ -427,7 +424,7 @@ function alternarModoTrilha(modo) {
 }
 
 // -------------------------------------------------------------
-// LÓGICA DE ABAS (Global Window para onclick HTML funcionar)
+// LÓGICA DE ABAS E MANUAL
 // -------------------------------------------------------------
 window.alternarAba = function(btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -445,7 +442,6 @@ window.removerItemManual = function(index) {
     marcarAlteracao();
 }
 
-// Funções de Renderização Manual
 function renderizarListaManual() {
     const ul = document.getElementById("lista-manual-preview");
     const btnLimpar = document.getElementById("btn-limpar-aulas");
@@ -497,7 +493,6 @@ function atualizarMetadadosGlobais() {
 // -------------------------------------------------------------
 function setupGlobalListeners() {
     
-    // Filtros
     const addEvt = (id, evt, fn) => { const el = document.getElementById(id); if(el) el.addEventListener(evt, fn); };
     
     addEvt("filtro-trilha", "change", (e) => { preencherOpcoesSubtrilha(e.target.value); aplicarFiltros(); });
@@ -514,7 +509,6 @@ function setupGlobalListeners() {
         aplicarFiltros();
     });
 
-    // Modais - Fechar
     document.querySelectorAll(".btn-close-modal").forEach(btn => btn.addEventListener("click", () => {
         if(modalYouTube) modalYouTube.style.display = "none";
         if(modalCurso) modalCurso.style.display = "none";
@@ -522,7 +516,6 @@ function setupGlobalListeners() {
     document.querySelectorAll(".btn-close-modal-curso").forEach(btn => btn.addEventListener("click", () => modalCurso.style.display = "none"));
     document.querySelectorAll(".btn-close-modal-aulas").forEach(btn => btn.addEventListener("click", () => modalAulas.style.display = "none"));
 
-    // Novo Curso
     addEvt("btn-novo-curso", "click", () => {
         resetarModalManutencao();
         document.getElementById("curso-id").value = ""; 
@@ -532,7 +525,6 @@ function setupGlobalListeners() {
         if(modalCurso) modalCurso.style.display = "flex";
     });
 
-    // Excluir Curso
     addEvt("btn-excluir-curso", "click", async () => {
         const id = document.getElementById("curso-id").value;
         if(!id) return;
@@ -545,14 +537,12 @@ function setupGlobalListeners() {
         }
     });
 
-    // Toggle Trilha
     addEvt("btn-toggle-trilha", "click", () => {
         const inputTexto = document.getElementById("curso-trilha-input");
         const isInputMode = inputTexto.style.display === "block";
         alternarModoTrilha(isInputMode ? "select" : "input");
     });
 
-    // Salvar Curso
     if(btnSalvarCurso) btnSalvarCurso.addEventListener("click", async () => {
         const id = document.getElementById("curso-id").value;
         const nome = document.getElementById("curso-nome").value;
@@ -600,7 +590,6 @@ function setupGlobalListeners() {
         }
     });
 
-    // Monitorar inputs para habilitar salvar
     if(formCurso) {
         formCurso.querySelectorAll("input, select, textarea").forEach(el => {
             el.addEventListener("input", marcarAlteracao);
@@ -608,7 +597,6 @@ function setupGlobalListeners() {
         });
     }
 
-    // LISTENER MANUAL ADD
     addEvt("btn-add-manual", "click", () => {
         const titulo = document.getElementById("manual-titulo").value.trim();
         const link = document.getElementById("manual-link").value.trim();
@@ -644,7 +632,6 @@ function setupGlobalListeners() {
         }
     });
 
-    // LISTENER LIMPEZA LINK
     const inputLink = document.getElementById("curso-link");
     if (inputLink) {
         inputLink.addEventListener("input", (e) => {
@@ -662,7 +649,6 @@ function setupGlobalListeners() {
         });
     }
 
-    // LISTENER SYNC YOUTUBE
     if(btnSyncRapido) {
         btnSyncRapido.addEventListener("click", async () => {
             const linkUrl = document.getElementById("curso-link").value.trim();
@@ -702,17 +688,11 @@ function setupGlobalListeners() {
                     const dataDetails = await respDetails.json();
 
                     const pageVideos = dataDetails.items.map(item => {
-                        // Parse ISO Duration
-                        const match = item.contentDetails.duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-                        const hours = (parseInt(match[1]) || 0);
-                        const mins = (parseInt(match[2]) || 0);
-                        const totalMins = (hours * 60) + mins;
-                        
                         return {
                             titulo: item.snippet.title,
                             link_video: `https://www.youtube.com/watch?v=${item.id}`,
                             descricao: item.snippet.description || "",
-                            duracao_minutos: totalMins,
+                            duracao_minutos: parseIsoDuration(item.contentDetails.duration),
                             ordem: 0
                         };
                     });
