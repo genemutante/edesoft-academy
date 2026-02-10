@@ -771,3 +771,12 @@ input:checked + .slider:before{ transform: translateX(18px) !important; }
   width: min(1320px, 96vw) !important;  /* cresce até 1320 ou 96% da tela */
   max-width: none !important;           /* remove o teto de 1000px */
 }
+
+.modal-content{
+  max-height: 98vh !important; /* era 95vh */
+}
+
+.modal-overlay{
+  padding: 12px !important; /* reduz margens internas do overlay */
+  align-items: center !important;
+}
