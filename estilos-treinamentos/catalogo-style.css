@@ -273,3 +273,9 @@ input:checked + .slider:before{transform:translateX(20px)}
 #modal-lista-aulas .modal-footer{
   flex: 0 0 auto;
 }
+
+#modal-lista-aulas .modal-body{
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
+}
+
