@@ -264,18 +264,10 @@ input:checked + .slider:before{transform:translateX(20px)}
 
 /* corpo rola */
 #modal-lista-aulas .modal-body{
-  flex: 1;                     /* ocupa o espaço restante */
-  overflow-y: auto;            /* ✅ scroll aqui */
-  padding-bottom: 12px;
-}
-
-/* opcional: footer sempre visível */
-#modal-lista-aulas .modal-footer{
-  flex: 0 0 auto;
-}
-
-#modal-lista-aulas .modal-body{
   overflow-y: auto !important;
+  padding-bottom: 12px;
   flex: 1 1 auto !important;
 }
+
+
 
