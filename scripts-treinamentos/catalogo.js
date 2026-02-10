@@ -1,5 +1,5 @@
 /* =============================================================
-   catalogo.js - Versão Corrigida (Sync Blindado e Sem Duplicação)
+   catalogo.JS - Versão Final (Correção Botão Fechar)
    ============================================================= */
 
 import { DBHandler } from "../bd-treinamentos/db-handler.js";
@@ -16,7 +16,7 @@ let houveAlteracao = false;
 // Elementos DOM
 let modalCurso, formCurso, areaDelete, btnSalvarCurso;
 let modalAulas, listaAulasUl;
-let btnSyncRapido;
+let modalYouTube, btnSyncRapido, selectCursoYT, inputPlaylistId, inputApiKey;
 let btnNovoCurso, btnLimparFiltros;
 
 // =============================================================
@@ -47,7 +47,6 @@ function normalizarTexto(str) {
 
 function limparTituloVideo(titulo) {
     if (!titulo) return "Aula Sem Título";
-    // Remove numerações do início (Ex: "01. ", "03 ", "Aula 1 -")
     return titulo.replace(/^(\d+[\s\-\.]+|aula\s+\d+[\s\-\.]+|video\s+\d+[\s\-\.]+)/i, '').trim();
 }
 
@@ -64,7 +63,9 @@ function carregarElementosDOM() {
     modalAulas = document.getElementById("modal-lista-aulas");
     listaAulasUl = document.getElementById("lista-aulas-container");
 
+    modalYouTube = document.getElementById("modal-youtube");
     btnSyncRapido = document.getElementById("btn-sync-youtube-rapido");
+    
     btnNovoCurso = document.getElementById("btn-novo-curso");
     btnLimparFiltros = document.getElementById("btn-limpar-filtros");
 }
@@ -98,7 +99,7 @@ async function inicializarApp() {
 document.addEventListener("DOMContentLoaded", inicializarApp);
 
 // =============================================================
-// 4. RENDERIZAÇÃO (Cards)
+// 4. RENDERIZAÇÃO
 // =============================================================
 
 function atualizarResumo(lista) {
@@ -231,7 +232,6 @@ function abrirModalAulas(id) {
 function resetarModalManutencao() {
     if(formCurso) formCurso.reset();
     
-    // ZERA VARIÁVEIS PARA EVITAR DUPLICAÇÃO E ERRO DE ESTADO
     videosPendentes = []; 
     houveAlteracao = false;
     
@@ -258,7 +258,6 @@ function editarCurso(id) {
     const curso = cursos.find(c => c.id == id);
     if (!curso) return;
 
-    // Popula campos
     document.getElementById("curso-id").value = curso.id;
     document.getElementById("curso-nome").value = curso.nome;
     document.getElementById("curso-status").value = (curso.status || "DISPONÍVEL").toUpperCase();
@@ -267,13 +266,11 @@ function editarCurso(id) {
     document.getElementById("curso-descricao").value = curso.descricao || "";
     document.getElementById("curso-exibir").checked = (curso.exibir_catalogo !== false);
 
-    // Carrega aulas sem ativar flag de alteração
     if (curso.aulas && curso.aulas.length > 0) {
         videosPendentes = JSON.parse(JSON.stringify(curso.aulas));
         videosPendentes.sort((a, b) => a.ordem - b.ordem);
     }
     
-    // CRUCIAL: Força false pois acabamos de carregar do banco
     houveAlteracao = false;
 
     renderizarListaManual();
@@ -323,7 +320,7 @@ window.removerItemManual = function(index) {
     videosPendentes.splice(index, 1);
     videosPendentes.forEach((v, i) => v.ordem = i + 1);
     renderizarListaManual();
-    marcarAlteracao(); // Remover conta como alteração
+    marcarAlteracao();
     atualizarMetadadosGlobais();
 };
 
@@ -341,7 +338,6 @@ function atualizarMetadadosGlobais() {
 
     const badge = document.getElementById("badge-pendente");
     if(badge) {
-        // Só mostra o badge se HOUVE ALTERAÇÃO. Se apenas abriu a tela, fica oculto.
         if (houveAlteracao) {
             badge.style.display = "block";
             badge.textContent = "Alterações não salvas";
@@ -374,24 +370,28 @@ function setupGlobalListeners() {
         aplicarFiltros();
     });
 
-    // Fechar Modal
-    document.querySelectorAll(".btn-close-modal, .btn-close-modal-curso, .btn-close-modal-aulas").forEach(b => {
-        b.addEventListener("click", () => {
-            resetarModalManutencao();
-            if(modalCurso) modalCurso.style.display = "none";
+    // -------------------------------------------------------------
+    // FECHAR MODAIS - CORREÇÃO CRÍTICA AQUI
+    // -------------------------------------------------------------
+
+    // 1. Botões "X" e "Fechar" da Lista de Aulas (Visualização)
+    // Esses botões tem a classe .btn-close-modal-aulas no HTML
+    document.querySelectorAll(".btn-close-modal-aulas").forEach(btn => {
+        btn.addEventListener("click", () => {
             if(modalAulas) modalAulas.style.display = "none";
         });
     });
 
-    // Botão Cancelar
-    const btnCancelar = document.querySelector(".modal-footer .btn-secondary-full");
-    if (btnCancelar) {
-        btnCancelar.replaceWith(btnCancelar.cloneNode(true));
-        document.querySelector(".modal-footer .btn-secondary-full").addEventListener("click", () => {
+    // 2. Botões "X" e "Cancelar" do Modal de Edição (Novo/Editar)
+    // Esses botões tem a classe .btn-close-modal-curso no HTML
+    document.querySelectorAll(".btn-close-modal-curso").forEach(btn => {
+        btn.addEventListener("click", () => {
             resetarModalManutencao();
-            modalCurso.style.display = "none";
+            if(modalCurso) modalCurso.style.display = "none";
         });
-    }
+    });
+
+    // -------------------------------------------------------------
 
     addEvt("btn-novo-curso", "click", () => {
         resetarModalManutencao();
@@ -470,7 +470,6 @@ function setupGlobalListeners() {
         }
     };
 
-    // --- SYNC CORRIGIDO (SEM DUPLICAÇÃO E SEM TRAVAMENTO) ---
     if(btnSyncRapido) btnSyncRapido.onclick = async () => {
         const link = document.getElementById("curso-link").value.trim();
         const pid = link.includes("list=") ? link.split("list=")[1].split("&")[0] : link;
@@ -481,7 +480,6 @@ function setupGlobalListeners() {
         btnSyncRapido.disabled = true;
 
         const backup = [...videosPendentes];
-        // 1. ZERA TUDO ANTES DE COMEÇAR A BUSCA
         videosPendentes = []; 
 
         try {
@@ -512,12 +510,11 @@ function setupGlobalListeners() {
 
             if(fetched.length === 0) throw new Error("Playlist vazia.");
 
-            // 2. RECRIAR LISTA LIMPA
             videosPendentes = fetched.map((v, i) => ({ ...v, ordem: i+1 }));
             
-            marcarAlteracao(); // Agora sim marca alteração
-            renderizarListaManual();
-            atualizarMetadadosGlobais();
+            marcarAlteracao(); 
+            renderizarListaManual();      
+            atualizarMetadadosGlobais();  
             
             const elData = document.getElementById("meta-data-sync");
             if(elData) { elData.textContent = "Agora"; elData.style.color = "#16a34a"; }
@@ -527,10 +524,9 @@ function setupGlobalListeners() {
         } catch(e) {
             console.error(e);
             alert("Erro: " + e.message);
-            videosPendentes = backup; // Restaura se der erro
+            videosPendentes = backup;
             renderizarListaManual();
         } finally {
-            // 3. SEMPRE DESTRAVA O BOTÃO
             btnSyncRapido.innerHTML = textoOriginal;
             btnSyncRapido.disabled = false;
         }
