@@ -542,12 +542,11 @@ async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
 
 
 
-// No db-handler.js
+// --- NO ARQUIVO: db-handler.js ---
 
-    // 1. Atualize este método para trazer o título da aula
-    async listarAgendamentosFuturos() {
-        const hoje = new Date().toISOString();
-        
+    // 1. LISTAGEM COMPLETA (Histórico + Futuro)
+    async listarAgendamentos() {
+        // Removemos o filtro .gte(hoje) para mostrar o histórico
         const { data, error } = await supabaseClient
             .from('agendamentos')
             .select(`
@@ -557,21 +556,29 @@ async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
                 observacoes,
                 treinamento:treinamentos (nome),
                 colaborador:colaboradores (nome),
-                aula:aulas_treinamentos (titulo, ordem)  // <--- NOVO
+                aula:aulas_treinamentos (titulo, ordem)
             `)
-            .gte('data_hora', hoje)
-            .order('data_hora', { ascending: true });
+            .order('data_hora', { ascending: false }); // Do mais novo para o mais antigo
 
         if (error) throw error;
         return data;
     },
 
-    // 2. O método criarAgendamento já é genérico, então NÃO precisa mudar.
-    // Ele aceita qualquer objeto payload, então já vai aceitar o 'aula_id' que enviaremos.
+    // 2. DAR BAIXA (Mudar Status)
+    async atualizarStatusAgendamento(id, novoStatus) {
+        const { error } = await supabaseClient
+            .from('agendamentos')
+            .update({ status: novoStatus })
+            .eq('id', id);
+        
+        if (error) throw error;
+    },
+
+    // 3. CRIAR (Mantido igual, apenas para referência)
     async criarAgendamento(payload) {
         const { data, error } = await supabaseClient
             .from('agendamentos')
-            .insert(payload); // Se payload for um array, ele insere múltiplos de uma vez!
+            .insert(payload);
         if (error) throw error;
         return data;
     },
@@ -582,6 +589,7 @@ async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
 
 // No final do ficheiro db-handler.js
 window.DBHandler = DBHandler;
+
 
 
 
