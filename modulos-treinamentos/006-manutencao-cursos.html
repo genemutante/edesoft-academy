@@ -152,48 +152,6 @@
     </footer>
   </div>
 
-<div id="modal-youtube" class="modal-overlay" style="display: none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Sincronizar Playlist do YouTube</h2>
-      <button class="btn-close-modal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Selecione o Curso para Atualizar</label>
-        <select id="yt-curso-selecionado" class="input-premium">
-            <option value="">Carregando cursos...</option>
-        </select>
-        <small style="color: #ef4444; margin-top: 5px; display:block;">⚠️ Atenção: Isso substituirá todas as aulas atuais deste curso pelas da playlist.</small>
-      </div>
-      <div class="form-row">
-        <div class="form-group" style="flex: 1;">
-            <label>YouTube API Key</label>
-            <input type="password" id="yt-api-key" class="input-premium" placeholder="Cole sua chave API aqui...">
-        </div>
-        <div class="form-group" style="flex: 1;">
-            <label>ID da Playlist ou URL Completa</label>
-            <input type="text" id="yt-playlist-id" class="input-premium" placeholder="Ex: PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG">
-        </div>
-      </div>
-      <button id="btn-buscar-videos" class="btn-primary-full">🔍 Buscar Vídeos na Playlist</button>
-      <div id="yt-preview-area" style="margin-top: 20px; display: none;">
-         <h3 style="font-size: 0.9rem; margin-bottom: 10px;">Preview (<span id="yt-total-videos">0</span> vídeos encontrados)</h3>
-         <div class="preview-table-wrapper">
-             <table class="preview-table">
-                 <thead><tr><th>#</th><th>Título</th><th>Duração</th><th>Link</th></tr></thead>
-                 <tbody id="yt-lista-videos"></tbody>
-             </table>
-         </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <span id="yt-status-msg" class="status-msg"></span>
-      <button id="btn-salvar-sincronizacao" class="btn-save" disabled>💾 Salvar e Atualizar Aulas</button>
-    </div>
-  </div>
-</div>
-
 <div id="modal-lista-aulas" class="modal-overlay" style="display: none;">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
@@ -271,20 +229,26 @@
         </div>
 
         <div class="form-group">
-            <label>Origem das Aulas</label>
+            <label style="margin-bottom: 8px;">Origem das Aulas</label>
             
-            <div class="tabs-origin">
-                <button type="button" class="tab-btn active" data-target="tab-youtube" onclick="alternarAba(this)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/></svg>
-                    Playlist YouTube
-                </button>
-                <button type="button" class="tab-btn" data-target="tab-manual" onclick="alternarAba(this)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    Manual / Individual
-                </button>
+            <div class="source-selector">
+                <div class="radio-option">
+                    <input type="radio" name="fonte_aulas" id="fonte_youtube" value="youtube" checked onchange="alternarFonte(this.value)">
+                    <label for="fonte_youtube">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Playlist YouTube
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="fonte_aulas" id="fonte_manual" value="manual" onchange="alternarFonte(this.value)">
+                    <label for="fonte_manual">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        Manual / Individual
+                    </label>
+                </div>
             </div>
 
-            <div id="tab-youtube" class="tab-content active">
+            <div id="panel-youtube" style="display: block;">
                 <div class="youtube-wrapper">
                     <div style="display: flex; gap: 8px;">
                         <input type="url" id="curso-link" class="input-premium" placeholder="Cole a URL da playlist aqui..." style="flex: 1;">
@@ -293,12 +257,12 @@
                         </button>
                     </div>
                     <small class="youtube-help-text">
-                        O sistema buscará título, duração e link de todos os vídeos da playlist automaticamente.
+                        O sistema substituirá as aulas atuais pelas da playlist.
                     </small>
                 </div>
             </div>
 
-            <div id="tab-manual" class="tab-content" style="display: none;">
+            <div id="panel-manual" style="display: none;">
                 <div class="manual-wrapper">
                     <div class="manual-input-row">
                         <input type="text" id="manual-titulo" class="input-premium" placeholder="Título da Aula" style="flex: 3;">
@@ -307,37 +271,39 @@
                     <div class="manual-input-row" style="margin-top: 8px;">
                         <input type="url" id="manual-link" class="input-premium" placeholder="Link do Vídeo (Opcional)" style="flex: 1;">
                         <button type="button" id="btn-add-manual" class="btn-add-manual">
-                            + Adicionar
+                            + Adicionar Aula
                         </button>
                     </div>
-                    
-                    <ul id="lista-manual-preview" class="lista-manual-preview"></ul>
                 </div>
             </div>
 
-            <div class="sync-metadata" id="box-metadata-sync" style="margin-top: 8px;">
-                <div class="meta-item">
-                    <span class="meta-label">Aulas:</span>
-                    <span class="meta-value" id="meta-qtd-aulas">0</span>
-                </div>
-                <div style="width: 1px; height: 12px; background: #cbd5e1;"></div>
-                <div class="meta-item">
-                    <span class="meta-label">Tempo:</span>
-                    <span class="meta-value" id="meta-tempo-total">0 min</span>
-                </div>
-                <div style="width: 1px; height: 12px; background: #cbd5e1;"></div>
-                <div class="meta-item" style="flex: 1;">
-                    <span class="meta-label">Sync:</span>
-                    <span class="meta-value" id="meta-data-sync">Nunca</span>
+            <div style="margin-top: 16px;">
+                <div class="sync-metadata" id="box-metadata-sync">
+                    <div class="meta-item">
+                        <span class="meta-label">Aulas:</span>
+                        <span class="meta-value" id="meta-qtd-aulas">0</span>
+                    </div>
+                    <div style="width: 1px; height: 12px; background: #cbd5e1;"></div>
+                    <div class="meta-item">
+                        <span class="meta-label">Tempo:</span>
+                        <span class="meta-value" id="meta-tempo-total">0 min</span>
+                    </div>
+                    <div style="width: 1px; height: 12px; background: #cbd5e1;"></div>
+                    <div class="meta-item" style="flex: 1;">
+                        <span class="meta-label">Sync:</span>
+                        <span class="meta-value" id="meta-data-sync">Nunca</span>
+                    </div>
+                    
+                    <div class="meta-badge-pendente" id="badge-pendente" style="display: none;">
+                        Pendentes
+                    </div>
+                    
+                    <button type="button" id="btn-limpar-aulas" style="margin-left: auto; font-size: 0.75rem; color: #ef4444; background: none; border: none; cursor: pointer; display: none; font-weight: 600;">
+                        Limpar Tudo
+                    </button>
                 </div>
                 
-                <div class="meta-badge-pendente" id="badge-pendente" style="display: none;">
-                    Pendentes
-                </div>
-                
-                <button type="button" id="btn-limpar-aulas" style="margin-left: auto; font-size: 0.7rem; color: #ef4444; background: none; border: none; cursor: pointer; display: none; font-weight: 600;">
-                    Limpar Tudo
-                </button>
+                <ul id="lista-manual-preview" class="lista-manual-preview"></ul>
             </div>
         </div>
 
@@ -363,6 +329,8 @@
     </div>
   </div>
 </div>
+
+<div id="modal-youtube" class="modal-overlay" style="display: none;"></div>
 
 </body>
 </html>
