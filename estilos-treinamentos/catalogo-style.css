@@ -766,3 +766,8 @@ input:checked + .slider:before{ transform: translateX(18px) !important; }
   padding:7px 10px !important;  /* segue seu padrão slim */
   line-height:1.15;
 }
+
+.modal-content{
+  width: min(1320px, 96vw) !important;  /* cresce até 1320 ou 96% da tela */
+  max-width: none !important;           /* remove o teto de 1000px */
+}
