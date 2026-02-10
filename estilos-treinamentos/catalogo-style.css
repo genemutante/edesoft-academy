@@ -780,3 +780,28 @@ input:checked + .slider:before{ transform: translateX(18px) !important; }
   padding: 12px !important; /* reduz margens internas do overlay */
   align-items: center !important;
 }
+
+/* =========================
+   TOPO DO MODAL EM GRID
+   ========================= */
+.curso-topo-grid{
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 2fr auto; /* Nome | Status | Descrição | Exibir */
+  gap: 10px 16px !important;
+  align-items: end !important;
+  margin-bottom: 10px !important;
+}
+
+/* Linha 2: Trilha | + | Subtrilha ocupando largura inteira */
+.curso-topo-grid .form-row-trilhas{
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 260px 44px 1fr; /* Trilha | + | Subtrilha */
+  gap: 12px !important;
+  align-items: end !important;
+}
+.curso-topo-grid .toggle-wrapper{
+  min-height: unset !important;
+  padding-bottom: 0 !important;
+  justify-content: flex-end !important;
+}
