@@ -57,8 +57,6 @@ dados.forEach(d => {
 
 // ================= RENDERIZAÇÃO =================
 
-// ... (Mantenha todo o código anterior até o renderGrid) ...
-
 function renderGrid() {
   grid.innerHTML = "";
 
@@ -75,18 +73,18 @@ function renderGrid() {
     .forEach(d => {
       let mostrarLinha = true;
 
+      const etapasArr = Array.isArray(d.etapas) ? d.etapas : [];
+
       // --- FILTRO POR ETAPA ---
       // Agora a grid é 1 linha por dia. Se houver filtro de etapa, o dia precisa conter essa etapa.
       if (etapaSel !== "") {
-        const etapas = Array.isArray(d.etapas) ? d.etapas : [];
-        if (!etapas.includes(etapaSel)) mostrarLinha = false;
+        if (!etapasArr.includes(etapaSel)) mostrarLinha = false;
       }
 
       // --- FILTRO POR PARTICIPANTE ---
       // Só faz sentido quando o dia tem etapa "prover" e o participante está em alguma aula do dia.
       if (partSel !== "") {
-        const etapas = Array.isArray(d.etapas) ? d.etapas : [];
-        if (!etapas.includes("prover")) {
+        if (!etapasArr.includes("prover")) {
           mostrarLinha = false;
         } else {
           const estaNasAulas = d.aulas && d.aulas.some(a =>
@@ -106,14 +104,21 @@ function renderGrid() {
         tr.onclick = () => alternarSelecao(tr, d, null, dadosVisiveis);
 
         // Etapa exibida: exatamente como vem do calendário (melhor cenário)
-        const etapaTexto =
-          (typeof d.etapaTexto === "string" && d.etapaTexto.trim() !== "") ? d.etapaTexto :
-          (typeof d.etapa_processo === "string" && d.etapa_processo.trim() !== "") ? d.etapa_processo :
-          (Array.isArray(d.etapas) && d.etapas.length > 0) ? d.etapas.map(k => etapasMap[k] || k).join(" / ") :
-          "—";
+        const etapaTextoRaw =
+          (typeof d.etapaTexto === "string" && d.etapaTexto.trim() !== "") ? d.etapaTexto.trim() :
+          (typeof d.etapa_processo === "string" && d.etapa_processo.trim() !== "") ? d.etapa_processo.trim() :
+          (etapasArr.length > 0) ? etapasArr.map(k => etapasMap[k] || k).join(" / ") :
+          "";
+
+        const etapaTexto = etapaTextoRaw !== "" ? etapaTextoRaw : "—";
 
         // Classe visual (mantém CSS existente): usa a primeira etapa normalizada, se existir
-        const etapaCssKey = (Array.isArray(d.etapas) && d.etapas.length > 0) ? d.etapas[0] : "";
+        // Se não houver, coloca uma classe fallback para não ficar "sem classe"
+        const etapaCssKey = (etapasArr.length > 0) ? etapasArr[0] : "nao_mapeado";
+
+        // ✅ CLASSES para não ficar "branco" quando não há etapa mapeada/texto vazio
+        if (etapasArr.length === 0) tr.classList.add("row-nao-mapeado");
+        if (etapaTexto === "—") tr.classList.add("row-sem-etapa");
 
         // Evidência (se houver). Quando não há etapa focada, basta indicar se existe evidência no dia
         const temEvidencia = Array.isArray(d.evidencias) && d.evidencias.length > 0;
@@ -144,6 +149,7 @@ function renderGrid() {
   atualizarKPIs(dadosVisiveis);
   carregarVisaoGeral(dadosVisiveis);
 }
+
 
 
 
@@ -424,3 +430,4 @@ filtroParticipante.onchange = renderGrid;
 
 // Inicializa
 renderGrid();
+
