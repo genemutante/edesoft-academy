@@ -1,0 +1,780 @@
+/* =========================================
+   RESET & BASE
+   ========================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #eef2f6; /* MUDANÇA: Um cinza mais azulado e sólido */
+  color: #111;
+  overflow: hidden; /* Trava a rolagem geral */
+  font-size: 13px;
+}
+
+/* =========================================
+   ESTRUTURA FLEX (Para tela cheia)
+   ========================================= */
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ================= HEADER ================= */
+.top-nav {
+  height: 72px;
+  background: #FFFFFF;
+  border-top: 4px solid #1E3A8A; /* Para ter o mesmo visual */
+  border-bottom: 1px solid #cbd5e1; /* Borda inferior mais nítida */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra para descolar do fundo */
+  
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Para separar a marca, a navegação e o item à direita */
+  padding: 0 20px; 
+}
+
+/* NOVO: Estilos da Área de Marca (Brand Area) */
+.brand-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E3A8A;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: #1E3A8A;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.nav {
+  display: flex;
+  gap: 22px;
+  margin-left: 15px; /* Altere este valor para definir o recuo do menu */
+}
+/* ATUALIZAÇÃO: Estilos do item de navegação (com centralização e hover) */
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  font-size: 11px;
+  color: #6B7280;
+  cursor: pointer;
+  /* Transições consolidadas */
+  transition: color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  min-width: auto;
+  
+  text-align: center; /* Centraliza o texto */
+  padding: 0px; 
+  border-radius: 0px; 
+  margin: 0;
+}
+
+
+
+.nav-item i {
+  font-size: 16px;
+}
+
+.nav-item:hover {
+  color: #1E3A8A; /* Cor do texto no hover */
+  background-color: #f1f5f9; /* Fundo destacado no hover */
+  transform: none; 
+}
+
+.nav-item.active {
+  color: #1E3A8A;
+  font-weight: 500;
+}
+
+.nav-item.active:after {
+  content: '';
+  position: absolute;
+  bottom: -22px; /* Ajustado para compensar o padding do nav-item */
+  width: 100%;
+  height: 3px;
+  background-color: #1E3A8A;
+  border-radius: 2px 2px 0 0;
+}
+
+
+
+/* =========================================
+   DASHBOARD CONTAINER (Ocupa o resto)
+   ========================================= */
+.dashboard-container {
+  flex: 1; /* Ocupa todo o espaço restante abaixo dos 72px */
+  display: flex;
+  flex-direction: column;
+  padding: 16px 32px; /* Espaçamento lateral igual ao index */
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* =========================================
+   BARRA DE FILTROS (Visual Amarelo)
+   ========================================= */
+.filters-bar {
+  background: #eee8aa; /* Amarelo similar ao print */
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid #d4c668;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.filter-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-black {
+  background: #333;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* Garante que os selects tenham largura mínima consistente */
+.select-box {
+  padding: 0 8px; /* Ajuste no padding */
+  border: 1px solid #999;
+  background: #fff;
+  min-width: 140px; /* Um pouco mais largo para caber os textos */
+  font-size: 14px;
+  border-radius: 4px;
+  height: 35px; /* Altura fixa igual ao botão preto */
+  cursor: pointer;
+}
+
+.btn-clear {
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 12px;
+}
+
+/* =========================================
+   LAYOUT GRIDS (Esquerda/Direita)
+   ========================================= */
+.painel-layout {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden; /* Importante para scroll interno */
+}
+
+.col-esquerda {
+  display: grid;
+  grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr); /* Flexibilidade vertical */
+  gap: 12px;
+  overflow: hidden;
+}
+
+.col-direita {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* =========================================
+   BOXES (Cartões mais definidos)
+   ========================================= */
+.box {
+  background: #fff;
+  border: 1px solid #d1d5db; /* Borda um pouco mais escura que antes */
+  border-radius: 6px; /* Cantos um pouco mais arredondados */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* MUDANÇA: Sombra suave para "descolar" do fundo */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+}
+
+.table-scroll, .content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Scrollbar Webkit (Chrome/Edge) */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Cabeçalhos dos Painéis */
+.panel-header {
+  background: #fff;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 14px;
+  border-bottom: 2px solid #000;
+}
+
+.panel-header.dark-blue-accent {
+  background: #1E3A8A; /* Azul Institucional (substitui o preto) */
+  color: #fff;        /* Texto branco puro */
+  border-bottom: none;
+  padding: 10px 12px;
+  border-radius: 4px 4px 0 0; /* Arredonda levemente o topo */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.float-right { float: right; }
+
+/* =========================================
+   BASE (Fundo com mais personalidade)
+   ========================================= */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: #eef2f6; /* MUDANÇA: Um cinza mais azulado e sólido */
+  color: #111;
+}
+
+
+
+
+/* =========================================
+   BOXES (Cartões mais definidos)
+   ========================================= */
+.box {
+  background: #fff;
+  border: 1px solid #d1d5db; /* Borda um pouco mais escura que antes */
+  border-radius: 6px; /* Cantos um pouco mais arredondados */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* MUDANÇA: Sombra suave para "descolar" do fundo */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+}
+
+/* =========================================
+   CABEÇALHOS DOS PAINÉIS (O "Algo" que faltava)
+   ========================================= */
+/* Isso cria uma barra cinza clara no topo de cada caixa, organizando a visão */
+.panel-header,
+.panel-header.dark-blue-accent {
+  background: #f8fafc; /* Fundo Cinza Prata/Gelo */
+  color: #334155;      /* Texto Cinza Chumbo (não preto) */
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase; /* Dá um ar mais técnico */
+  letter-spacing: 0.02em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Pequeno detalhe colorido na esquerda para identificar que é título */
+.panel-header::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 12px;
+  background: #1E3A8A; /* Azul da marca */
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+/* =========================================
+   TABELAS (Layout Fixo e Estável)
+   ========================================= */
+.grid {
+  width: 100%;
+  border-collapse: separate; 
+  border-spacing: 0;
+  table-layout: fixed; /* O SEGREDO: Trava a largura das colunas */
+}
+
+.grid th {
+  background: #1f2937;
+  color: #fff;
+  padding: 10px 8px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 12px;
+  position: sticky; /* Mantém cabeçalho fixo na rolagem */
+  top: 0;
+  z-index: 10;
+  border-right: 1px solid #374151;
+  white-space: nowrap; /* Impede quebra de linha no título */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #f3f4f6;
+  vertical-align: middle;
+  font-size: 12px;
+  color: #374151;
+  height: 34px; /* Altura fixa da linha para não pular */
+  
+  /* Truncamento de texto (Cria o "..." se for muito grande) */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid tr:hover { background: #eff6ff; cursor: pointer; }
+
+/* Estilo de Seleção (Mantido e reforçado) */
+.grid tr.selected {
+  background-color: #bfdbfe !important;
+  font-weight: 600;
+}
+.grid tr.selected td {
+  color: #1e3a8a;
+  border-bottom: 1px solid #93c5fd;
+}
+
+/* Alinhamentos Utilitários */
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-left { text-align: left !important; }
+
+
+/* =========================================
+   DEFINIÇÃO DE LARGURAS (PIXELS FIXOS - ANTI-TREMEDEIRA)
+   ========================================= */
+
+/* --- Tabela Principal (Topo) --- */
+.col-data       { width: 90px; }
+.col-dia        { width: 80px; }
+.col-etapa      { width: 110px; } /* Aumentei para garantir que não corte */
+.col-agendados  { width: 60px; text-align: center; }
+.col-realizados { width: 60px; text-align: center; }
+.col-aderencia  { width: 50px; text-align: center; }
+.col-monitorado { width: 80px; text-align: center; }
+
+/* --- Tabela Evidências (Baixo) --- */
+.col-ev-origem    { width: 110px; }
+.col-ev-data      { width: 90px; }
+.col-ev-etapa     { width: 110px; } /* Menor que a de cima */
+.col-ev-descricao { width: 350px; } /* Espaço generoso para texto */
+.col-ev-link      { width: 50px; text-align: center; }
+
+/* --- Tabela Participantes (Direita) --- */
+/* Total estimado: ~350px (cabe na coluna de 30%) */
+.col-part-nome   { width: 260px; }
+.col-part-status { width: 70px; text-align: center; }
+
+
+/* ================= HOME HEADER ================= */
+.home-header {
+  margin-bottom: 56px;
+}
+
+.home-header h1 {
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.home-subtitle {
+  font-size: 16px;
+  color: #6B7280;
+  max-width: 520px;
+}
+
+/* ================= HOME CONTENT ================= */
+.home-content {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.home-content article {
+  max-width: 720px;
+}
+
+.home-content h2 {
+  font-size: 22px;
+  font-weight: 500;
+  color: #1E3A8A;
+  margin-bottom: 6px;
+}
+
+.meta {
+  font-size: 13px;
+  color: #6B7280;
+  margin-bottom: 12px;
+}
+
+.home-content p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* ================= FOOTER ================= */
+.footer {
+  height: 36px;
+  border-top: 1px solid #E5E7EB;
+  background: #FFFFFF;
+
+  font-size: 12px;
+  color: #6B7280;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+}
+
+/* ================= HOME GRID ================= */
+
+.home {
+  height: calc(100vh - 72px - 36px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.home-grid {
+  width: 100%;
+  max-width: 1100px;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 80px;
+}
+
+/* COLUNA ESQUERDA */
+.home-intro h1 {
+  font-size: 42px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+.home-intro .subtitle {
+  font-size: 17px;
+  color: #6B7280;
+  max-width: 360px;
+}
+
+
+/* =========================================
+   ETAPAS & CORES
+   ========================================= */
+.etapa {
+  display: inline-block; /* Garante que o padding funcione bem */
+  padding: 4px 8px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 11px;
+  border-radius: 4px; /* Arredondamento suave */
+  white-space: nowrap; /* Impede que o texto quebre */
+}
+
+/* Mapeamento pelas chaves do data.js (letras minúsculas, sem espaço) */
+.etapa.levantar  { background: #7c3aed; } /* Roxo */
+.etapa.plano     { background: #db2777; } /* Rosa */
+.etapa.preparar  { background: #059669; } /* Verde Esmeralda */
+.etapa.prover    { background: #ea580c; } /* Laranja */
+.etapa.obter     { background: #0891b2; } /* Ciano */
+.etapa.monitorar { background: #2563eb; } /* Azul */
+
+
+/* =========================================
+   LISTA DE AULAS (Com Data)
+   ========================================= */
+#aulas div {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent; /* Prepara para a seleção */
+}
+
+#aulas div:hover {
+  background: #f9fafb;
+  border-left-color: #cbd5e1; /* Hover suave */
+}
+
+/* --- ITEM SELECIONADO (Ativo) --- */
+#aulas div.selected {
+  background: #eff6ff; /* Fundo azul bem clarinho */
+  border-left-color: #1E3A8A; /* Borda azul forte na esquerda */
+}
+
+#aulas div.selected .aula-nome {
+  color: #1E3A8A;
+  font-weight: 700;
+}
+
+
+/* --- ETIQUETA DE DATA (Mais elegante) --- */
+.aula-data {
+  font-family: 'Consolas', monospace;
+  color: #1e40af;       /* Azul escuro no texto */
+  font-size: 11px;
+  background: #dbeafe;  /* Azul claro no fundo (em vez de cinza) */
+  padding: 3px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid #bfdbfe; /* Borda sutil */
+}
+
+.aula-nome {
+  font-weight: 500;
+  color: #374151;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.participants-list div {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.participants-list div:nth-child(even) { background: #fafafa; }
+
+
+
+/* =========================================
+   AREA DE KPIS (Cards de Topo)
+   ========================================= */
+.kpi-area {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 4px; /* Espaço antes dos filtros */
+  flex: 0 0 auto; /* Altura fixa baseada no conteúdo */
+}
+
+.kpi-card {
+  background: #fff;
+  flex: 1; /* Todos com mesma largura */
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* Ícones Circulares */
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.kpi-icon.blue {
+  background: #eff6ff;
+  color: #1E3A8A; /* Azul Institucional */
+}
+
+.kpi-icon.orange {
+  background: #fff7ed;
+  color: #ea580c; /* Laranja */
+}
+
+.kpi-icon.red {
+  background: #fef2f2;
+  color: #dc2626; /* Vermelho Alerta */
+}
+
+/* Tipografia do Card */
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-info h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  margin: 2px 0;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: #ef4444; /* Vermelho para o subtítulo de alerta */
+  font-weight: 500;
+}
+
+/* =========================================
+   BARRA DE CONTROLE (Destacada)
+   ========================================= */
+.control-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  /* MUDANÇA: Borda e sombra mais marcadas para separar do resto */
+  border-bottom: 1px solid #cbd5e1; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  padding: 8px 16px;
+  height: 54px;
+  flex: 0 0 auto;
+  z-index: 10;
+  /* AQUI É ONDE VOCÊ ALTERA */
+  margin-top: 18px; /* Adiciona 12 pixels de espaço acima da barra */
+}
+
+/* ================= NOVO: Estilos do Link dentro do Nav Item ================= */
+.nav-item a {
+  /* 1. Remove o sublinhado padrão do link */
+  text-decoration: none; 
+  
+  /* 2. Garante que o link ocupe todo o espaço do nav-item e herde o layout flex */
+  display: flex; 
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  /* 3. Garante que a cor do texto do link seja a cor padrão do nav-item */
+  color: inherit; 
+  
+  /* 4. Transfere o padding, border-radius e margin do .nav-item para o <a> */
+  padding: 6px 8px; /* Padding para o hover */
+  border-radius: 6px; 
+  margin: 0 -8px; /* Ajusta o espaçamento */
+  
+  /* 5. Garante que o link reaja ao hover se o .nav-item a estiver sendo usado */
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+/* --- LADO ESQUERDO: KPIs --- */
+.kpi-wrapper {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  border-right: 1px solid #e5e7eb;
+  padding-right: 20px;
+}
+
+.kpi-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.kpi-compact i {
+  font-size: 14px;
+}
+.kpi-compact i.blue { color: #2563eb; }
+.kpi-compact i.orange { color: #ea580c; }
+.kpi-compact i.red { color: #dc2626; }
+
+.kpi-value {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111;
+}
+
+/* --- LADO DIREITO: FILTROS --- */
+.filters-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Ajuste fino nos inputs para ficarem menores */
+.select-compact {
+  height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #f9fafb;
+  min-width: 110px;
+}
+
+.btn-compact {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #1f2937;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-link {
+  font-size: 11px;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+/* Ajuste o padding do container principal para "colar" mais */
+.dashboard-container {
+  padding: 0; /* Remove padding externo para aproveitar 100% */
+  gap: 0;
+}
+/* O painel layout precisa de um padding interno agora */
+.painel-layout {
+  padding: 12px;
+}
+
