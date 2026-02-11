@@ -956,3 +956,264 @@ table.main-grid td.col-etapa {
   padding-right: 10px;
 }
 
+/* =========================================================
+   MODAL EVIDÊNCIA (IA) - visual "relatório profissional"
+   ========================================================= */
+
+.evidencia-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9999;
+}
+
+.evidencia-overlay.open {
+  display: flex;
+}
+
+.evidencia-modal {
+  width: min(980px, 100%);
+  max-height: 92vh;
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.25);
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.evidencia-header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  color: #fff;
+}
+
+.evidencia-titlewrap { flex: 1; min-width: 0; }
+
+.evidencia-badge {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: .08em;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  margin-bottom: 8px;
+}
+
+.evidencia-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evidencia-subtitle {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.78);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evidencia-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.evidencia-btn {
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.evidencia-btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.evidencia-btn-primary:hover { filter: brightness(1.05); }
+
+.evidencia-btn-ghost {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+.evidencia-btn-ghost:hover { background: rgba(255,255,255,0.18); }
+
+.evidencia-body {
+  padding: 16px 18px;
+  overflow: auto;
+  background: #f8fafc;
+}
+
+.evidencia-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.evidencia-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 14px;
+}
+
+.evidencia-card-full {
+  margin-top: 14px;
+}
+
+.evidencia-card-title {
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.evidencia-kv .kv {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed rgba(15, 23, 42, 0.08);
+}
+
+.evidencia-kv .kv:last-child { border-bottom: 0; }
+
+.evidencia-kv span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.evidencia-kv strong {
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.evidencia-result {
+  background: #eff6ff;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.evidencia-result-label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 6px;
+}
+
+.evidencia-result-value {
+  font-size: 14px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.evidencia-seal {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+.evidencia-seal i {
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.seal-title {
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.seal-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.evidencia-log {
+  margin: 0;
+  padding: 12px;
+  background: #0b1220;
+  color: #e2e8f0;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.evidencia-footer-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #475569;
+}
+
+/* Responsivo */
+@media (max-width: 860px) {
+  .evidencia-grid { grid-template-columns: 1fr; }
+  .evidencia-kv .kv { grid-template-columns: 1fr; }
+  .evidencia-title { white-space: normal; }
+  .evidencia-subtitle { white-space: normal; }
+}
+
+/* Impressão/PDF: imprime só o modal */
+@media print {
+  body * { visibility: hidden !important; }
+  #evidenciaModalOverlay,
+  #evidenciaModalOverlay * { visibility: visible !important; }
+  #evidenciaModalOverlay {
+    position: static !important;
+    inset: auto !important;
+    background: none !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+  .evidencia-modal {
+    width: 100% !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+  .evidencia-body { overflow: visible !important; }
+}
+
