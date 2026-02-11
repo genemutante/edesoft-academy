@@ -795,3 +795,44 @@ body {
   font-style: italic;
 }
 
+/* =========================================
+   ESTILO PEDIDO:
+   - Fim de semana: marcador escuro
+   - Dia não útil: tom avermelhado
+   ========================================= */
+
+/* 1) DIA NÃO ÚTIL -> linha avermelhada discreta */
+.main-grid tbody tr.row-nao-util td {
+  background: #fff1f2 !important;   /* rosa bem leve */
+}
+
+/* Mantém texto legível no tom avermelhado */
+.main-grid tbody tr.row-nao-util td {
+  color: #111827 !important;
+}
+
+/* 2) FIM DE SEMANA -> "bolinha" escura na coluna Etapa do Processo (3ª coluna) */
+.main-grid tbody tr.row-fds td:nth-child(3) {
+  position: relative;
+}
+
+/* esconde qualquer badge/texto de etapa (geralmente sábado/domingo não tem etapa) */
+.main-grid tbody tr.row-fds td:nth-child(3) .etapa {
+  display: none !important;
+}
+
+/* cria o marcador escuro */
+.main-grid tbody tr.row-fds td:nth-child(3)::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  background: #4b5563; /* cinza escuro */
+}
+
+/* Se for fim de semana E não útil, mantém o marcador e a linha avermelhada */
+.main-grid tbody tr.row-nao-util.row-fds td:nth-child(3)::before {
+  background: #374151; /* um pouco mais escuro */
+}
+
