@@ -778,3 +778,20 @@ body {
   padding: 12px;
 }
 
+/* Linhas onde não há etapa mapeada (feriado/recesso/evento/sem processo) */
+.main-grid tbody tr.row-nao-mapeado td {
+  background: #f7f8fb;      /* leve cinza para diferenciar */
+  color: #6b7280;           /* texto mais apagado */
+}
+
+/* Se quiser destacar só a coluna "Etapa do Processo" */
+.main-grid tbody tr.row-nao-mapeado td:nth-child(3) {
+  font-style: italic;
+}
+
+/* Linhas sem etapa (string vazia) */
+.main-grid tbody tr.row-sem-etapa td:nth-child(3) {
+  color: #9ca3af;
+  font-style: italic;
+}
+
