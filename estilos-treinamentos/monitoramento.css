@@ -836,3 +836,57 @@ body {
   background: #374151; /* um pouco mais escuro */
 }
 
+/* =========================================================
+   FIX: Dia não útil (row-nao-util) com badge apagado
+   - garante legibilidade do badge (etapa)
+   - dá aparência semelhante ao print "expectativa"
+   ========================================================= */
+
+/* Linha não útil: tom rosado */
+.main-grid tbody tr.row-nao-util td {
+  background: #fff1f2 !important;
+}
+
+/* (opcional) data e dia em vermelho, como no exemplo */
+.main-grid tbody tr.row-nao-util td:nth-child(1),
+.main-grid tbody tr.row-nao-util td:nth-child(2) {
+  color: #e11d48 !important;
+  font-weight: 700 !important;
+}
+
+/* ✅ Badge da etapa em dia não útil: NÃO pode ficar lavado */
+.main-grid tbody tr.row-nao-util td:nth-child(3) .etapa {
+  opacity: 1 !important;
+  filter: none !important;
+  color: #ffffff !important;
+  background: #e11d48 !important;      /* vermelho forte */
+  border: 0 !important;
+  font-style: normal !important;
+  box-shadow: none !important;
+}
+
+/* Se seu CSS base usa "display: inline-block" etc., isso mantém; se não, força */
+.main-grid tbody tr.row-nao-util td:nth-child(3) .etapa {
+  display: inline-block !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+}
+
+/* Caso exista regra que apague o conteúdo do badge por herança */
+.main-grid tbody tr.row-nao-util td:nth-child(3) {
+  color: #111827 !important;
+}
+
+/* Fim de semana: marcador escuro e sem badge (mantém o que já tínhamos) */
+.main-grid tbody tr.row-fds td:nth-child(3) .etapa {
+  display: none !important;
+}
+.main-grid tbody tr.row-fds td:nth-child(3)::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  background: #4b5563;
+}
+
