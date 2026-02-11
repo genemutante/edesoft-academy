@@ -414,6 +414,74 @@ async function carregarEvidenciasDoDia(dadosDia) {
   }
 }
 
+
+function openEvidenciaModal(payload) {
+  const overlay = document.getElementById("evidenciaModalOverlay");
+  if (!overlay) return;
+
+  // Preenche campos
+  const dataISO = payload?.data_calendario ?? "";
+  const dataBR = dataISO ? dataISO.split("-").reverse().join("/") : (payload?.data ?? "");
+
+  document.getElementById("ev_data").textContent = dataBR || "—";
+  document.getElementById("ev_dia").textContent = payload?.dia_semana ?? "—";
+  document.getElementById("ev_tipo").textContent = payload?.tipo_dia ?? "—";
+  document.getElementById("ev_etapa").textContent = payload?.etapa_processo ?? "—";
+
+  const avaliacao = payload?.avaliacao_monitoria ?? "Sem dados de monitoria para exibir.";
+  document.getElementById("ev_avaliacao").textContent = avaliacao;
+
+  const log = payload?.log_autenticacao_automatica ?? "Sem log automático.";
+  document.getElementById("ev_log").textContent = log;
+
+  const sub = `Data de referência: ${dataBR || "—"} • Origem: Edesoft Academy • Registro: Automático`;
+  const subEl = document.getElementById("evidenciaSubTitle");
+  if (subEl) subEl.textContent = sub;
+
+  // Abre
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+
+  // trava scroll do fundo
+  document.documentElement.style.overflow = "hidden";
+}
+
+function closeEvidenciaModal() {
+  const overlay = document.getElementById("evidenciaModalOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+  document.documentElement.style.overflow = "";
+}
+
+function bindEvidenciaModalEvents() {
+  const overlay = document.getElementById("evidenciaModalOverlay");
+  const btnClose = document.getElementById("btnEvidenciaFechar");
+  const btnPrint = document.getElementById("btnEvidenciaImprimir");
+
+  if (btnClose) btnClose.onclick = closeEvidenciaModal;
+  if (btnPrint) btnPrint.onclick = () => window.print();
+
+  // Clique fora fecha
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeEvidenciaModal();
+    });
+  }
+
+  // ESC fecha
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeEvidenciaModal();
+  });
+}
+
+// Chame uma vez na inicialização
+bindEvidenciaModalEvents();
+
+
+
+
+
 // ================= EVENTOS =================
 
 document.getElementById("btnLimpar").onclick = () => {
@@ -429,3 +497,4 @@ filtroParticipante.onchange = renderGrid;
 
 // Inicializa
 renderGrid();
+
