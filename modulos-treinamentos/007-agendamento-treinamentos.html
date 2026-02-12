@@ -285,34 +285,43 @@
       }
     }
 
+    // ✅ Popula o select de Conteúdo com base na agenda carregada
+// ✅ Popula o select de Conteúdo com base na agenda carregada
+// ✅ Popula o select com CURSOS (treinamentos) únicos da agenda
 function atualizarFiltroConteudo() {
-  const sel = document.getElementById('grid-filter-aula');
+  const sel = document.getElementById('grid-filter-aula'); // mantém o id pra não mexer no HTML
   if (!sel) return;
 
   const valorAtual = sel.value;
+
   const map = new Map(); // treinamentoId -> nomeTreinamento
 
   (agendaCache || []).forEach(item => {
-    // ✅ fallback: se não vier item.treinamento.id, usa item.treinamento_id
-    const tid = item?.treinamento?.id ?? item?.treinamento_id ?? item?.treinamentoId ?? null;
-    const tnome = (item?.treinamento?.nome || '').trim();
-
+    const tid = item.treinamento?.id;
+    const tnome = (item.treinamento?.nome || '').trim();
     if (!tid || !tnome) return;
 
+    // 1 curso aparece muitas vezes na agenda, mas no Map entra só 1 vez
     map.set(String(tid), tnome);
   });
 
   sel.innerHTML = `<option value="">Todos Cursos</option>`;
 
+  // ✅ ordena por nome do curso
   [...map.entries()]
     .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR', { sensitivity: 'base' }))
     .forEach(([treinamentoId, nome]) => {
       sel.innerHTML += `<option value="${treinamentoId}">${nome}</option>`;
     });
 
-  if ([...sel.options].some(o => o.value === valorAtual)) sel.value = valorAtual;
-  else sel.value = '';
+  // mantém seleção anterior se ainda existir
+  if ([...sel.options].some(o => o.value === valorAtual)) {
+    sel.value = valorAtual;
+  } else {
+    sel.value = '';
+  }
 }
+
 
 
 window.carregarAgenda = async function() {
@@ -377,9 +386,7 @@ window.carregarAgenda = async function() {
 // 3) Filtro por CURSO (treinamento)
 let matchCurso = true;
 if (aulaFilter) {
-const tid = item?.treinamento?.id ?? item?.treinamento_id ?? item?.treinamentoId ?? '';
-matchCurso = String(tid) === aulaFilter;
-
+  matchCurso = String(item.treinamento?.id || '') === aulaFilter;
 }
 
 
@@ -713,8 +720,6 @@ matchCurso = String(tid) === aulaFilter;
   </script>
 </body>
 </html>
-
-
 
 
 
