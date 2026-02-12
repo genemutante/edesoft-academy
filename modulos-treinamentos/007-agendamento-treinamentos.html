@@ -473,7 +473,8 @@ if (aulaFilter) {
           minute: '2-digit'
         });
 
-        const nomeAula = item.aula ? (item.aula.titulo || '') : 'Curso Completo';
+        const nomeAula = item.aula?.titulo?.trim() || '-';
+
 
         let labelStatus = item.status;
         let statusClass = 'st-agendado';
@@ -720,6 +721,7 @@ if (aulaFilter) {
   </script>
 </body>
 </html>
+
 
 
 
