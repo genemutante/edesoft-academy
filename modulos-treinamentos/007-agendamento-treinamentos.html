@@ -171,7 +171,8 @@
             try {
                 const [treinos, colabs] = await Promise.all([
                     DBHandler.listarTreinamentos(),
-                    DBHandler.listarColaboradores({ somenteAtivos: true })
+                    DBHandler.listarColaboradores()
+
                 ]);
                 todosCursos = treinos || [];
                 todosColabs = colabs || [];
@@ -479,6 +480,7 @@ lista.forEach(item => {
     </script>
 </body>
 </html>
+
 
 
 
