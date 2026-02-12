@@ -383,15 +383,15 @@ window.carregarAgenda = async function() {
 
         // 3) Filtro de conteúdo (aula)
         let matchAula = true;
-        if (aulaFilter) {
-          if (aulaFilter === '__CURSO_INTEIRO__') {
-            matchAula = !item.aula; // aula_id null
-          } else {
-            matchAula = String(item.aula?.id || '') === aulaFilter;
-          }
-        }
+// 3) Filtro por CURSO (treinamento)
+let matchCurso = true;
+if (aulaFilter) {
+  matchCurso = String(item.treinamento?.id || '') === aulaFilter;
+}
 
-        return matchTexto && matchStatus && matchAula;
+
+        return matchTexto && matchStatus && matchCurso;
+
       });
 
       if (viewMode === 'view_list') {
@@ -720,6 +720,7 @@ window.carregarAgenda = async function() {
   </script>
 </body>
 </html>
+
 
 
 
