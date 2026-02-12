@@ -287,62 +287,41 @@
 
     // ✅ Popula o select de Conteúdo com base na agenda carregada
 // ✅ Popula o select de Conteúdo com base na agenda carregada
+// ✅ Popula o select com CURSOS (treinamentos) únicos da agenda
 function atualizarFiltroConteudo() {
-  const sel = document.getElementById('grid-filter-aula');
+  const sel = document.getElementById('grid-filter-aula'); // mantém o id pra não mexer no HTML
   if (!sel) return;
 
   const valorAtual = sel.value;
 
-  // lista para ordenar por: treinamento -> tema
-  const itens = []; // [{ id, treinamento, tema, label }]
-  let temCursoInteiro = false;
+  const map = new Map(); // treinamentoId -> nomeTreinamento
 
   (agendaCache || []).forEach(item => {
-    if (!item.aula) {
-      temCursoInteiro = true;
-      return;
-    }
+    const tid = item.treinamento?.id;
+    const tnome = (item.treinamento?.nome || '').trim();
+    if (!tid || !tnome) return;
 
-    const id = String(item.aula.id);
-
-    const treinamento = (item.treinamento?.nome || '').trim();
-
-    let tema = (item.aula.titulo || '').trim();
-
-    // remove prefixos duplicados comuns do título
-    tema = tema
-      .replace(/^Aula\s*\d+\s*[:\-]\s*/i, '')
-      .replace(/^\d+\s*[.\-:]\s*/, '')
-      .trim();
-
-    // ✅ label final: "TREINAMENTO — TEMA" (sem "Aula X" no final)
-    const label = treinamento
-      ? `${treinamento} — ${tema}`
-      : (tema || `Conteúdo ${id}`);
-
-    // evita duplicar por id (mesma aula pode aparecer em vários agendamentos)
-    if (!itens.some(x => x.id === id)) itens.push({ id, treinamento, tema, label });
+    // 1 curso aparece muitas vezes na agenda, mas no Map entra só 1 vez
+    map.set(String(tid), tnome);
   });
 
-  sel.innerHTML = `<option value="">Todos Conteúdos</option>`;
-  if (temCursoInteiro) sel.innerHTML += `<option value="__CURSO_INTEIRO__">(Curso Inteiro)</option>`;
+  sel.innerHTML = `<option value="">Todos Cursos</option>`;
 
-  // ✅ Ordenação: Treinamento -> Tema
-  itens
-    .sort((a, b) => {
-      const c1 = a.treinamento.localeCompare(b.treinamento, 'pt-BR', { sensitivity: 'base' });
-      if (c1 !== 0) return c1;
-      return a.tema.localeCompare(b.tema, 'pt-BR', { sensitivity: 'base' });
-    })
-    .forEach(({ id, label }) => {
-      sel.innerHTML += `<option value="${id}">${label}</option>`;
+  // ✅ ordena por nome do curso
+  [...map.entries()]
+    .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR', { sensitivity: 'base' }))
+    .forEach(([treinamentoId, nome]) => {
+      sel.innerHTML += `<option value="${treinamentoId}">${nome}</option>`;
     });
 
   // mantém seleção anterior se ainda existir
   if ([...sel.options].some(o => o.value === valorAtual)) {
     sel.value = valorAtual;
+  } else {
+    sel.value = '';
   }
 }
+
 
 
 window.carregarAgenda = async function() {
@@ -741,6 +720,7 @@ window.carregarAgenda = async function() {
   </script>
 </body>
 </html>
+
 
 
 
