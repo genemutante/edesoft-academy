@@ -554,7 +554,7 @@ async salvarCursoCompleto(dadosCurso, aulasPendentes = null) {
                 data_hora,
                 status,
                 observacoes,
-                treinamento:treinamentos (nome),
+                treinamento:treinamentos (id, nome),
                 colaborador:colaboradores (nome),
                 aula:aulas_treinamentos (id, titulo, ordem)
 
@@ -634,6 +634,7 @@ async carregarEvidenciaCompleta(dataISO) {
 
 // No final do ficheiro db-handler.js
 window.DBHandler = DBHandler;
+
 
 
 
