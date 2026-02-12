@@ -301,15 +301,21 @@
           return;
         }
 
-        const id = String(item.aula.id);
-        const titulo = (item.aula.titulo || '').trim();
-        const ordem = item.aula.ordem ?? '';
+       const id = String(item.aula.id);
+const ordem = item.aula.ordem ?? '';
 
-        const label = (ordem !== '' && ordem !== null && ordem !== undefined)
-          ? `Aula ${ordem}: ${titulo}`
-          : (titulo || `Aula ${id}`);
+let titulo = (item.aula.titulo || '').trim();
 
-        map.set(id, label);
+// remove prefixos duplicados comuns
+titulo = titulo
+  .replace(/^Aula\s*\d+\s*[:\-]\s*/i, '')   // "Aula 10: " ou "Aula 10 - "
+  .replace(/^\d+\s*[.\-:]\s*/, '');        // "10. " ou "10 - " ou "10: "
+
+const label = (ordem !== '' && ordem !== null && ordem !== undefined)
+  ? `Aula ${ordem}: ${titulo}`
+  : (titulo || `Aula ${id}`);
+
+map.set(id, label);
       });
 
       sel.innerHTML = `<option value="">Todos Conteúdos</option>`;
@@ -721,3 +727,4 @@
   </script>
 </body>
 </html>
+
