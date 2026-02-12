@@ -286,14 +286,15 @@
     }
 
     // ✅ Popula o select de Conteúdo com base na agenda carregada
+// ✅ Popula o select de Conteúdo com base na agenda carregada
 function atualizarFiltroConteudo() {
   const sel = document.getElementById('grid-filter-aula');
   if (!sel) return;
 
   const valorAtual = sel.value;
 
-  // vamos montar uma lista com "tema" (título limpo) para ordenar por assunto
-  const itens = []; // [{ id, tema, label }]
+  // lista para ordenar por: treinamento -> tema
+  const itens = []; // [{ id, treinamento, tema, label }]
   let temCursoInteiro = false;
 
   (agendaCache || []).forEach(item => {
@@ -303,31 +304,36 @@ function atualizarFiltroConteudo() {
     }
 
     const id = String(item.aula.id);
-    const ordem = item.aula.ordem ?? '';
+
+    const treinamento = (item.treinamento?.nome || '').trim();
 
     let tema = (item.aula.titulo || '').trim();
 
-    // remove prefixos duplicados comuns
+    // remove prefixos duplicados comuns do título
     tema = tema
-      .replace(/^Aula\s*\d+\s*[:\-]\s*/i, '') // "Aula 10: " ou "Aula 10 - "
-      .replace(/^\d+\s*[.\-:]\s*/, '')       // "10. " ou "10 - " ou "10: "
+      .replace(/^Aula\s*\d+\s*[:\-]\s*/i, '')
+      .replace(/^\d+\s*[.\-:]\s*/, '')
       .trim();
 
-const label = (ordem !== '' && ordem !== null && ordem !== undefined)
-  ? `${tema} — Aula ${ordem}`
-  : (tema || `Aula ${id}`);
+    // ✅ label final: "TREINAMENTO — TEMA" (sem "Aula X" no final)
+    const label = treinamento
+      ? `${treinamento} — ${tema}`
+      : (tema || `Conteúdo ${id}`);
 
-
-    // evita duplicar a mesma aula (por id)
-    if (!itens.some(x => x.id === id)) itens.push({ id, tema, label });
+    // evita duplicar por id (mesma aula pode aparecer em vários agendamentos)
+    if (!itens.some(x => x.id === id)) itens.push({ id, treinamento, tema, label });
   });
 
   sel.innerHTML = `<option value="">Todos Conteúdos</option>`;
   if (temCursoInteiro) sel.innerHTML += `<option value="__CURSO_INTEIRO__">(Curso Inteiro)</option>`;
 
-  // ✅ ordena pelo TEMA (assunto), ignorando "Aula X:"
+  // ✅ Ordenação: Treinamento -> Tema
   itens
-    .sort((a, b) => a.tema.localeCompare(b.tema, 'pt-BR', { sensitivity: 'base' }))
+    .sort((a, b) => {
+      const c1 = a.treinamento.localeCompare(b.treinamento, 'pt-BR', { sensitivity: 'base' });
+      if (c1 !== 0) return c1;
+      return a.tema.localeCompare(b.tema, 'pt-BR', { sensitivity: 'base' });
+    })
     .forEach(({ id, label }) => {
       sel.innerHTML += `<option value="${id}">${label}</option>`;
     });
@@ -337,6 +343,7 @@ const label = (ordem !== '' && ordem !== null && ordem !== undefined)
     sel.value = valorAtual;
   }
 }
+
 
 window.carregarAgenda = async function() {
   document.getElementById('loading-grid').style.display = 'block';
@@ -734,6 +741,7 @@ window.carregarAgenda = async function() {
   </script>
 </body>
 </html>
+
 
 
 
