@@ -205,7 +205,9 @@
                 } else {
                     agendaCache = await DBHandler.listarAgendamentosFuturos();
                 }
+                atualizarFiltroConteudo();
                 renderizarGrid();
+
             } catch (e) { console.error(e); alert("Erro ao carregar agenda: " + e.message); } 
             finally { document.getElementById('loading-grid').style.display = 'none'; }
         };
@@ -536,6 +538,7 @@ lista.forEach(item => {
     </script>
 </body>
 </html>
+
 
 
 
