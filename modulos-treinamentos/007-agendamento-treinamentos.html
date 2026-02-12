@@ -279,9 +279,30 @@
 function renderizarLinhas(lista, container) {
             const agora = new Date();
             
-            // Ordena: Data mais recente primeiro
-            lista.sort((a,b) => new Date(b.data_hora) - new Date(a.data_hora));
+ //----------------------------------
+const getAulaOrdem = (it) => {
+  const n = it?.aula?.ordem;
+  return Number.isFinite(Number(n)) ? Number(n) : 999999; // "Curso Completo"/sem aula vai pro fim
+};
 
+const getNomeColab = (it) => (it?.colaborador?.nome || '').toString();
+
+lista.sort((a, b) => {
+  // 1) Data (asc)
+  const da = new Date(a.data_hora).getTime();
+  const db = new Date(b.data_hora).getTime();
+  if (da !== db) return da - db;
+
+  // 2) Ordem da aula (asc)
+  const oa = getAulaOrdem(a);
+  const ob = getAulaOrdem(b);
+  if (oa !== ob) return oa - ob;
+
+  // 3) Colaborador (asc)
+  return getNomeColab(a).localeCompare(getNomeColab(b), 'pt-BR', { sensitivity: 'base' });
+});
+
+//-------------------------
             lista.forEach(item => {
                 const dataItem = new Date(item.data_hora);
                 const dataFmt = dataItem.toLocaleString('pt-BR', { 
@@ -455,6 +476,7 @@ function renderizarLinhas(lista, container) {
     </script>
 </body>
 </html>
+
 
 
 
