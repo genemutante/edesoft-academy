@@ -313,9 +313,10 @@ function atualizarFiltroConteudo() {
       .replace(/^\d+\s*[.\-:]\s*/, '')       // "10. " ou "10 - " ou "10: "
       .trim();
 
-    const label = (ordem !== '' && ordem !== null && ordem !== undefined)
-      ? `Aula ${ordem}: ${tema}`
-      : (tema || `Aula ${id}`);
+const label = (ordem !== '' && ordem !== null && ordem !== undefined)
+  ? `${tema} — Aula ${ordem}`
+  : (tema || `Aula ${id}`);
+
 
     // evita duplicar a mesma aula (por id)
     if (!itens.some(x => x.id === id)) itens.push({ id, tema, label });
@@ -733,5 +734,6 @@ window.carregarAgenda = async function() {
   </script>
 </body>
 </html>
+
 
 
